@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads · Lead360</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --bg:#FAFAF9;--panel:#FFFFFF;--panel-2:#F4F4F2;
+ --sidebar:#111111;--sidebar-text:#C4C0BB;--sidebar-text-active:#FFFFFF;--sidebar-hover:#1F1F1F;
+ --border:#E8E6E3;--border-strong:#D4D1CC;
+ --text:#0F0F0F;--text-muted:#6B6660;--text-subtle:#9A948E;
+ --primary:#EA5400;--primary-soft:rgba(234,84,0,.08);--primary-press:#CC4900;
+ --success:#0E7C5A;--warn:#B8710A;--danger:#B42318;--info:#175CD3;--steel:#475467;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+ -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.num{font-variant-numeric:tabular-nums}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;
+ font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .12s}
+.btn.sm{height:32px;padding:0 11px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-press)}
+.btn-secondary{background:var(--panel);border-color:var(--border-strong);color:var(--text)}.btn-secondary:hover{background:var(--panel-2)}
+.btn-ghost{background:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.btn-danger{background:var(--panel);border-color:var(--danger);color:var(--danger)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border:1px solid var(--border);
+ border-radius:4px;background:var(--panel);color:var(--text);font-size:12px;font-weight:600}
+.pill .dot{width:6px;height:6px;border-radius:50%}
+.dot-generated{background:var(--info)}.dot-pending{background:var(--warn)}.dot-approved{background:var(--success)}
+.dot-sent{background:var(--primary)}.dot-locked{background:var(--steel)}.dot-lost{background:var(--danger)}.dot-rejected{background:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{position:sticky;top:0;background:var(--panel-2);border-bottom:1px solid var(--border-strong);
+ text-align:left;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--text-subtle);text-transform:uppercase;padding:0 16px;height:40px}
+tbody td{border-bottom:1px solid var(--border);padding:0 16px;height:44px;color:var(--text)}
+tbody tr{transition:background .1s}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2);cursor:pointer}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.kpi{padding:24px}
+.kpi .label{margin-bottom:10px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.kpi .val{font-size:32px;font-weight:600;line-height:1}.kpi .delta{font-size:12px;font-weight:500;margin-left:8px}
+.delta.up{color:var(--success)}.delta.down{color:var(--danger)}
+.segbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--panel-2);position:relative}
+.segbar .z-danger{background:rgba(180,35,24,.18)}.segbar .z-warn{background:rgba(184,113,10,.18)}.segbar .z-success{background:rgba(14,124,90,.18)}
+.segbar .marker{position:absolute;top:-3px;width:3px;height:16px;background:var(--text);border-radius:2px}
+.side{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--sidebar-text);font-size:14px;font-weight:500}
+.side i{width:16px;height:16px}
+.side:hover{background:var(--sidebar-hover);color:#fff}
+.side.active{background:var(--sidebar-hover);color:#fff;position:relative}
+.side.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.iconbtn{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;cursor:pointer;color:var(--text-muted)}
+.iconbtn:hover{background:var(--panel-2);color:var(--text)}
+/* leads specifics */
+.pagehead{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:16px}
+.pagehead h1{font-size:22px;font-weight:600}
+.pagehead .subtitle{font-size:13px;color:var(--text-muted);margin-top:3px}
+.filters{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.fselect{position:relative}
+.select{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid var(--border-strong);border-radius:6px;background:var(--panel);font-size:13px;font-weight:500;cursor:pointer;color:var(--text)}
+.select:hover{background:var(--panel-2)}
+.select i{width:15px;height:15px;color:var(--text-subtle)}
+.searchbox{position:relative;margin-left:auto;min-width:240px}
+.searchbox i{position:absolute;left:11px;top:10px;width:15px;color:var(--text-subtle)}
+.searchbox input{width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border-strong);border-radius:6px;background:var(--panel);font:inherit;font-size:13px}
+.chip{display:inline-flex;align-items:center;height:22px;padding:0 8px;border:1px solid var(--border);border-radius:4px;background:var(--panel);font-size:12px;font-weight:500;color:var(--text-muted)}
+.co{font-size:12px;color:var(--text-subtle);margin-top:2px}
+.lead-name{font-weight:600;font-size:14px;line-height:1.25}
+/* lead cell w/ monogram */
+.leadcell{display:flex;align-items:center;gap:12px}
+.mono{flex:0 0 34px;width:34px;height:34px;border-radius:7px;background:var(--panel-2);border:1px solid var(--border);
+ display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:.01em}
+.empty{display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:56px 20px;text-align:center}
+.empty i{width:26px;height:26px;color:var(--text-subtle)}
+.empty h3{font-size:15px;font-weight:600}
+.empty p{font-size:13px;color:var(--text-muted);max-width:320px}
+.menu{position:absolute;top:42px;left:0;min-width:180px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 2px rgba(15,15,15,.04);padding:5px;z-index:20;display:none}
+.menu.open{display:block}
+.menu .item{display:flex;align-items:center;height:34px;padding:0 10px;border-radius:6px;font-size:13px;color:var(--text);cursor:pointer}
+.menu .item:hover{background:var(--panel-2)}
+/* account menu / role switcher (sidebar) */
+.acct{margin-top:auto;position:relative}
+.acctbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:none;border-top:1px solid #262626;background:transparent;cursor:pointer;font:inherit;text-align:left}
+.acctbtn:hover{background:var(--sidebar-hover)}
+.acctav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#2a2a2a;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.acctid{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.acctname{font-size:13px;color:#fff;font-weight:500}
+.acctrole{font-size:11px;color:var(--sidebar-text)}
+.acctchev{width:15px;height:15px;color:var(--sidebar-text);flex:0 0 15px}
+.acctpop{position:absolute;left:12px;right:12px;bottom:60px;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.3);padding:6px;z-index:60;display:none}
+.acctpop.show{display:block}
+.accthead{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.accthead .an{font-size:13.5px;color:var(--text);font-weight:600}
+.accthead .ae{font-size:12px;color:var(--text-muted);margin-top:2px}
+.acctitem{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.acctitem:hover{background:var(--panel-2)}
+.acctitem i{width:15px;height:15px;color:var(--text-muted)}
+.acctitem.danger{color:var(--danger)}.acctitem.danger i{color:var(--danger)}
+.acctsep{height:1px;background:var(--border);margin:6px 0}
+/* prototype-only list-state switcher + loading skeleton */
+.demoswitch{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 6px 0 11px;border:1px dashed var(--border-strong);border-radius:7px;background:var(--panel);font-size:12px;font-weight:600;color:var(--text-subtle);white-space:nowrap}
+.demoswitch i{width:14px;height:14px;color:var(--primary)}
+.demoswitch select{height:28px;border:1px solid var(--border);border-radius:5px;background:var(--panel-2);font:inherit;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;padding:0 6px}
+.skelrow{display:flex;align-items:center;gap:12px;padding:0 16px;height:44px;border-bottom:1px solid var(--border)}
+.skelbar{height:11px;border-radius:6px;background:linear-gradient(90deg,var(--panel-2) 25%,#EEEBE8 37%,var(--panel-2) 63%);background-size:400% 100%;animation:shimmer 1.3s ease infinite}
+.skel-mono{width:34px;height:34px;flex:0 0 34px;border-radius:7px;background:var(--panel-2);animation:shimmer 1.3s ease infinite;background-image:linear-gradient(90deg,var(--panel-2) 25%,#EEEBE8 37%,var(--panel-2) 63%);background-size:400% 100%}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+</style>
+</head>
+<body>
+<div style="display:flex;min-height:100vh">
+  <aside style="width:260px;flex:0 0 260px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;align-self:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 12px 22px">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px">L</span>
+      <span style="font-weight:600;font-size:16px;color:#fff">Lead360</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px" aria-label="Primary">
+      <a class="side active" data-testid="nav-leads" href="leads.page.html"><i data-lucide="list"></i>Leads</a>
+      <a class="side" data-testid="nav-projects" href="projects.page.html"><i data-lucide="folder"></i>Projects</a>
+      <a class="side" data-testid="nav-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="acct">
+      <button class="acctbtn" onclick="toggleAcct(event)" data-testid="acct-trigger" aria-haspopup="true">
+        <span class="acctav">FK</span>
+        <span class="acctid"><span class="acctname">Farah Karim</span><span class="acctrole">Sales / PM</span></span>
+        <i data-lucide="chevron-up" class="acctchev"></i>
+      </button>
+      <div class="acctpop" data-testid="acct-pop">
+        <div class="accthead"><div class="an">Farah Karim</div><div class="ae">farah.karim@riseuplabs.com</div></div>
+        <a class="acctitem" data-testid="acct-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+        <a class="acctitem" data-testid="acct-switch-view" href="../management/overview.page.html"><i data-lucide="repeat"></i>Switch to Admin view</a>
+        <div class="acctsep"></div>
+        <a class="acctitem danger" data-testid="acct-signout" href="login.page.html"><i data-lucide="log-out"></i>Sign out</a>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:0 32px;height:60px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <div style="position:relative;flex:1;max-width:420px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:9px;width:16px;color:var(--text-subtle)"></i>
+        <input data-testid="topbar-search" placeholder="Search leads, companies…" style="width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px">
+      </div>
+      <a class="btn btn-primary" data-testid="topbar-new-lead" href="new-lead-info.page.html"><i data-lucide="plus" style="width:16px"></i>New Lead</a>
+      <span data-testid="topbar-avatar" aria-label="Account" title="Farah Karim · Sales / PM" style="width:32px;height:32px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);color:var(--text-muted);display:grid;place-items:center;font-size:12px;font-weight:600;flex:0 0 32px">FK</span>
+    </header>
+    <main style="padding:32px;max-width:1400px;width:100%;margin:0 auto">
+      <div class="pagehead">
+        <div>
+          <h1>Leads</h1>
+          <div class="subtitle">All leads and proposals across the pipeline.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label class="demoswitch" title="Prototype only — preview list states"><i data-lucide="flask-conical"></i><span>State</span>
+            <select id="stateSel" onchange="setListState(this.value)" data-testid="leads-state-switch"><option value="data">Data</option><option value="loading">Loading</option><option value="empty">Empty</option></select>
+          </label>
+          <a class="btn btn-primary" href="new-lead-info.page.html" data-testid="leads-new"><i data-lucide="plus" style="width:16px"></i>New Lead</a>
+        </div>
+      </div>
+
+      <div class="filters">
+        <div class="fselect">
+          <button class="select" data-testid="leads-filter-status" onclick="tog('mStatus')"><span>Status</span><i data-lucide="chevron-down"></i></button>
+          <div class="menu" id="mStatus">
+            <div class="item">All statuses</div>
+            <div class="item">Generated</div>
+            <div class="item">Pending Approval</div>
+            <div class="item">Approved</div>
+            <div class="item">Sent</div>
+            <div class="item">Locked</div>
+            <div class="item">Lost</div>
+          </div>
+        </div>
+        <div class="fselect">
+          <button class="select" data-testid="leads-filter-template" onclick="tog('mTemplate')"><span>Template</span><i data-lucide="chevron-down"></i></button>
+          <div class="menu" id="mTemplate">
+            <div class="item">All templates</div>
+            <div class="item">Global</div>
+            <div class="item">Local</div>
+            <div class="item">Agency</div>
+            <div class="item">Design Portfolio</div>
+          </div>
+        </div>
+        <div class="searchbox">
+          <i data-lucide="search"></i>
+          <input placeholder="Search this list…" data-testid="leads-search">
+        </div>
+      </div>
+
+      <div class="card" data-testid="leads-table" style="overflow:hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>Lead / Company</th>
+              <th>Template</th>
+              <th>Status</th>
+              <th class="num">Value</th>
+              <th class="num">Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-testid="leads-row-ap-invoice" onclick="location.href='lead-detail.page.html'">
+              <td><div class="leadcell"><span class="mono">AI</span><div><div class="lead-name">AP Invoice Automation</div><div class="co">ATEC Group</div></div></div></td>
+              <td><span class="chip">Global</span></td>
+              <td><span class="pill"><span class="dot dot-approved"></span>Approved</span></td>
+              <td class="num">$86,000</td>
+              <td class="num">2h ago</td>
+            </tr>
+            <tr data-testid="leads-row-fifa" onclick="location.href='lead-detail.page.html'">
+              <td><div class="leadcell"><span class="mono">FP</span><div><div class="lead-name">FIFA Campaign Microsite</div><div class="co">FIFA Partner Co</div></div></div></td>
+              <td><span class="chip">Agency</span></td>
+              <td><span class="pill"><span class="dot dot-sent"></span>Sent</span></td>
+              <td class="num">$58,000</td>
+              <td class="num">1d ago</td>
+            </tr>
+            <tr data-testid="leads-row-urmi" onclick="location.href='lead-detail.page.html'">
+              <td><div class="leadcell"><span class="mono">UG</span><div><div class="lead-name">Urmi Commerce Revamp</div><div class="co">Urmi Group</div></div></div></td>
+              <td><span class="chip">Local</span></td>
+              <td><span class="pill"><span class="dot dot-pending"></span>Pending Approval</span></td>
+              <td class="num">$42,000</td>
+              <td class="num">2d ago</td>
+            </tr>
+            <tr data-testid="leads-row-writerush" onclick="location.href='lead-detail.page.html'">
+              <td><div class="leadcell"><span class="mono">WR</span><div><div class="lead-name">WriteRush Rebrand</div><div class="co">WriteRush</div></div></div></td>
+              <td><span class="chip">Design Portfolio</span></td>
+              <td><span class="pill"><span class="dot dot-generated"></span>Generated</span></td>
+              <td class="num">$31,000</td>
+              <td class="num">3d ago</td>
+            </tr>
+            <tr data-testid="leads-row-vault" onclick="location.href='lead-detail.page.html'">
+              <td><div class="leadcell"><span class="mono">VL</span><div><div class="lead-name">Vault Health Platform</div><div class="co">Vital Labs</div></div></div></td>
+              <td><span class="chip">Global</span></td>
+              <td><span class="pill"><span class="dot dot-locked"></span>Locked</span></td>
+              <td class="num">$120,000</td>
+              <td class="num">1w ago</td>
+            </tr>
+            <tr data-testid="leads-row-loop" onclick="location.href='lead-detail.page.html'">
+              <td><div class="leadcell"><span class="mono">LW</span><div><div class="lead-name">Loop Social App</div><div class="co">Loopwave</div></div></div></td>
+              <td><span class="chip">Agency</span></td>
+              <td><span class="pill"><span class="dot dot-lost"></span>Lost</span></td>
+              <td class="num">$26,000</td>
+              <td class="num">2w ago</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="skel" data-testid="leads-skeleton" style="display:none">
+          <div class="skelrow"><span class="skel-mono"></span><span class="skelbar" style="width:180px"></span><span class="skelbar" style="width:72px;margin-left:auto"></span><span class="skelbar" style="width:80px"></span><span class="skelbar" style="width:56px"></span></div>
+          <div class="skelrow"><span class="skel-mono"></span><span class="skelbar" style="width:150px"></span><span class="skelbar" style="width:72px;margin-left:auto"></span><span class="skelbar" style="width:80px"></span><span class="skelbar" style="width:56px"></span></div>
+          <div class="skelrow"><span class="skel-mono"></span><span class="skelbar" style="width:200px"></span><span class="skelbar" style="width:72px;margin-left:auto"></span><span class="skelbar" style="width:80px"></span><span class="skelbar" style="width:56px"></span></div>
+          <div class="skelrow"><span class="skel-mono"></span><span class="skelbar" style="width:160px"></span><span class="skelbar" style="width:72px;margin-left:auto"></span><span class="skelbar" style="width:80px"></span><span class="skelbar" style="width:56px"></span></div>
+          <div class="skelrow"><span class="skel-mono"></span><span class="skelbar" style="width:190px"></span><span class="skelbar" style="width:72px;margin-left:auto"></span><span class="skelbar" style="width:80px"></span><span class="skelbar" style="width:56px"></span></div>
+        </div>
+        <div class="empty" data-testid="leads-empty">
+          <i data-lucide="inbox"></i>
+          <h3>No leads match your filters</h3>
+          <p>Active filters: <b>Status: Sent</b> · <b>Template: Local</b>. Clear them to see all leads, or create a new one.</p>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary sm" data-testid="leads-empty-clear" onclick="setListState('data')"><i data-lucide="x" style="width:15px"></i>Clear filters</button>
+            <a class="btn btn-primary sm" href="new-lead-info.page.html" data-testid="leads-empty-new"><i data-lucide="plus" style="width:15px"></i>New Lead</a>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:13px;color:var(--text-muted)">
+        <span>Showing <span class="num" id="leads-shown">6</span> of <span class="num" id="leads-total">6</span> leads</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary sm" data-testid="leads-prev" disabled>Previous</button>
+          <button class="btn btn-secondary sm" data-testid="leads-next" disabled>Next</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+lucide.createIcons();
+  window.toggleAcct=function(e){e.stopPropagation();var pop=e.currentTarget.parentNode.querySelector('.acctpop');var open=pop.classList.contains('show');document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});if(!open)pop.classList.add('show');};
+function tog(id){
+  const m=document.getElementById(id);const open=m.classList.contains('open');
+  document.querySelectorAll('.menu').forEach(x=>x.classList.remove('open'));
+  if(!open)m.classList.add('open');
+}
+// single document-click handler closes BOTH the account popover and any open filter menu
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.acct'))document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});
+  if(!e.target.closest('.fselect'))document.querySelectorAll('.menu').forEach(function(x){x.classList.remove('open')});
+});
+
+// ===== client-side filtering =====
+var statusFilter='all', templateFilter='all', queryFilter='';
+function applyFilters(){
+  var rows=document.querySelectorAll('[data-testid="leads-table"] tbody tr');
+  var shown=0, total=rows.length;
+  rows.forEach(function(r){
+    var status=(r.querySelector('.pill')||{}).textContent||'';
+    var template=(r.querySelector('.chip')||{}).textContent||'';
+    var text=r.textContent.toLowerCase();
+    var okS=statusFilter==='all'||status.trim().toLowerCase()===statusFilter;
+    var okT=templateFilter==='all'||template.trim().toLowerCase()===templateFilter;
+    var okQ=!queryFilter||text.indexOf(queryFilter)>-1;
+    var show=okS&&okT&&okQ;
+    r.style.display=show?'':'none';
+    if(show)shown++;
+  });
+  var showing=document.getElementById('leads-shown');
+  if(showing)showing.textContent=shown;
+  var totalEl=document.getElementById('leads-total');
+  if(totalEl)totalEl.textContent=total;
+  // empty state
+  var card=document.querySelector('[data-testid="leads-table"]');
+  var tbl=card.querySelector('table');
+  var empty=card.querySelector('[data-testid="leads-empty"]');
+  if(shown===0){
+    tbl.style.display='none';empty.style.display='flex';
+    var parts=[];
+    if(statusFilter!=='all')parts.push('Status: '+cap(statusFilter));
+    if(templateFilter!=='all')parts.push('Template: '+cap(templateFilter));
+    if(queryFilter)parts.push('Search: "'+queryFilter+'"');
+    var p=empty.querySelector('p');
+    if(p)p.innerHTML=parts.length
+      ? 'Active filters: '+parts.map(function(x){return '<b>'+x+'</b>';}).join(' · ')+'. Clear them to see all leads, or create a new one.'
+      : 'No leads to show. Clear filters to see all leads, or create a new one.';
+  }else{
+    tbl.style.display='';empty.style.display='none';
+  }
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+// wire status/template dropdown items
+function wireMenu(menuId,setter){
+  document.querySelectorAll('#'+menuId+' .item').forEach(function(it){
+    it.addEventListener('click',function(){
+      var v=it.textContent.trim().toLowerCase();
+      setter(v.indexOf('all')===0?'all':v);
+      document.querySelectorAll('.menu').forEach(function(x){x.classList.remove('open')});
+      applyFilters();
+    });
+  });
+}
+wireMenu('mStatus',function(v){statusFilter=v;});
+wireMenu('mTemplate',function(v){templateFilter=v;});
+// wire both search inputs
+function onSearch(e){queryFilter=e.target.value.toLowerCase().trim();applyFilters();}
+var listSearch=document.querySelector('[data-testid="leads-search"]');
+if(listSearch)listSearch.addEventListener('input',onSearch);
+var topSearch=document.querySelector('[data-testid="topbar-search"]');
+if(topSearch)topSearch.addEventListener('input',onSearch);
+
+// prototype-only: preview data / loading / empty list states
+window.setListState=function(s){
+  var card=document.querySelector('[data-testid="leads-table"]');
+  var tbl=card.querySelector('table');
+  var skel=card.querySelector('[data-testid="leads-skeleton"]');
+  var empty=card.querySelector('[data-testid="leads-empty"]');
+  tbl.style.display=s==='data'?'':'none';
+  skel.style.display=s==='loading'?'block':'none';
+  empty.style.display=s==='empty'?'flex':'none';
+  if(s==='data'){statusFilter='all';templateFilter='all';queryFilter='';
+    if(listSearch)listSearch.value='';applyFilters();}
+  var sel=document.getElementById('stateSel'); if(sel&&sel.value!==s)sel.value=s;
+};
+</script>
+</body>
+</html>

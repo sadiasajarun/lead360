@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead360 — Settings (Admin)</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#FAFAF9;--panel:#FFFFFF;--panel-2:#F4F4F2;--sidebar:#111111;--sidebar-text:#C4C0BB;--sidebar-hover:#1F1F1F;
+ --border:#E8E6E3;--border-strong:#D4D1CC;--text:#0F0F0F;--text-muted:#6B6660;--text-subtle:#9A948E;
+ --primary:#EA5400;--primary-soft:rgba(234,84,0,.08);--primary-press:#CC4900;--success:#0E7C5A;--warn:#B8710A;--danger:#B42318;--info:#175CD3;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .12s}
+.btn.sm{height:32px;padding:0 11px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-press)}
+.btn-secondary{background:var(--panel);border-color:var(--border-strong);color:var(--text)}.btn-secondary:hover{background:var(--panel-2)}
+.btn-ghost{background:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.side{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--sidebar-text);font-size:14px;font-weight:500}
+.side i{width:16px;height:16px}.side:hover{background:var(--sidebar-hover);color:#fff}
+.side.active{background:var(--sidebar-hover);color:#fff;position:relative}.side.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+.setlayout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;margin-top:24px;align-items:start}
+.setnav{position:sticky;top:88px;display:flex;flex-direction:column;gap:1px;max-height:calc(100vh - 110px);overflow:auto}
+.setnav .grp{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle);padding:12px 12px 6px}
+.seti{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:6px;color:var(--text-muted);font-size:13.5px;font-weight:500;cursor:pointer}
+.seti i{width:15px;height:15px}
+.seti:hover{background:var(--panel-2);color:var(--text)}
+.seti.active{background:var(--panel);border:1px solid var(--border-strong);color:var(--text);position:relative}
+.seti.active::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:2px;border-radius:2px;background:var(--primary)}
+.setpanel{display:none}.setpanel.active{display:block}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:16px}
+.card h2{font-size:15px;font-weight:600}
+.card .desc{font-size:13px;color:var(--text-muted);margin-top:3px;line-height:1.55}
+.card .hr{height:1px;background:var(--border);margin:18px 0}
+.chead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.frow{margin-bottom:16px;max-width:560px}.frow:last-child{margin-bottom:0}
+.frow > label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.frow .hint{font-size:12px;color:var(--text-subtle);margin-top:5px}
+.inp,.sel,textarea.inp{width:100%;border:1px solid var(--border-strong);border-radius:6px;padding:9px 11px;font:inherit;font-size:14px;color:var(--text);background:var(--panel)}
+.inp:focus,.sel:focus,textarea.inp:focus{outline:none;border-color:var(--primary)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px}.grid2 .frow{max-width:none;margin-bottom:0}
+.avatar{width:64px;height:64px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:22px;font-weight:700}
+.arow{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.switch{width:38px;height:22px;border-radius:999px;background:var(--border-strong);position:relative;cursor:pointer;flex:0 0 38px;transition:background .15s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch.on{background:var(--primary)}.switch.on::after{transform:translateX(16px)}
+.switch.lock{opacity:.5;cursor:not-allowed}
+.toggle-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:0}.toggle-row .tl{font-size:14px;font-weight:500}.toggle-row .th{font-size:12.5px;color:var(--text-muted);margin-top:2px;max-width:440px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-subtle);border-bottom:1px solid var(--border-strong);padding:0 12px 8px}
+tbody td{border-bottom:1px solid var(--border);padding:10px 12px;color:var(--text)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border:1px solid var(--border);border-radius:4px;font-size:11.5px;font-weight:600;color:var(--text)}
+.pill .dot{width:6px;height:6px;border-radius:50%}
+.dot-sales{background:var(--info)}.dot-admin{background:var(--primary)}.dot-active{background:var(--success)}
+.tmpl{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+.tmpl:last-child{border-bottom:0}
+.tmpl .n{font-weight:600;font-size:14px}.tmpl .r{font-size:12.5px;color:var(--text-muted);margin-top:2px}
+.tchip{font-size:11px;font-weight:600;color:var(--text-muted);background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:2px 8px}
+.swatch{width:34px;height:34px;border-radius:6px;border:1px solid var(--border);flex:0 0 34px}
+.crow{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.flagbadge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--warn);background:rgba(184,113,10,.1);border:1px solid rgba(184,113,10,.25);border-radius:999px;padding:3px 10px}
+.egrey{opacity:.55;pointer-events:none}
+.savebar{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+.cinp{display:flex;gap:8px;align-items:center}.cinp input[type=color]{width:38px;height:34px;border:1px solid var(--border-strong);border-radius:6px;background:var(--panel);padding:2px;cursor:pointer}
+/* account menu / role switcher (sidebar) */
+.acct{margin-top:auto;position:relative}
+.acctbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:none;border-top:1px solid #262626;background:transparent;cursor:pointer;font:inherit;text-align:left}
+.acctbtn:hover{background:var(--sidebar-hover)}
+.acctav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#2a2a2a;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.acctid{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.acctname{font-size:13px;color:#fff;font-weight:500}
+.acctrole{font-size:11px;color:var(--sidebar-text)}
+.acctchev{width:15px;height:15px;color:var(--sidebar-text);flex:0 0 15px}
+.acctpop{position:absolute;left:12px;right:12px;bottom:60px;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.3);padding:6px;z-index:60;display:none}
+.acctpop.show{display:block}
+.accthead{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.accthead .an{font-size:13.5px;color:var(--text);font-weight:600}
+.accthead .ae{font-size:12px;color:var(--text-muted);margin-top:2px}
+.acctitem{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.acctitem:hover{background:var(--panel-2)}
+.acctitem i{width:15px;height:15px;color:var(--text-muted)}
+.acctitem.danger{color:var(--danger)}.acctitem.danger i{color:var(--danger)}
+.acctsep{height:1px;background:var(--border);margin:6px 0}
+</style>
+</head>
+<body>
+<div style="display:flex;min-height:100vh">
+  <aside style="width:260px;flex:0 0 260px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;align-self:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 12px 22px">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px">L</span>
+      <span style="font-weight:600;font-size:16px;color:#fff">Lead360</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px" aria-label="Primary">
+      <a class="side" data-testid="nav-overview" href="overview.page.html"><i data-lucide="layout-dashboard"></i>Overview</a>
+      <a class="side" data-testid="nav-approvals" href="approvals.page.html"><i data-lucide="check-square"></i>Approvals</a>
+      <a class="side" data-testid="nav-leads" href="leads.page.html"><i data-lucide="list"></i>Leads</a>
+      <a class="side" data-testid="nav-projects" href="../app/projects.page.html"><i data-lucide="folder"></i>Projects</a>
+      <a class="side active" data-testid="nav-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="acct">
+      <button class="acctbtn" onclick="toggleAcct(event)" data-testid="acct-trigger" aria-haspopup="true">
+        <span class="acctav">SN</span>
+        <span class="acctid"><span class="acctname">Sadia Noor</span><span class="acctrole">Admin</span></span>
+        <i data-lucide="chevron-up" class="acctchev"></i>
+      </button>
+      <div class="acctpop" data-testid="acct-pop">
+        <div class="accthead"><div class="an">Sadia Noor</div><div class="ae">sadia.noor@riseuplabs.com</div></div>
+        <a class="acctitem" data-testid="acct-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+        <a class="acctitem" data-testid="acct-switch-view" href="../app/leads.page.html"><i data-lucide="repeat"></i>Switch to Sales view</a>
+        <div class="acctsep"></div>
+        <a class="acctitem danger" data-testid="acct-signout" href="../app/login.page.html"><i data-lucide="log-out"></i>Sign out</a>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:0 32px;height:60px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <div style="position:relative;flex:1;max-width:420px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:9px;width:16px;color:var(--text-subtle)"></i>
+        <input data-testid="topbar-search" placeholder="Search settings…" style="width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px">
+      </div>
+      <span style="width:32px;height:32px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--text-muted)">SN</span>
+    </header>
+
+    <main style="padding:32px;max-width:1400px;width:100%;margin:0 auto">
+      <h1 style="font-size:22px;font-weight:600">Settings</h1>
+      <div class="desc" style="color:var(--text-muted);font-size:13px;margin-top:6px">Personal preferences and organization-wide configuration.</div>
+
+      <div class="setlayout">
+        <nav class="setnav" aria-label="Settings sections">
+          <div class="grp">Personal</div>
+          <a class="seti active" data-sec="profile" data-testid="set-nav-profile"><i data-lucide="user"></i>Profile</a>
+          <a class="seti" data-sec="prefs" data-testid="set-nav-prefs"><i data-lucide="sliders-horizontal"></i>Preferences</a>
+          <a class="seti" data-sec="security" data-testid="set-nav-security"><i data-lucide="shield"></i>Security</a>
+          <div class="grp">Organization</div>
+          <a class="seti" data-sec="team" data-testid="set-nav-team"><i data-lucide="users"></i>Team &amp; Roles</a>
+          <a class="seti" data-sec="templates" data-testid="set-nav-templates"><i data-lucide="layout-template"></i>Templates</a>
+          <a class="seti" data-sec="rates" data-testid="set-nav-rates"><i data-lucide="wallet"></i>Rates &amp; Currency</a>
+          <a class="seti" data-sec="approvals" data-testid="set-nav-approvals"><i data-lucide="git-pull-request-arrow"></i>Approvals</a>
+          <a class="seti" data-sec="branding" data-testid="set-nav-branding"><i data-lucide="palette"></i>Branding</a>
+          <a class="seti" data-sec="kb" data-testid="set-nav-kb"><i data-lucide="database"></i>Knowledge Base</a>
+          <a class="seti" data-sec="delivery" data-testid="set-nav-delivery"><i data-lucide="send"></i>Delivery &amp; Integrations</a>
+          <a class="seti" data-sec="audit" data-testid="set-nav-audit"><i data-lucide="scroll-text"></i>Security &amp; Audit</a>
+        </nav>
+
+        <div class="setmain">
+          <!-- PROFILE -->
+          <section class="setpanel active" id="sec-profile">
+            <div class="card">
+              <h2>Profile</h2><div class="desc">How you appear across Lead360.</div><div class="hr"></div>
+              <div class="arow"><span class="avatar">SN</span><div><button class="btn btn-secondary sm" data-testid="set-avatar-upload"><i data-lucide="upload" style="width:14px"></i>Upload photo</button><div class="hint" style="font-size:12px;color:var(--text-subtle);margin-top:6px">PNG or JPG, up to 2MB.</div></div></div>
+              <div class="grid2"><div class="frow"><label>Full name</label><input class="inp" value="Sadia Noor" data-testid="set-name"></div><div class="frow"><label>Job title</label><input class="inp" value="Head of Presales" data-testid="set-title"></div></div>
+              <div class="frow" style="margin-top:16px"><label>Work email</label><input class="inp" value="sadia.noor@riseuplabs.com" data-testid="set-email"></div>
+              <div class="savebar"><button class="btn btn-primary" data-testid="set-profile-save"><i data-lucide="check" style="width:15px"></i>Save changes</button></div>
+            </div>
+          </section>
+
+          <!-- PREFERENCES -->
+          <section class="setpanel" id="sec-prefs">
+            <div class="card">
+              <h2>Defaults</h2><div class="desc">Your personal defaults for new leads and documents.</div><div class="hr"></div>
+              <div class="grid2">
+                <div class="frow"><label>Default proposal template</label><select class="sel" data-testid="set-default-template"><option>Global</option><option>Local</option><option>Agency</option><option>Design Portfolio</option></select></div>
+                <div class="frow"><label>Default budget currency</label><select class="sel" data-testid="set-default-currency"><option>USD $</option><option>EUR €</option><option>GBP £</option><option>BDT ৳</option><option>AED</option><option>SAR</option></select></div>
+                <div class="frow"><label>Proposal theme</label><select class="sel" data-testid="set-default-theme"><option>Light</option><option>Dark</option><option>Mixture</option></select></div>
+                <div class="frow"><label>Language</label><select class="sel" data-testid="set-language"><option>English</option><option>Bangla</option></select></div>
+              </div>
+              <div class="savebar"><button class="btn btn-primary" data-testid="set-prefs-save"><i data-lucide="check" style="width:15px"></i>Save preferences</button></div>
+            </div>
+          </section>
+
+          <!-- SECURITY (personal) -->
+          <section class="setpanel" id="sec-security">
+            <div class="card">
+              <h2>Password</h2><div class="desc">Choose a strong password you don't use elsewhere.</div><div class="hr"></div>
+              <div class="frow"><label>Current password</label><input class="inp" type="password" placeholder="••••••••" data-testid="set-cur-pw"></div>
+              <div class="grid2"><div class="frow"><label>New password</label><input class="inp" type="password" placeholder="••••••••" data-testid="set-new-pw"></div><div class="frow"><label>Confirm</label><input class="inp" type="password" placeholder="••••••••" data-testid="set-confirm-pw"></div></div>
+              <div class="savebar" style="margin-top:16px"><button class="btn btn-primary" data-testid="set-pw-save"><i data-lucide="lock" style="width:15px"></i>Update password</button></div>
+            </div>
+          </section>
+
+          <!-- TEAM & ROLES -->
+          <section class="setpanel" id="sec-team">
+            <div class="card">
+              <div class="chead"><div><h2>Team &amp; Roles</h2><div class="desc">Manage who can access Lead360 and what they can do.</div></div><button class="btn btn-primary sm" data-testid="set-invite-user"><i data-lucide="user-plus" style="width:15px"></i>Invite user</button></div>
+              <div class="hr"></div>
+              <table>
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last active</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td>Sadia Noor</td><td>sadia.noor@riseuplabs.com</td><td><span class="pill"><span class="dot dot-admin"></span>Admin</span></td><td><span class="pill"><span class="dot dot-active"></span>Active</span></td><td>now</td><td class="num"><button class="btn btn-ghost sm" data-testid="set-user-1"><i data-lucide="more-horizontal" style="width:15px"></i></button></td></tr>
+                  <tr><td>Farah Karim</td><td>farah.karim@riseuplabs.com</td><td><span class="pill"><span class="dot dot-sales"></span>Sales/PM</span></td><td><span class="pill"><span class="dot dot-active"></span>Active</span></td><td>12m ago</td><td class="num"><button class="btn btn-ghost sm" data-testid="set-user-2"><i data-lucide="more-horizontal" style="width:15px"></i></button></td></tr>
+                  <tr><td>Nabil Hasan</td><td>nabil.hasan@riseuplabs.com</td><td><span class="pill"><span class="dot dot-sales"></span>Sales/PM</span></td><td><span class="pill"><span class="dot dot-active"></span>Active</span></td><td>1h ago</td><td class="num"><button class="btn btn-ghost sm" data-testid="set-user-3"><i data-lucide="more-horizontal" style="width:15px"></i></button></td></tr>
+                  <tr><td>Tanvir Rahman</td><td>tanvir.rahman@riseuplabs.com</td><td><span class="pill"><span class="dot dot-sales"></span>Sales/PM</span></td><td><span class="pill"><span class="dot dot-active"></span>Active</span></td><td>yesterday</td><td class="num"><button class="btn btn-ghost sm" data-testid="set-user-4"><i data-lucide="more-horizontal" style="width:15px"></i></button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- TEMPLATES -->
+          <section class="setpanel" id="sec-templates">
+            <div class="card">
+              <div class="chead"><div><h2>Proposal templates</h2><div class="desc">The four template types and how their budget is delivered. Section structure follows the Riseup document standard.</div></div></div>
+              <div class="hr"></div>
+              <div class="tmpl"><div><div class="n">Global <span class="tchip" style="margin-left:6px">Org default</span></div><div class="r">Proposal (PDF) + <b>separate</b> Excel budget · 11-section technical format</div></div><div style="display:flex;gap:8px"><button class="btn btn-ghost sm" data-testid="set-tmpl-global-default">Set default</button><button class="btn btn-secondary sm" data-testid="set-tmpl-global-edit"><i data-lucide="pencil" style="width:14px"></i>Edit</button></div></div>
+              <div class="tmpl"><div><div class="n">Local</div><div class="r">Proposal (PDF) + <b>separate</b> Excel budget · 11-section technical format</div></div><div style="display:flex;gap:8px"><button class="btn btn-ghost sm" data-testid="set-tmpl-local-default">Set default</button><button class="btn btn-secondary sm" data-testid="set-tmpl-local-edit"><i data-lucide="pencil" style="width:14px"></i>Edit</button></div></div>
+              <div class="tmpl"><div><div class="n">Agency</div><div class="r">Proposal + budget <b>combined</b> · inline Financial Proposal</div></div><div style="display:flex;gap:8px"><button class="btn btn-ghost sm" data-testid="set-tmpl-agency-default">Set default</button><button class="btn btn-secondary sm" data-testid="set-tmpl-agency-edit"><i data-lucide="pencil" style="width:14px"></i>Edit</button></div></div>
+              <div class="tmpl"><div><div class="n">Design Portfolio</div><div class="r">Proposal + budget <b>combined</b> · inline Financial Proposal</div></div><div style="display:flex;gap:8px"><button class="btn btn-ghost sm" data-testid="set-tmpl-design-default">Set default</button><button class="btn btn-secondary sm" data-testid="set-tmpl-design-edit"><i data-lucide="pencil" style="width:14px"></i>Edit</button></div></div>
+            </div>
+          </section>
+
+          <!-- RATES & CURRENCY -->
+          <section class="setpanel" id="sec-rates">
+            <div class="card">
+              <h2>Day-rates</h2><div class="desc">Base rates (USD) used when generating budgets. Applied per department and seniority.</div><div class="hr"></div>
+              <table>
+                <thead><tr><th>Department</th><th>Role</th><th>Type</th><th class="num">Rate / day (USD)</th></tr></thead>
+                <tbody>
+                  <tr><td>Managing &amp; Planning</td><td>Project Manager</td><td>Senior</td><td class="num"><input class="inp" style="width:96px;text-align:right;padding:6px 8px" value="120" data-testid="rate-pm"></td></tr>
+                  <tr><td>Managing &amp; Planning</td><td>Product Designer</td><td>Senior</td><td class="num"><input class="inp" style="width:96px;text-align:right;padding:6px 8px" value="90" data-testid="rate-pd"></td></tr>
+                  <tr><td>Art</td><td>UI/UX Designer</td><td>Mid</td><td class="num"><input class="inp" style="width:96px;text-align:right;padding:6px 8px" value="70" data-testid="rate-uiux"></td></tr>
+                  <tr><td>Development</td><td>Tech Lead</td><td>Senior</td><td class="num"><input class="inp" style="width:96px;text-align:right;padding:6px 8px" value="130" data-testid="rate-tl"></td></tr>
+                  <tr><td>Development</td><td>Backend / Frontend</td><td>Mid</td><td class="num"><input class="inp" style="width:96px;text-align:right;padding:6px 8px" value="85" data-testid="rate-dev"></td></tr>
+                  <tr><td>Development</td><td>DevOps</td><td>Senior</td><td class="num"><input class="inp" style="width:96px;text-align:right;padding:6px 8px" value="110" data-testid="rate-devops"></td></tr>
+                  <tr><td>Others</td><td>QA Expert</td><td>Mid</td><td class="num"><input class="inp" style="width:96px;text-align:right;padding:6px 8px" value="60" data-testid="rate-qa"></td></tr>
+                </tbody>
+              </table>
+              <div class="savebar"><button class="btn btn-primary sm" data-testid="set-rates-save"><i data-lucide="check" style="width:15px"></i>Save rates</button></div>
+            </div>
+            <div class="card">
+              <div class="chead"><div><h2>Currencies &amp; FX</h2><div class="desc">Currencies clients can view budgets in. Rates are relative to USD.</div></div><button class="btn btn-secondary sm" data-testid="set-add-currency"><i data-lucide="plus" style="width:14px"></i>Add currency</button></div>
+              <div class="hr"></div>
+              <table>
+                <thead><tr><th>Currency</th><th>Symbol</th><th class="num">Rate vs USD</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td>USD — US Dollar</td><td>$</td><td class="num">1.00</td><td class="num"><span class="tchip">base</span></td></tr>
+                  <tr><td>EUR — Euro</td><td>€</td><td class="num">0.92</td><td class="num"><button class="btn btn-ghost sm" data-testid="cur-eur"><i data-lucide="pencil" style="width:14px"></i></button></td></tr>
+                  <tr><td>GBP — Pound</td><td>£</td><td class="num">0.79</td><td class="num"><button class="btn btn-ghost sm" data-testid="cur-gbp"><i data-lucide="pencil" style="width:14px"></i></button></td></tr>
+                  <tr><td>BDT — Taka</td><td>৳</td><td class="num">117.00</td><td class="num"><button class="btn btn-ghost sm" data-testid="cur-bdt"><i data-lucide="pencil" style="width:14px"></i></button></td></tr>
+                  <tr><td>AED — Dirham</td><td>AED</td><td class="num">3.67</td><td class="num"><button class="btn btn-ghost sm" data-testid="cur-aed"><i data-lucide="pencil" style="width:14px"></i></button></td></tr>
+                  <tr><td>SAR — Riyal</td><td>SAR</td><td class="num">3.75</td><td class="num"><button class="btn btn-ghost sm" data-testid="cur-sar"><i data-lucide="pencil" style="width:14px"></i></button></td></tr>
+                </tbody>
+              </table>
+              <div class="frow" style="margin-top:18px;max-width:220px"><label>Default tax / VAT</label><input class="inp" value="0%" data-testid="set-tax"></div>
+            </div>
+          </section>
+
+          <!-- APPROVALS -->
+          <section class="setpanel" id="sec-approvals">
+            <div class="card">
+              <h2>Approval workflow</h2><div class="desc">Control the verification gate before a proposal can be delivered.</div><div class="hr"></div>
+              <div class="toggle-row"><div><div class="tl">Require admin approval</div><div class="th">Proposals must be verified by an admin before they can be delivered to the client.</div></div><div class="switch on" data-testid="set-require-approval"></div></div>
+              <div class="frow" style="margin-top:16px"><label>Approvers</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill"><span class="dot dot-admin"></span>Sadia Noor</span><button class="btn btn-ghost sm" data-testid="set-add-approver"><i data-lucide="plus" style="width:14px"></i>Add approver</button></div>
+              </div>
+              <div class="frow" style="margin-top:16px;max-width:280px"><label>Readiness threshold</label><input class="inp" value="80" data-testid="set-readiness-threshold"><div class="hint">Minimum readiness score (0–100) before a proposal can be generated without an override.</div></div>
+            </div>
+            <div class="card">
+              <h2>Lost reasons</h2><div class="desc">Options shown when a lead is marked Lost (feeds loss analytics).</div><div class="hr"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <span class="pill">Budget too high</span><span class="pill">Timeline</span><span class="pill">Chose competitor</span><span class="pill">No response</span><span class="pill">Scope mismatch</span><span class="pill">Other</span>
+                <button class="btn btn-ghost sm" data-testid="set-add-lostreason"><i data-lucide="plus" style="width:14px"></i>Add reason</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- BRANDING -->
+          <section class="setpanel" id="sec-branding">
+            <div class="card">
+              <h2>Branding</h2><div class="desc">Applied to client-facing proposals, budgets and deliverables.</div><div class="hr"></div>
+              <div class="frow"><label>Company logo</label>
+                <div style="display:flex;align-items:center;gap:16px"><img src="../assets/riseup-logo.png" alt="Riseup Labs" style="height:44px;border:1px solid var(--border);border-radius:8px;padding:6px;background:#fff"><button class="btn btn-secondary sm" data-testid="set-logo-upload"><i data-lucide="upload" style="width:14px"></i>Replace logo</button></div>
+              </div>
+              <div class="crow"><span class="swatch" style="background:#EA5400"></span><div class="frow" style="margin:0;max-width:200px"><label>Primary color</label><div class="cinp"><input type="color" value="#EA5400" data-testid="set-color-primary"><input class="inp" value="#EA5400" data-testid="set-color-primary-hex"></div></div></div>
+              <div class="crow"><span class="swatch" style="background:#1A1715"></span><div class="frow" style="margin:0;max-width:200px"><label>Text / charcoal</label><div class="cinp"><input type="color" value="#1A1715" data-testid="set-color-ink"><input class="inp" value="#1A1715" data-testid="set-color-ink-hex"></div></div></div>
+              <div class="hr"></div>
+              <div class="grid2">
+                <div class="frow"><label>Company name</label><input class="inp" value="Riseup Labs" data-testid="set-company-name"></div>
+                <div class="frow"><label>Website</label><input class="inp" value="riseuplabs.com" data-testid="set-company-web"></div>
+                <div class="frow"><label>Contact email</label><input class="inp" value="hello@riseuplabs.com" data-testid="set-company-email"></div>
+                <div class="frow"><label>Deliverable file naming</label><input class="inp" value="{Client}-{Type}-{Date}" data-testid="set-file-naming"></div>
+              </div>
+              <div class="frow" style="margin-top:16px"><label>Proposal footer text</label><textarea class="inp" style="min-height:64px" data-testid="set-footer">Riseup Labs · riseuplabs.com · Confidential</textarea></div>
+              <div class="savebar"><button class="btn btn-primary" data-testid="set-branding-save"><i data-lucide="check" style="width:15px"></i>Save branding</button></div>
+            </div>
+          </section>
+
+          <!-- KNOWLEDGE BASE -->
+          <section class="setpanel" id="sec-kb">
+            <div class="card">
+              <div class="chead"><div><h2>Portfolio sync</h2><div class="desc">Projects and case studies are synced from the Riseup portfolio and used as RAG evidence.</div></div><button class="btn btn-secondary sm" data-testid="set-resync"><i data-lucide="refresh-cw" style="width:14px"></i>Re-sync now</button></div>
+              <div class="hr"></div>
+              <div class="grid2"><div class="frow"><label>Source URL</label><input class="inp" value="https://riseuplabs.com/portfolio/" data-testid="set-portfolio-url"></div><div class="frow"><label>Sync schedule</label><select class="sel" data-testid="set-sync-schedule"><option>Daily</option><option>Weekly</option><option>Manual only</option></select></div></div>
+            </div>
+            <div class="card">
+              <h2>Database folders (RAG index)</h2><div class="desc">Which Proposal &amp; Budget Database categories feed proposal generation.</div><div class="hr"></div>
+              <div class="toggle-row"><div class="tl">Agency</div><div class="switch on" data-testid="set-rag-agency"></div></div>
+              <div class="toggle-row"><div class="tl">Design Portfolio</div><div class="switch on" data-testid="set-rag-design"></div></div>
+              <div class="toggle-row"><div class="tl">Global</div><div class="switch on" data-testid="set-rag-global"></div></div>
+              <div class="toggle-row"><div class="tl">Local</div><div class="switch on" data-testid="set-rag-local"></div></div>
+            </div>
+            <div class="card">
+              <h2>Auto-save rules</h2><div class="desc">What Lead360 archives into the database automatically.</div><div class="hr"></div>
+              <div class="toggle-row"><div><div class="tl">Save client requirements used for generation</div><div class="th">Every uploaded brief/requirement that feeds a proposal is stored in the database.</div></div><div class="switch on" data-testid="set-save-requirements"></div></div>
+              <div class="toggle-row"><div><div class="tl">Save approved proposals &amp; budgets</div><div class="th">Once an admin approves, the proposal (PDF) and budget (Excel) are archived by category.</div></div><div class="switch on" data-testid="set-save-approved"></div></div>
+              <div class="toggle-row"><div><div class="tl">Add locked projects to Projects</div><div class="th">When a lead is marked Locked, it becomes a portfolio project automatically.</div></div><div class="switch on" data-testid="set-locked-to-projects"></div></div>
+            </div>
+          </section>
+
+          <!-- DELIVERY & INTEGRATIONS -->
+          <section class="setpanel" id="sec-delivery">
+            <div class="card">
+              <h2>Deliverables</h2><div class="desc">How each lead is delivered to the client.</div><div class="hr"></div>
+              <div class="toggle-row"><div><div class="tl">Proposal — PDF</div><div class="th">Branded, print-ready PDF (active).</div></div><div class="switch on lock" title="Always on"></div></div>
+              <div class="toggle-row"><div><div class="tl">Budget — Excel (.xlsx)</div><div class="th">Excel matching the Riseup budget format (active).</div></div><div class="switch on lock" title="Always on"></div></div>
+            </div>
+            <div class="card">
+              <div class="chead"><div><h2>Email delivery</h2><div class="desc">Send documents to clients from within Lead360.</div></div><span class="flagbadge"><i data-lucide="power-off" style="width:12px"></i>Disabled for production</span></div>
+              <div class="hr"></div>
+              <div class="toggle-row"><div><div class="tl">Enable email delivery</div><div class="th">Developed but turned off (<code>EMAIL_ENABLED=false</code>). Until enabled, deliver by downloading the PDF + Excel and sending them yourself.</div></div><div class="switch lock" data-testid="set-email-enabled" title="Disabled"></div></div>
+              <div class="egrey" style="margin-top:16px">
+                <div class="grid2"><div class="frow"><label>SMTP host</label><input class="inp" placeholder="smtp.provider.com" disabled></div><div class="frow"><label>From address</label><input class="inp" placeholder="sales@riseuplabs.com" disabled></div><div class="frow"><label>Reply-to</label><input class="inp" placeholder="reply@riseuplabs.com" disabled></div><div class="frow"><label>Provider</label><select class="sel" disabled><option>AWS SES</option><option>SMTP</option></select></div></div>
+              </div>
+            </div>
+            <div class="card">
+              <h2>Integrations</h2><div class="desc">Optional channels (not yet available).</div><div class="hr"></div>
+              <div class="toggle-row"><div><div class="tl">Slack</div><div class="th">Share deliverables / notify a channel. Not yet available.</div></div><div class="switch lock" title="Not yet available"></div></div>
+              <div class="toggle-row"><div><div class="tl">Zoom</div><div class="th">Schedule client demos. Not yet available.</div></div><div class="switch lock" title="Not yet available"></div></div>
+            </div>
+          </section>
+
+          <!-- SECURITY & AUDIT -->
+          <section class="setpanel" id="sec-audit">
+            <div class="card">
+              <h2>Authentication</h2><div class="desc">How your team signs in.</div><div class="hr"></div>
+              <div class="frow" style="max-width:280px"><label>Sign-in method</label><select class="sel" data-testid="set-auth-method"><option>Email &amp; password</option><option>SSO (not yet available)</option></select></div>
+              <div class="grid2" style="margin-top:4px"><div class="frow"><label>Session timeout</label><select class="sel" data-testid="set-session"><option>8 hours</option><option>24 hours</option><option>7 days</option></select></div><div class="frow"><label>Min password length</label><input class="inp" value="8" data-testid="set-pw-min"></div></div>
+            </div>
+            <div class="card">
+              <h2>Audit log</h2><div class="desc">Recent approvals and setting changes.</div><div class="hr"></div>
+              <table>
+                <thead><tr><th>When</th><th>Who</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td>Jun 26 · 14:05</td><td>Sadia Noor</td><td>Approved proposal — AP Invoice Automation (ATEC Group)</td></tr>
+                  <tr><td>Jun 26 · 11:20</td><td>Sadia Noor</td><td>Updated day-rate — DevOps → $110/day</td></tr>
+                  <tr><td>Jun 25 · 17:40</td><td>Sadia Noor</td><td>Invited user — Tanvir Rahman (Sales/PM)</td></tr>
+                  <tr><td>Jun 24 · 09:12</td><td>Sadia Noor</td><td>Changed readiness threshold → 80</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<div id="toast" style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);background:#111;color:#fff;font-size:13px;font-weight:500;padding:10px 16px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:200"></div>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+lucide.createIcons();
+  window.toggleAcct=function(e){e.stopPropagation();var pop=e.currentTarget.parentNode.querySelector('.acctpop');var open=pop.classList.contains('show');document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});if(!open)pop.classList.add('show');};
+  document.addEventListener('click',function(){document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')})});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});});
+
+  var _tt;window.toast=function(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(_tt);_tt=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(12px)';},1600);};
+
+document.querySelectorAll('.seti').forEach(function(a){a.addEventListener('click',function(){
+  document.querySelectorAll('.seti').forEach(function(x){x.classList.remove('active');});a.classList.add('active');
+  document.querySelectorAll('.setpanel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById('sec-'+a.dataset.sec);if(t)t.classList.add('active');
+});});
+document.querySelectorAll('.switch:not(.lock)').forEach(function(s){s.addEventListener('click',function(){s.classList.toggle('on');});});
+
+  // Save buttons → toast('Saved')
+  document.querySelectorAll('[data-testid$="-save"]').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(b.getAttribute('data-testid')==='set-pw-save')return; // handled below with validation
+      toast('Saved');
+    });
+  });
+
+  // Password: New ≠ Confirm → error
+  var pwSave=document.querySelector('[data-testid="set-pw-save"]');
+  if(pwSave)pwSave.addEventListener('click',function(){
+    var np=document.querySelector('[data-testid="set-new-pw"]');
+    var cp=document.querySelector('[data-testid="set-confirm-pw"]');
+    if((np.value||cp.value)&&np.value!==cp.value){
+      np.style.borderColor='var(--danger)';cp.style.borderColor='var(--danger)';
+      toast('Passwords do not match');return;
+    }
+    np.style.borderColor='';cp.style.borderColor='';
+    toast('Password updated');
+  });
+
+  // Templates: "Set default" moves the Org default chip
+  document.querySelectorAll('[data-testid^="set-tmpl-"][data-testid$="-default"]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var nameEl=b.closest('.tmpl').querySelector('.n');
+      document.querySelectorAll('#sec-templates .tchip').forEach(function(c){c.remove();});
+      var chip=document.createElement('span');chip.className='tchip';chip.style.marginLeft='6px';chip.textContent='Org default';
+      nameEl.appendChild(chip);
+      toast('Default template updated');
+    });
+  });
+
+  // Branding: two-way color ↔ hex sync
+  function syncColor(colorSel,hexSel){
+    var c=document.querySelector(colorSel), h=document.querySelector(hexSel);
+    if(!c||!h)return;
+    var swatch=c.closest('.crow')?c.closest('.crow').querySelector('.swatch'):null;
+    c.addEventListener('input',function(){h.value=c.value.toUpperCase();if(swatch)swatch.style.background=c.value;});
+    h.addEventListener('input',function(){if(/^#([0-9a-fA-F]{6})$/.test(h.value)){c.value=h.value;if(swatch)swatch.style.background=h.value;}});
+  }
+  syncColor('[data-testid="set-color-primary"]','[data-testid="set-color-primary-hex"]');
+  syncColor('[data-testid="set-color-ink"]','[data-testid="set-color-ink-hex"]');
+
+  // Remaining action buttons → toast
+  var actions={
+    'set-invite-user':'Invite sent',
+    'set-add-approver':'Approver added',
+    'set-add-currency':'Currency added',
+    'set-add-lostreason':'Reason added',
+    'set-resync':'Re-syncing portfolio…',
+    'set-avatar-upload':'Photo uploaded',
+    'set-logo-upload':'Logo replaced'
+  };
+  Object.keys(actions).forEach(function(id){
+    var el=document.querySelector('[data-testid="'+id+'"]');
+    if(el)el.addEventListener('click',function(){toast(actions[id]);});
+  });
+  // Kebab / row-action + currency-edit buttons → toast
+  ['set-user-1','set-user-2','set-user-3','set-user-4','cur-eur','cur-gbp','cur-bdt','cur-aed','cur-sar'].forEach(function(id){
+    var el=document.querySelector('[data-testid="'+id+'"]');
+    if(el)el.addEventListener('click',function(){toast('Opening options…');});
+  });
+</script>
+</body>
+</html>

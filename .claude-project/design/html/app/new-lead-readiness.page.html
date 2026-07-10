@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Lead · Readiness — Lead360</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --bg:#FAFAF9;--panel:#FFFFFF;--panel-2:#F4F4F2;
+ --sidebar:#111111;--sidebar-text:#C4C0BB;--sidebar-text-active:#FFFFFF;--sidebar-hover:#1F1F1F;
+ --border:#E8E6E3;--border-strong:#D4D1CC;
+ --text:#0F0F0F;--text-muted:#6B6660;--text-subtle:#9A948E;
+ --primary:#EA5400;--primary-soft:rgba(234,84,0,.08);--primary-press:#CC4900;
+ --success:#0E7C5A;--warn:#B8710A;--danger:#B42318;--info:#175CD3;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+ -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;
+ font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .12s}
+.btn.sm{height:32px;padding:0 11px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-press)}
+.btn-secondary{background:var(--panel);border-color:var(--border-strong);color:var(--text)}.btn-secondary:hover{background:var(--panel-2)}
+.btn-ghost{background:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.btn-danger{background:var(--panel);border-color:var(--danger);color:var(--danger)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border:1px solid var(--border);
+ border-radius:4px;background:var(--panel);color:var(--text);font-size:12px;font-weight:500}
+.pill .dot{width:6px;height:6px;border-radius:50%}
+/* readiness segment bar */
+.segbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--panel-2);position:relative}
+.segbar .z-danger{background:rgba(180,35,24,.18)}.segbar .z-warn{background:rgba(184,113,10,.18)}.segbar .z-success{background:rgba(14,124,90,.18)}
+.segbar .marker{position:absolute;top:-3px;width:3px;height:16px;background:var(--text);border-radius:2px}
+
+/* ---- APP-SHELL ---- */
+.side{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--sidebar-text);font-size:14px;font-weight:500}
+.side i{width:16px;height:16px}
+.side:hover{background:var(--sidebar-hover);color:#fff}
+.side.active{background:var(--sidebar-hover);color:#fff;position:relative}
+.side.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.iconbtn{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;cursor:pointer;color:var(--text-muted)}
+.iconbtn:hover{background:var(--panel-2);color:var(--text)}
+
+/* ---- IN-MAIN STEPPER ---- */
+.stepbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 20px;margin-bottom:28px;position:sticky;top:76px;z-index:5}
+.stepper{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:9px}
+.step .node{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;
+ border:1.5px solid var(--border-strong);background:var(--panel);color:var(--text-subtle);flex:0 0 auto}
+.step .stx{font-size:13px;font-weight:500;color:var(--text-subtle);white-space:nowrap}
+.step.done .node{background:var(--primary);border-color:var(--primary);color:#fff}
+.step.done .stx{color:var(--text-muted)}
+.step.current .node{border-color:var(--primary);color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.step.current .stx{color:var(--text);font-weight:600}
+.step .node i{width:14px;height:14px}
+.connector{width:36px;height:1.5px;background:var(--border-strong);margin:0 10px}
+.connector.done{background:var(--primary)}
+/* content */
+.flow-body{width:100%;max-width:760px}
+.flow-h{font-size:22px;font-weight:600;margin-bottom:6px}
+.flow-sub{font-size:14px;color:var(--text-muted);margin-bottom:32px}
+/* action row */
+.flow-actions{display:flex;align-items:center;justify-content:space-between;max-width:760px;margin-top:36px;padding-top:24px;border-top:1px solid var(--border)}
+
+/* score panel */
+.score-card{padding:24px;margin-bottom:24px}
+.score-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px}
+.score-num{font-size:44px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.score-of{font-size:16px;color:var(--text-subtle);font-weight:500}
+.score-state{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border-radius:4px;font-size:12px;font-weight:600;
+ background:rgba(184,113,10,.1);color:var(--warn);border:1px solid rgba(184,113,10,.3)}
+.score-state i{width:13px;height:13px}
+.score-right{text-align:right}
+.score-thresh{font-size:12px;color:var(--text-subtle);margin-top:6px}
+.segwrap{margin-top:8px}
+.segscale{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--text-subtle);font-variant-numeric:tabular-nums}
+.segzones{display:flex;margin-top:4px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.segzones span:nth-child(2){text-align:center}.segzones span:nth-child(3){text-align:right}
+.missing{margin-top:20px;padding-top:20px;border-top:1px solid var(--border);font-size:14px;color:var(--text-muted);line-height:1.6}
+.missing strong{color:var(--text);font-weight:600}
+
+/* checklist */
+.sec-label{margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.checklist{display:flex;flex-direction:column;gap:12px}
+.query{border:1px solid var(--border);border-radius:8px;background:var(--panel);padding:16px}
+.query.resolved{border-color:rgba(14,124,90,.35);background:rgba(14,124,90,.03)}
+.q-head{display:flex;align-items:flex-start;gap:11px}
+.q-ic{width:26px;height:26px;border-radius:6px;background:var(--panel-2);display:grid;place-items:center;color:var(--warn);flex:0 0 auto;margin-top:1px}
+.query.resolved .q-ic{color:var(--success)}
+.q-ic i{width:15px;height:15px}
+.q-body{flex:1;min-width:0}
+.q-title{font-size:14px;font-weight:600;line-height:1.4}
+.q-desc{font-size:13px;color:var(--text-muted);margin-top:3px;line-height:1.5}
+.q-status{flex:0 0 auto;font-size:12px;font-weight:500;color:var(--text-subtle);display:inline-flex;align-items:center;gap:5px}
+.q-status.done{color:var(--success)}.q-status.done i{width:14px;height:14px}
+.q-status.overridden{color:var(--text-subtle)}
+.q-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-left:37px}
+.q-answer{margin-top:12px;margin-left:37px;padding:11px 13px;border:1px solid var(--border);border-radius:6px;background:var(--panel-2);font-size:13px;color:var(--text);line-height:1.5}
+.q-answer .qa-lbl{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-subtle);margin-bottom:4px}
+.answer-input{margin-top:12px;margin-left:37px}
+.answer-input textarea{width:100%;min-height:70px;padding:10px 12px;border:1px solid var(--border-strong);border-radius:6px;background:var(--panel);
+ font:inherit;font-size:13px;color:var(--text);resize:vertical}
+.answer-input textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.answer-input .ai-actions{display:flex;gap:8px;margin-top:10px}
+.copied{color:var(--success)!important}
+/* prototype-only preview switcher */
+.demoswitch{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 6px 0 11px;border:1px dashed var(--border-strong);border-radius:7px;background:var(--panel);font-size:12px;font-weight:600;color:var(--text-subtle);white-space:nowrap}
+.demoswitch i{width:14px;height:14px;color:var(--primary)}
+.demoswitch select{height:26px;border:1px solid var(--border);border-radius:5px;background:var(--panel-2);font:inherit;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;padding:0 6px}
+/* distinct override action */
+.btn-override{background:var(--panel);border-color:rgba(184,113,10,.55);color:var(--warn)}
+.btn-override:hover{background:rgba(184,113,10,.08)}
+.override-note{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--warn);margin-top:8px;justify-content:flex-end}
+.override-note i{width:13px;height:13px}
+.actions-side{display:flex;flex-direction:column;align-items:flex-end}
+/* ready (≥80) state */
+.score-state.ready{background:rgba(14,124,90,.1);color:var(--success);border-color:rgba(14,124,90,.3)}
+body.ready .query{border-color:rgba(14,124,90,.35);background:rgba(14,124,90,.03)}
+body.ready .query .q-actions,body.ready .query .answer-input{display:none}
+body.ready .query .q-ic{color:var(--success)}
+@media(max-width:640px){.step .stx{display:none}.connector{width:20px;margin:0 6px}.q-actions,.q-answer,.answer-input{padding-left:0;margin-left:0}}
+/* account menu / role switcher (sidebar) */
+.acct{margin-top:auto;position:relative}
+.acctbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:none;border-top:1px solid #262626;background:transparent;cursor:pointer;font:inherit;text-align:left}
+.acctbtn:hover{background:var(--sidebar-hover)}
+.acctav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#2a2a2a;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.acctid{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.acctname{font-size:13px;color:#fff;font-weight:500}
+.acctrole{font-size:11px;color:var(--sidebar-text)}
+.acctchev{width:15px;height:15px;color:var(--sidebar-text);flex:0 0 15px}
+.acctpop{position:absolute;left:12px;right:12px;bottom:60px;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.3);padding:6px;z-index:60;display:none}
+.acctpop.show{display:block}
+.accthead{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.accthead .an{font-size:13.5px;color:var(--text);font-weight:600}
+.accthead .ae{font-size:12px;color:var(--text-muted);margin-top:2px}
+.acctitem{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.acctitem:hover{background:var(--panel-2)}
+.acctitem i{width:15px;height:15px;color:var(--text-muted)}
+.acctitem.danger{color:var(--danger)}.acctitem.danger i{color:var(--danger)}
+.acctsep{height:1px;background:var(--border);margin:6px 0}
+</style>
+</head>
+<body>
+<div style="display:flex;min-height:100vh">
+  <aside style="width:260px;flex:0 0 260px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;align-self:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 12px 22px">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px">L</span>
+      <span style="font-weight:600;font-size:16px;color:#fff">Lead360</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px" aria-label="Primary">
+      <a class="side active" data-testid="nav-leads" href="leads.page.html"><i data-lucide="list"></i>Leads</a>
+      <a class="side" data-testid="nav-projects" href="projects.page.html"><i data-lucide="folder"></i>Projects</a>
+      <a class="side" data-testid="nav-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="acct">
+      <button class="acctbtn" onclick="toggleAcct(event)" data-testid="acct-trigger" aria-haspopup="true">
+        <span class="acctav">FK</span>
+        <span class="acctid"><span class="acctname">Farah Karim</span><span class="acctrole">Sales / PM</span></span>
+        <i data-lucide="chevron-up" class="acctchev"></i>
+      </button>
+      <div class="acctpop" data-testid="acct-pop">
+        <div class="accthead"><div class="an">Farah Karim</div><div class="ae">farah.karim@riseuplabs.com</div></div>
+        <a class="acctitem" data-testid="acct-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+        <a class="acctitem" data-testid="acct-switch-view" href="../management/overview.page.html"><i data-lucide="repeat"></i>Switch to Admin view</a>
+        <div class="acctsep"></div>
+        <a class="acctitem danger" data-testid="acct-signout" href="login.page.html"><i data-lucide="log-out"></i>Sign out</a>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:0 32px;height:60px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <div style="position:relative;flex:1;max-width:420px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:9px;width:16px;color:var(--text-subtle)"></i>
+        <input data-testid="topbar-search" placeholder="Search leads, companies…" style="width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px">
+      </div>
+      <a class="btn btn-primary" data-testid="topbar-new-lead" href="new-lead-info.page.html"><i data-lucide="plus" style="width:16px"></i>New Lead</a>
+    </header>
+    <main style="padding:32px;max-width:1400px;width:100%;margin:0 auto">
+
+      <div class="card stepbar">
+        <nav class="stepper" aria-label="New lead progress">
+          <div class="step done" data-testid="step3-node-info"><span class="node"><i data-lucide="check"></i></span><span class="stx">Info</span></div>
+          <span class="connector done"></span>
+          <div class="step done" data-testid="step3-node-requirement"><span class="node"><i data-lucide="check"></i></span><span class="stx">Requirement</span></div>
+          <span class="connector done"></span>
+          <div class="step current" data-testid="step3-node-readiness"><span class="node">3</span><span class="stx">Readiness</span></div>
+          <span class="connector"></span>
+          <div class="step" data-testid="step3-node-template"><span class="node">4</span><span class="stx">Template</span></div>
+          <span class="connector"></span>
+          <div class="step" data-testid="step3-node-generate"><span class="node">5</span><span class="stx">Generate</span></div>
+        </nav>
+        <a class="btn btn-ghost sm" data-testid="step3-save-exit" href="leads.page.html"><i data-lucide="log-out" style="width:15px"></i>Save &amp; exit</a>
+      </div>
+
+      <div class="flow-body">
+        <h1 class="flow-h">Requirement readiness</h1>
+        <p class="flow-sub">We scored how complete the brief is. Resolve the open queries below to strengthen the proposal, or override to continue.</p>
+
+        <section class="card score-card" data-testid="step3-score-card">
+          <div class="score-top">
+            <div>
+              <div><span class="score-num" data-testid="step3-score">72</span><span class="score-of"> / 100</span></div>
+              <div style="margin-top:10px"><span class="score-state" data-testid="step3-score-state"><i data-lucide="alert-triangle"></i>Below threshold</span></div>
+            </div>
+            <div class="score-right">
+              <div class="label">Readiness</div>
+              <div class="score-thresh">Recommended: 80+</div>
+              <label class="demoswitch" style="margin-top:10px" title="Prototype only — preview readiness states">
+                <i data-lucide="flask-conical"></i><span>Preview</span>
+                <select id="readySel" onchange="setReady(this.value==='ready')" data-testid="step3-preview-switch">
+                  <option value="below" selected>Below 80</option>
+                  <option value="ready">Ready · 88</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="segwrap">
+            <div class="segbar" data-testid="step3-segbar">
+              <div class="z-danger" style="flex:0 0 60%"></div>
+              <div class="z-warn" style="flex:0 0 20%"></div>
+              <div class="z-success" style="flex:0 0 20%"></div>
+              <div class="marker" style="left:72%" data-testid="step3-marker" title="Score 72"></div>
+            </div>
+            <div class="segscale"><span>0</span><span>60</span><span>80</span><span>100</span></div>
+            <div class="segzones" aria-hidden="true"><span style="flex:0 0 60%;color:var(--danger)">At risk</span><span style="flex:0 0 20%;color:var(--warn)">Fair</span><span style="flex:0 0 20%;color:var(--success)">Ready</span></div>
+          </div>
+          <p class="missing" data-testid="step3-missing">
+            <strong>What's missing:</strong> the brief covers the SAP AP-invoice workflow well, but three areas are still ambiguous — the expected <strong>monthly invoice volume</strong>, the <strong>SAP module &amp; version</strong> in use, and whether an <strong>on-prem or cloud deployment</strong> is required. Confirming these will sharpen the budget and architecture. You can send the queries below to the client, answer them yourself, or override and continue.
+          </p>
+        </section>
+
+        <div class="sec-label">
+          <span class="label">Open client queries</span>
+          <span class="q-status" data-testid="step3-query-count">1 of 3 resolved</span>
+        </div>
+
+        <div class="checklist" data-testid="step3-checklist">
+
+          <!-- Query 1: open -->
+          <div class="query" data-testid="step3-query-volume">
+            <div class="q-head">
+              <span class="q-ic"><i data-lucide="help-circle"></i></span>
+              <div class="q-body">
+                <div class="q-title">What is the expected monthly invoice volume?</div>
+                <div class="q-desc">Drives throughput sizing, OCR licensing tier, and the exception-handling budget.</div>
+              </div>
+              <span class="q-status" data-testid="step3-status-volume">Open</span>
+            </div>
+            <div class="q-actions">
+              <button class="btn btn-secondary sm" data-testid="step3-copy-volume"><i data-lucide="copy" style="width:15px"></i>Copy to send</button>
+              <button class="btn btn-ghost sm" data-testid="step3-answer-volume"><i data-lucide="check" style="width:15px"></i>Mark confirmed</button>
+            </div>
+            <div class="answer-input" data-testid="step3-answerbox-volume" style="display:none">
+              <textarea data-testid="step3-answerinput-volume" placeholder="Type the confirmed answer from the client…"></textarea>
+              <div class="ai-actions">
+                <button class="btn btn-primary sm" data-testid="step3-saveanswer-volume">Save answer</button>
+                <button class="btn btn-ghost sm" data-testid="step3-cancelanswer-volume">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Query 2: open -->
+          <div class="query" data-testid="step3-query-sap">
+            <div class="q-head">
+              <span class="q-ic"><i data-lucide="help-circle"></i></span>
+              <div class="q-body">
+                <div class="q-title">Which SAP module and version are in use?</div>
+                <div class="q-desc">Confirms the integration surface (S/4HANA vs ECC) and posting API feasibility.</div>
+              </div>
+              <span class="q-status" data-testid="step3-status-sap">Open</span>
+            </div>
+            <div class="q-actions">
+              <button class="btn btn-secondary sm" data-testid="step3-copy-sap"><i data-lucide="copy" style="width:15px"></i>Copy to send</button>
+              <button class="btn btn-ghost sm" data-testid="step3-answer-sap"><i data-lucide="check" style="width:15px"></i>Mark confirmed</button>
+            </div>
+            <div class="answer-input" data-testid="step3-answerbox-sap" style="display:none">
+              <textarea data-testid="step3-answerinput-sap" placeholder="Type the confirmed answer from the client…"></textarea>
+              <div class="ai-actions">
+                <button class="btn btn-primary sm" data-testid="step3-saveanswer-sap">Save answer</button>
+                <button class="btn btn-ghost sm" data-testid="step3-cancelanswer-sap">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Query 3: resolved (confirmed inline answer) -->
+          <div class="query resolved" data-testid="step3-query-deploy">
+            <div class="q-head">
+              <span class="q-ic"><i data-lucide="check-circle-2"></i></span>
+              <div class="q-body">
+                <div class="q-title">Is on-prem or cloud deployment required?</div>
+                <div class="q-desc">Determines infrastructure, security posture, and hosting line items.</div>
+              </div>
+              <span class="q-status done" data-testid="step3-status-deploy"><i data-lucide="check"></i>Confirmed</span>
+            </div>
+            <div class="q-answer" data-testid="step3-answer-deploy">
+              <div class="qa-lbl">Client answer</div>
+              Private cloud on Azure (Central India region); no on-prem requirement. IT security review required before go-live.
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flow-actions" id="actionsBelow">
+          <a class="btn btn-secondary" data-testid="step3-back" href="new-lead-requirement.page.html"><i data-lucide="arrow-left" style="width:16px"></i>Back</a>
+          <div class="actions-side">
+            <a class="btn btn-override" data-testid="step3-override-continue" href="new-lead-template.page.html"><i data-lucide="alert-triangle" style="width:15px"></i>Continue anyway (override)</a>
+            <span class="override-note"><i data-lucide="info"></i>2 inputs unconfirmed — the budget &amp; architecture may be less accurate.</span>
+          </div>
+        </div>
+        <div class="flow-actions" id="actionsReady" style="display:none">
+          <a class="btn btn-secondary" data-testid="step3-back-ready" href="new-lead-requirement.page.html"><i data-lucide="arrow-left" style="width:16px"></i>Back</a>
+          <a class="btn btn-primary" data-testid="step3-continue" href="new-lead-template.page.html">Continue to template<i data-lucide="arrow-right" style="width:16px"></i></a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+lucide.createIcons();
+  window.toggleAcct=function(e){e.stopPropagation();var pop=e.currentTarget.parentNode.querySelector('.acctpop');var open=pop.classList.contains('show');document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});if(!open)pop.classList.add('show');};
+  document.addEventListener('click',function(){document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')})});
+(function(){
+  // copy-to-send feedback
+  document.querySelectorAll('[data-testid^="step3-copy-"]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var html=b.innerHTML;b.classList.add('copied');
+      b.innerHTML='<i data-lucide="check" style="width:15px"></i>Copied';lucide.createIcons();
+      setTimeout(function(){b.classList.remove('copied');b.innerHTML=html;lucide.createIcons()},1600);
+    });
+  });
+  // mark-confirmed reveals inline answer box
+  [['volume'],['sap']].forEach(function(p){
+    var k=p[0];
+    var ans=document.querySelector('[data-testid="step3-answer-'+k+'"]');
+    var box=document.querySelector('[data-testid="step3-answerbox-'+k+'"]');
+    if(ans&&box){
+      ans.addEventListener('click',function(){box.style.display=box.style.display==='none'?'block':'none'});
+      var cancel=document.querySelector('[data-testid="step3-cancelanswer-'+k+'"]');
+      if(cancel)cancel.addEventListener('click',function(){box.style.display='none'});
+    }
+  });
+  // real resolution path: Save answer → resolve query, recompute count, and reach ready state
+  function recomputeReadiness(){
+    var open=['volume','sap'];
+    var resolved=1; // deploy is pre-confirmed
+    open.forEach(function(k){
+      var q=document.querySelector('[data-testid="step3-query-'+k+'"]');
+      if(q&&q.classList.contains('resolved'))resolved++;
+    });
+    var unresolved=(open.length+1)-resolved;
+    document.querySelector('[data-testid="step3-query-count"]').textContent=resolved+' of 3 resolved';
+    var note=document.querySelector('#actionsBelow .override-note');
+    if(note)note.innerHTML='<i data-lucide="info"></i>'+unresolved+' input'+(unresolved===1?'':'s')+' unconfirmed — the budget &amp; architecture may be less accurate.';
+    lucide.createIcons();
+    if(resolved>=3)setReady(true);
+  }
+  ['volume','sap'].forEach(function(k){
+    var save=document.querySelector('[data-testid="step3-saveanswer-'+k+'"]');
+    var box=document.querySelector('[data-testid="step3-answerbox-'+k+'"]');
+    var q=document.querySelector('[data-testid="step3-query-'+k+'"]');
+    if(save&&box&&q){
+      save.addEventListener('click',function(){
+        box.style.display='none';
+        q.classList.add('resolved');
+        var st=document.querySelector('[data-testid="step3-status-'+k+'"]');
+        if(st){st.className='q-status done';st.innerHTML='<i data-lucide="check"></i>Confirmed';}
+        recomputeReadiness();
+      });
+    }
+  });
+  // prototype-only: preview the below-80 vs ready (≥80) readiness states
+  window.setReady=function(ready){
+    document.body.classList.toggle('ready',ready);
+    document.querySelector('[data-testid="step3-score"]').textContent=ready?'88':'72';
+    var st=document.querySelector('[data-testid="step3-score-state"]');
+    st.className='score-state'+(ready?' ready':'');
+    st.innerHTML=ready?'<i data-lucide="check-circle-2"></i>Ready to generate':'<i data-lucide="alert-triangle"></i>Below threshold';
+    var mk=document.querySelector('[data-testid="step3-marker"]');
+    mk.style.left=ready?'88%':'72%';mk.title='Score '+(ready?'88':'72');
+    document.querySelector('[data-testid="step3-query-count"]').textContent=ready?'3 of 3 resolved':'1 of 3 resolved';
+    document.querySelector('[data-testid="step3-missing"]').innerHTML=ready
+      ?'<strong>All key inputs confirmed:</strong> monthly invoice volume, the SAP module &amp; version, and the deployment target are all answered. The brief is strong enough to generate an accurate proposal and budget.'
+      :'<strong>What\'s missing:</strong> the brief covers the SAP AP-invoice workflow well, but three areas are still ambiguous — the expected <strong>monthly invoice volume</strong>, the <strong>SAP module &amp; version</strong> in use, and whether an <strong>on-prem or cloud deployment</strong> is required. Confirming these will sharpen the budget and architecture. You can send the queries below to the client, answer them yourself, or override and continue.';
+    ['volume','sap'].forEach(function(k){
+      var s=document.querySelector('[data-testid="step3-status-'+k+'"]');
+      if(s){s.className='q-status'+(ready?' done':'');s.innerHTML=ready?'<i data-lucide="check"></i>Confirmed':'Open';}
+    });
+    document.getElementById('actionsBelow').style.display=ready?'none':'flex';
+    document.getElementById('actionsReady').style.display=ready?'flex':'none';
+    lucide.createIcons();
+  };
+})();
+</script>
+</body>
+</html>

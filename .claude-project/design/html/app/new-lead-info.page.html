@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Lead · Info — Lead360</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --bg:#FAFAF9;--panel:#FFFFFF;--panel-2:#F4F4F2;
+ --sidebar:#111111;--sidebar-text:#C4C0BB;--sidebar-text-active:#FFFFFF;--sidebar-hover:#1F1F1F;
+ --border:#E8E6E3;--border-strong:#D4D1CC;
+ --text:#0F0F0F;--text-muted:#6B6660;--text-subtle:#9A948E;
+ --primary:#EA5400;--primary-soft:rgba(234,84,0,.08);--primary-press:#CC4900;
+ --success:#0E7C5A;--warn:#B8710A;--danger:#B42318;--info:#175CD3;--steel:#475467;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+ -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.num{font-variant-numeric:tabular-nums}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;
+ font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .12s}
+.btn.sm{height:32px;padding:0 11px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-press)}
+.btn-secondary{background:var(--panel);border-color:var(--border-strong);color:var(--text)}.btn-secondary:hover{background:var(--panel-2)}
+.btn-ghost{background:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.btn-danger{background:var(--panel);border-color:var(--danger);color:var(--danger)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border:1px solid var(--border);
+ border-radius:4px;background:var(--panel);color:var(--text);font-size:12px;font-weight:500}
+.pill .dot{width:6px;height:6px;border-radius:50%}
+.dot-generated{background:var(--info)}.dot-pending{background:var(--warn)}.dot-approved{background:var(--success)}
+.dot-sent{background:var(--primary)}.dot-locked{background:var(--steel)}.dot-lost{background:var(--danger)}.dot-rejected{background:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{position:sticky;top:0;background:var(--panel-2);border-bottom:1px solid var(--border-strong);
+ text-align:left;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--text-subtle);text-transform:uppercase;padding:0 16px;height:40px}
+tbody td{border-bottom:1px solid var(--border);padding:0 16px;height:44px;color:var(--text)}
+tbody tr:hover{background:var(--panel-2);cursor:pointer}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.kpi{padding:24px}
+.kpi .label{margin-bottom:10px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.kpi .val{font-size:32px;font-weight:600;line-height:1}.kpi .delta{font-size:12px;font-weight:500;margin-left:8px}
+.delta.up{color:var(--success)}.delta.down{color:var(--danger)}
+/* readiness segment bar */
+.segbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--panel-2);position:relative}
+.segbar .z-danger{background:rgba(180,35,24,.18)}.segbar .z-warn{background:rgba(184,113,10,.18)}.segbar .z-success{background:rgba(14,124,90,.18)}
+.segbar .marker{position:absolute;top:-3px;width:3px;height:16px;background:var(--text);border-radius:2px}
+
+/* ---- APP-SHELL ---- */
+.side{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--sidebar-text);font-size:14px;font-weight:500}
+.side i{width:16px;height:16px}
+.side:hover{background:var(--sidebar-hover);color:#fff}
+.side.active{background:var(--sidebar-hover);color:#fff;position:relative}
+.side.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.iconbtn{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;cursor:pointer;color:var(--text-muted)}
+.iconbtn:hover{background:var(--panel-2);color:var(--text)}
+
+/* ---- IN-MAIN STEPPER ---- */
+.stepbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 20px;margin-bottom:28px;position:sticky;top:76px;z-index:5}
+.stepper{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:9px}
+.step .node{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;
+ border:1.5px solid var(--border-strong);background:var(--panel);color:var(--text-subtle);flex:0 0 auto}
+.step .stx{font-size:13px;font-weight:500;color:var(--text-subtle);white-space:nowrap}
+.step.done .node{background:var(--primary);border-color:var(--primary);color:#fff}
+.step.done .stx{color:var(--text-muted)}
+.step.current .node{border-color:var(--primary);color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.step.current .stx{color:var(--text);font-weight:600}
+.step .node i{width:14px;height:14px}
+.connector{width:36px;height:1.5px;background:var(--border-strong);margin:0 10px}
+.connector.done{background:var(--primary)}
+/* content */
+.flow-body{width:100%;max-width:760px}
+.flow-h{font-size:22px;font-weight:600;margin-bottom:6px}
+.flow-sub{font-size:14px;color:var(--text-muted);margin-bottom:32px}
+/* form */
+.field{margin-bottom:20px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+.field .opt{color:var(--text-subtle);font-weight:400}
+.field input,.field textarea{width:100%;height:40px;padding:0 12px;border:1px solid var(--border-strong);border-radius:6px;
+ background:var(--panel);font:inherit;font-size:14px;color:var(--text);transition:border-color .12s,box-shadow .12s}
+.field textarea{height:auto;padding:10px 12px;resize:vertical}
+.field input::placeholder,.field textarea::placeholder{color:var(--text-subtle)}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.field .hint{font-size:12px;color:var(--text-subtle);margin-top:6px}
+.field .err{display:none;font-size:12px;color:var(--danger);margin-top:6px}
+.field.invalid .err{display:block}
+.field.invalid input{border-color:var(--danger)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+/* action row */
+.flow-actions{display:flex;align-items:center;justify-content:space-between;max-width:760px;margin-top:36px;padding-top:24px;border-top:1px solid var(--border)}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}.step .stx{display:none}.connector{width:20px;margin:0 6px}}
+/* account menu / role switcher (sidebar) */
+.acct{margin-top:auto;position:relative}
+.acctbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:none;border-top:1px solid #262626;background:transparent;cursor:pointer;font:inherit;text-align:left}
+.acctbtn:hover{background:var(--sidebar-hover)}
+.acctav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#2a2a2a;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.acctid{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.acctname{font-size:13px;color:#fff;font-weight:500}
+.acctrole{font-size:11px;color:var(--sidebar-text)}
+.acctchev{width:15px;height:15px;color:var(--sidebar-text);flex:0 0 15px}
+.acctpop{position:absolute;left:12px;right:12px;bottom:60px;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.3);padding:6px;z-index:60;display:none}
+.acctpop.show{display:block}
+.accthead{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.accthead .an{font-size:13.5px;color:var(--text);font-weight:600}
+.accthead .ae{font-size:12px;color:var(--text-muted);margin-top:2px}
+.acctitem{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.acctitem:hover{background:var(--panel-2)}
+.acctitem i{width:15px;height:15px;color:var(--text-muted)}
+.acctitem.danger{color:var(--danger)}.acctitem.danger i{color:var(--danger)}
+.acctsep{height:1px;background:var(--border);margin:6px 0}
+</style>
+</head>
+<body>
+<div style="display:flex;min-height:100vh">
+  <aside style="width:260px;flex:0 0 260px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;align-self:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 12px 22px">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px">L</span>
+      <span style="font-weight:600;font-size:16px;color:#fff">Lead360</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px" aria-label="Primary">
+      <a class="side active" data-testid="nav-leads" href="leads.page.html"><i data-lucide="list"></i>Leads</a>
+      <a class="side" data-testid="nav-projects" href="projects.page.html"><i data-lucide="folder"></i>Projects</a>
+      <a class="side" data-testid="nav-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="acct">
+      <button class="acctbtn" onclick="toggleAcct(event)" data-testid="acct-trigger" aria-haspopup="true">
+        <span class="acctav">FK</span>
+        <span class="acctid"><span class="acctname">Farah Karim</span><span class="acctrole">Sales / PM</span></span>
+        <i data-lucide="chevron-up" class="acctchev"></i>
+      </button>
+      <div class="acctpop" data-testid="acct-pop">
+        <div class="accthead"><div class="an">Farah Karim</div><div class="ae">farah.karim@riseuplabs.com</div></div>
+        <a class="acctitem" data-testid="acct-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+        <a class="acctitem" data-testid="acct-switch-view" href="../management/overview.page.html"><i data-lucide="repeat"></i>Switch to Admin view</a>
+        <div class="acctsep"></div>
+        <a class="acctitem danger" data-testid="acct-signout" href="login.page.html"><i data-lucide="log-out"></i>Sign out</a>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:0 32px;height:60px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <div style="position:relative;flex:1;max-width:420px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:9px;width:16px;color:var(--text-subtle)"></i>
+        <input data-testid="topbar-search" placeholder="Search leads, companies…" style="width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px">
+      </div>
+      <a class="btn btn-primary" data-testid="topbar-new-lead" href="new-lead-info.page.html"><i data-lucide="plus" style="width:16px"></i>New Lead</a>
+    </header>
+    <main style="padding:32px;max-width:1400px;width:100%;margin:0 auto">
+
+      <div class="card stepbar">
+        <nav class="stepper" aria-label="New lead progress">
+          <div class="step current" data-testid="step1-node-info"><span class="node">1</span><span class="stx">Info</span></div>
+          <span class="connector"></span>
+          <div class="step" data-testid="step1-node-requirement"><span class="node">2</span><span class="stx">Requirement</span></div>
+          <span class="connector"></span>
+          <div class="step" data-testid="step1-node-readiness"><span class="node">3</span><span class="stx">Readiness</span></div>
+          <span class="connector"></span>
+          <div class="step" data-testid="step1-node-template"><span class="node">4</span><span class="stx">Template</span></div>
+          <span class="connector"></span>
+          <div class="step" data-testid="step1-node-generate"><span class="node">5</span><span class="stx">Generate</span></div>
+        </nav>
+        <a class="btn btn-ghost sm" data-testid="step1-save-exit" href="leads.page.html"><i data-lucide="log-out" style="width:15px"></i>Save &amp; exit</a>
+      </div>
+
+      <div class="flow-body">
+        <h1 class="flow-h">Lead information</h1>
+        <p class="flow-sub">Tell us who this proposal is for. We use this to personalise the draft.</p>
+
+        <form onsubmit="return false">
+          <div class="field" data-field="company">
+            <label for="company">Client company</label>
+            <input id="company" data-testid="step1-input-company" type="text" placeholder="e.g. ATEC Group" value="ATEC Group">
+            <div class="err" data-testid="step1-err-company">Client company is required.</div>
+          </div>
+          <div class="grid2">
+            <div class="field" data-field="contact">
+              <label for="contact">Contact name</label>
+              <input id="contact" data-testid="step1-input-contact" type="text" placeholder="e.g. Rehan Ahmed">
+              <div class="err" data-testid="step1-err-contact">Contact name is required.</div>
+            </div>
+            <div class="field" data-field="email">
+              <label for="email">Contact email</label>
+              <input id="email" data-testid="step1-input-email" type="email" placeholder="name@company.com">
+              <div class="err" data-testid="step1-err-email">Enter a valid email address.</div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="website">Company website</label>
+            <input id="website" data-testid="step1-input-website" type="url" placeholder="https://company.com">
+            <div class="hint">We may scan the site to enrich the client profile.</div>
+          </div>
+          <div class="field">
+            <label for="title">Lead title <span class="opt">— optional</span></label>
+            <input id="title" data-testid="step1-input-title" type="text" placeholder="e.g. AP Invoice Automation (SAP)">
+            <div class="hint">Leave blank and we'll name it from the requirement.</div>
+          </div>
+        </form>
+
+        <div class="flow-actions">
+          <a class="btn btn-secondary" data-testid="step1-cancel" href="leads.page.html">Cancel</a>
+          <a class="btn btn-primary" data-testid="step1-continue" href="new-lead-requirement.page.html">Continue<i data-lucide="arrow-right" style="width:16px"></i></a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>lucide.createIcons();
+  window.toggleAcct=function(e){e.stopPropagation();var pop=e.currentTarget.parentNode.querySelector('.acctpop');var open=pop.classList.contains('show');document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});if(!open)pop.classList.add('show');};
+  document.addEventListener('click',function(){document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')})});
+  // validate required fields before continuing
+  (function(){
+    var cont=document.querySelector('[data-testid="step1-continue"]');
+    if(!cont)return;
+    function fieldOf(name){return document.querySelector('[data-field="'+name+'"]');}
+    function mark(name,invalid,msg){var f=fieldOf(name);if(!f)return;f.classList.toggle('invalid',invalid);
+      if(invalid&&msg){var e=f.querySelector('.err');if(e)e.textContent=msg;}}
+    cont.addEventListener('click',function(ev){
+      var company=(document.getElementById('company').value||'').trim();
+      var contact=(document.getElementById('contact').value||'').trim();
+      var email=(document.getElementById('email').value||'').trim();
+      var emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      var ok=true;
+      mark('company',!company);if(!company)ok=false;
+      mark('contact',!contact);if(!contact)ok=false;
+      if(!email){mark('email',true,'Contact email is required.');ok=false;}
+      else if(!emailOk){mark('email',true,'Enter a valid email address.');ok=false;}
+      else mark('email',false);
+      if(!ok)ev.preventDefault();
+    });
+    ['company','contact','email'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el)el.addEventListener('input',function(){var f=fieldOf(id);if(f)f.classList.remove('invalid');});
+    });
+  })();
+</script>
+</body>
+</html>

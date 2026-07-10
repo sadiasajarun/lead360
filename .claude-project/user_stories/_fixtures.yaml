@@ -1,0 +1,45 @@
+# Lead360 — test fixtures (SINGLE SOURCE OF TRUTH for seed + e2e/global-setup).
+# The seed script (D5) MUST read `users` here and bcrypt-hash the passwords — never hardcode creds.
+# Playwright global-setup (D9) reads these to create storageState-{role}.json per role.
+# These are DEV/TEST credentials only. Real accounts are provisioned by the admin.
+
+users:
+  - key: sales
+    name: Farah Karim
+    email: farah.karim@riseuplabs.com
+    password: "Lead360!sales"
+    role: sales_pm
+  - key: sales2
+    name: Tanvir Rahman
+    email: tanvir.rahman@riseuplabs.com
+    password: "Lead360!sales2"
+    role: sales_pm
+  - key: admin
+    name: Sadia Noor
+    email: admin@admin.com
+    password: "Admin@123"
+    role: admin
+
+# Minimum related seed data (D5 seed creates these so stories/tests have something to act on):
+leads:
+  - title: AP Invoice Automation
+    company: ATEC Group
+    template: global
+    status: approved
+    value_cents: 8600000        # $86,000
+    submitted_by: sales
+  - title: FIFA Campaign Microsite
+    company: FIFA Partner Co
+    template: agency
+    status: sent
+    value_cents: 5800000        # $58,000
+    submitted_by: sales2
+  - title: Urmi Commerce Revamp
+    company: Urmi Group
+    template: local
+    status: pending_approval
+    value_cents: 4200000
+    submitted_by: sales2
+
+# Rate card seed comes from DATABASE_KNOWLEDGE.md §2c (seniority-tiered, USD/day).
+# Portfolio/database seed = Riseup real work only (never template-author sample data).

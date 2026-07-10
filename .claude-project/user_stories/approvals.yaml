@@ -1,0 +1,11 @@
+story: Admin verifies each lead before it can be sent
+persona: Admin
+acceptance_criteria:
+  - Approvals queue lists leads pending approval (oldest first); selecting a row loads that lead into the review panel.
+  - Approve moves the lead to Approved, removes it from the queue, decrements the count, writes an audit log entry.
+  - Reject requires a note; returns the lead to Sales with the note; audit-logged.
+  - A lead cannot be delivered to a client until Approved (hard gate).
+error_scenarios:
+  - Reject with empty note → blocked with a prompt to add a note.
+boundary_cases:
+  - Queue empties → "All caught up" state; review panel hidden.

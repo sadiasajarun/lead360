@@ -1,0 +1,48 @@
+# Lead360 — design-intent (D1 bridge artifact)
+# Extracted from the approved design HTML (.claude-project/design/html/). Consumed by D2-tech-spec.
+project: lead360
+prd_version: v13
+roles:
+  - id: app          # Sales / PM internal workspace
+    home: /leads
+    layout: dark-sidebar + sticky topbar (Riseup Studio)
+  - id: management   # Admin oversight + verification
+    home: /overview
+    layout: dark-sidebar + sticky topbar
+  - id: client       # external tokenized deliverable views (premium, Plus Jakarta Sans)
+    home: (per-lead tokenized link)
+
+design_system:
+  tokens: { bg: "#FAFAF9", panel: "#FFFFFF", sidebar: "#111111", border: "#E8E6E3",
+            text: "#0F0F0F", primary: "#EA5400", steel: "#475467" }
+  font_app: Inter
+  font_client: Plus Jakarta Sans
+  conventions: [hairline borders not shadows, small radii 8/6/4, Lucide icons, data-testid on interactives]
+
+pages:                # role/screen inventory -> D2 maps to endpoints
+  app:
+    - { slug: login, file: app/login.page.html }
+    - { slug: leads, file: app/leads.page.html, note: "list + filters + empty/loading states" }
+    - { slug: new-lead-info, file: app/new-lead-info.page.html }
+    - { slug: new-lead-requirement, file: app/new-lead-requirement.page.html }
+    - { slug: new-lead-readiness, file: app/new-lead-readiness.page.html, note: "score + query gate" }
+    - { slug: new-lead-template, file: app/new-lead-template.page.html }
+    - { slug: new-lead-generate, file: app/new-lead-generate.page.html }
+    - { slug: lead-detail, file: app/lead-detail.page.html, note: "Proposal|Budget|Sales Brief|Pitch Deck tabs; status machine; editable budget" }
+    - { slug: projects, file: app/projects.page.html, note: "Portfolio + Database tabs (39 real docs)" }
+    - { slug: project-detail, file: app/project-detail.page.html }
+    - { slug: settings, file: app/settings.page.html }
+    - { slug: not-found, file: app/404.page.html }
+  management:
+    - { slug: overview, file: management/overview.page.html, note: "analytics, funnel (stage snapshots)" }
+    - { slug: approvals, file: management/approvals.page.html, note: "verify each; approve/reject + note" }
+    - { slug: leads, file: management/leads.page.html, note: "read-only org-wide" }
+    - { slug: settings, file: management/settings.page.html, note: "team/templates/rates/branding/KB/delivery(email OFF)/audit" }
+  client:
+    - { slug: proposal-view, file: client/proposal-view.page.html }
+    - { slug: budget-view, file: client/budget-view.page.html }
+    - { slug: deliverable-view, file: client/deliverable-view.page.html }
+
+status_machine: [Generated, Pending Approval, Approved, Sent, Locked, Lost]
+deliverables: PDF (proposal) + Excel (budget) per lead; email built but DISABLED (EMAIL_ENABLED=false)
+data_provenance: Riseup Labs only — NEVER template-author (Potential Inc) sample data (see PRESENTATION_GUIDE.md §0)

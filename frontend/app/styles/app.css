@@ -1,0 +1,49 @@
+@import "tailwindcss";
+:root { --primary: #EA5400; }
+
+/* Cursor policy (user decision 2026-07-09):
+   1. Static text shows the ARROW, never the I-beam "writing" cursor — text stays selectable
+      (mouse drag / shift+arrows still work; cursor shape doesn't affect selection).
+   2. Anything clickable shows the HAND pointer.
+   3. Real text-entry fields keep the I-beam; disabled controls show not-allowed. */
+*,
+*::before,
+*::after {
+  cursor: default;
+}
+input,
+textarea,
+select,
+[contenteditable="true"],
+[contenteditable=""] {
+  cursor: text;
+}
+button,
+a,
+select,
+summary,
+label,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+[role="switch"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+input[type="range"],
+input[type="submit"],
+input[type="button"],
+button *,
+a *,
+[role="button"] *,
+[role="tab"] * {
+  cursor: pointer;
+}
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}

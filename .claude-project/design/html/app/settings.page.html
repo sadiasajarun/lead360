@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead360 — Settings</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#FAFAF9;--panel:#FFFFFF;--panel-2:#F4F4F2;--sidebar:#111111;--sidebar-text:#C4C0BB;--sidebar-hover:#1F1F1F;
+ --border:#E8E6E3;--border-strong:#D4D1CC;--text:#0F0F0F;--text-muted:#6B6660;--text-subtle:#9A948E;
+ --primary:#EA5400;--primary-soft:rgba(234,84,0,.08);--primary-press:#CC4900;--success:#0E7C5A;--warn:#B8710A;--danger:#B42318;--info:#175CD3;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .12s}
+.btn.sm{height:32px;padding:0 11px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-press)}
+.btn-secondary{background:var(--panel);border-color:var(--border-strong);color:var(--text)}.btn-secondary:hover{background:var(--panel-2)}
+.btn-ghost{background:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.side{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--sidebar-text);font-size:14px;font-weight:500}
+.side i{width:16px;height:16px}.side:hover{background:var(--sidebar-hover);color:#fff}
+.side.active{background:var(--sidebar-hover);color:#fff;position:relative}.side.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+/* settings layout */
+.setlayout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;margin-top:24px;align-items:start}
+.setnav{position:sticky;top:88px;display:flex;flex-direction:column;gap:1px;max-height:calc(100vh - 110px);overflow:auto}
+.setnav .grp{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle);padding:10px 12px 6px}
+.seti{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--text-muted);font-size:14px;font-weight:500;cursor:pointer}
+.seti i{width:16px;height:16px}
+.seti:hover{background:var(--panel-2);color:var(--text)}
+.seti.active{background:var(--panel);border:1px solid var(--border-strong);color:var(--text);position:relative}
+.seti.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.setpanel{display:none}.setpanel.active{display:block}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:16px}
+.card h2{font-size:15px;font-weight:600}
+.card .desc{font-size:13px;color:var(--text-muted);margin-top:3px;line-height:1.55}
+.card .hr{height:1px;background:var(--border);margin:18px 0}
+.frow{margin-bottom:16px;max-width:520px}
+.frow:last-child{margin-bottom:0}
+.frow > label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.frow .hint{font-size:12px;color:var(--text-subtle);margin-top:5px}
+.inp,.sel,textarea.inp{width:100%;border:1px solid var(--border-strong);border-radius:6px;padding:9px 11px;font:inherit;font-size:14px;color:var(--text);background:var(--panel)}
+.inp:focus,.sel:focus,textarea.inp:focus{outline:none;border-color:var(--primary)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:520px}.grid2 .frow{max-width:none;margin-bottom:0}
+.avatar{width:64px;height:64px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:22px;font-weight:700}
+.arow{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.switch{width:38px;height:22px;border-radius:999px;background:var(--border-strong);position:relative;cursor:pointer;flex:0 0 38px;transition:background .15s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch.on{background:var(--primary)}.switch.on::after{transform:translateX(16px)}
+.toggle-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:0}.toggle-row .tl{font-size:14px;font-weight:500}.toggle-row .th{font-size:12.5px;color:var(--text-muted);margin-top:2px;max-width:420px;line-height:1.5}
+.sesrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.sesrow:last-child{border-bottom:0}
+.sesrow .d{font-size:12.5px;color:var(--text-muted);margin-top:2px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border:1px solid var(--border);border-radius:4px;font-size:11.5px;font-weight:600;color:var(--text)}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
+.savebar{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+/* account menu / role switcher (sidebar) */
+.acct{margin-top:auto;position:relative}
+.acctbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:none;border-top:1px solid #262626;background:transparent;cursor:pointer;font:inherit;text-align:left}
+.acctbtn:hover{background:var(--sidebar-hover)}
+.acctav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#2a2a2a;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.acctid{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.acctname{font-size:13px;color:#fff;font-weight:500}
+.acctrole{font-size:11px;color:var(--sidebar-text)}
+.acctchev{width:15px;height:15px;color:var(--sidebar-text);flex:0 0 15px}
+.acctpop{position:absolute;left:12px;right:12px;bottom:60px;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.3);padding:6px;z-index:60;display:none}
+.acctpop.show{display:block}
+.accthead{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.accthead .an{font-size:13.5px;color:var(--text);font-weight:600}
+.accthead .ae{font-size:12px;color:var(--text-muted);margin-top:2px}
+.acctitem{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.acctitem:hover{background:var(--panel-2)}
+.acctitem i{width:15px;height:15px;color:var(--text-muted)}
+.acctitem.danger{color:var(--danger)}.acctitem.danger i{color:var(--danger)}
+.acctsep{height:1px;background:var(--border);margin:6px 0}
+</style>
+</head>
+<body>
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--text);color:#fff;font-size:13px;font-weight:500;padding:10px 16px;border-radius:8px;box-shadow:0 12px 32px rgba(15,15,15,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:120"></div>
+<div style="display:flex;min-height:100vh">
+  <aside style="width:260px;flex:0 0 260px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;align-self:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 12px 22px">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px">L</span>
+      <span style="font-weight:600;font-size:16px;color:#fff">Lead360</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px" aria-label="Primary">
+      <a class="side" data-testid="nav-leads" href="leads.page.html"><i data-lucide="list"></i>Leads</a>
+      <a class="side" data-testid="nav-projects" href="projects.page.html"><i data-lucide="folder"></i>Projects</a>
+      <a class="side active" data-testid="nav-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="acct">
+      <button class="acctbtn" onclick="toggleAcct(event)" data-testid="acct-trigger" aria-haspopup="true">
+        <span class="acctav">FK</span>
+        <span class="acctid"><span class="acctname">Farah Karim</span><span class="acctrole">Sales / PM</span></span>
+        <i data-lucide="chevron-up" class="acctchev"></i>
+      </button>
+      <div class="acctpop" data-testid="acct-pop">
+        <div class="accthead"><div class="an">Farah Karim</div><div class="ae">farah.karim@riseuplabs.com</div></div>
+        <a class="acctitem" data-testid="acct-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+        <a class="acctitem" data-testid="acct-switch-view" href="../management/overview.page.html"><i data-lucide="repeat"></i>Switch to Admin view</a>
+        <div class="acctsep"></div>
+        <a class="acctitem danger" data-testid="acct-signout" href="login.page.html"><i data-lucide="log-out"></i>Sign out</a>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:0 32px;height:60px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <div style="position:relative;flex:1;max-width:420px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:9px;width:16px;color:var(--text-subtle)"></i>
+        <input data-testid="topbar-search" placeholder="Search…" style="width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px">
+      </div>
+      <a class="btn btn-primary" data-testid="topbar-new-lead" href="new-lead-info.page.html"><i data-lucide="plus" style="width:16px"></i>New Lead</a>
+      <span style="width:32px;height:32px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--text-muted)">FK</span>
+    </header>
+
+    <main style="padding:32px;max-width:1400px;width:100%;margin:0 auto">
+      <h1 style="font-size:22px;font-weight:600">Settings</h1>
+      <div class="desc" style="color:var(--text-muted);font-size:13px;margin-top:6px">Your personal Lead360 preferences.</div>
+
+      <div class="setlayout">
+        <nav class="setnav" aria-label="Settings sections">
+          <div class="grp">Personal</div>
+          <a class="seti active" data-sec="profile" data-testid="set-nav-profile"><i data-lucide="user"></i>Profile</a>
+          <a class="seti" data-sec="prefs" data-testid="set-nav-prefs"><i data-lucide="sliders-horizontal"></i>Preferences</a>
+          <a class="seti" data-sec="security" data-testid="set-nav-security"><i data-lucide="shield"></i>Security</a>
+        </nav>
+
+        <div class="setmain">
+          <!-- PROFILE -->
+          <section class="setpanel active" id="sec-profile">
+            <div class="card">
+              <h2>Profile</h2>
+              <div class="desc">How you appear across Lead360.</div>
+              <div class="hr"></div>
+              <div class="arow">
+                <span class="avatar">FK</span>
+                <div><button class="btn btn-secondary sm" data-testid="set-avatar-upload"><i data-lucide="upload" style="width:14px"></i>Upload photo</button>
+                <div class="hint" style="font-size:12px;color:var(--text-subtle);margin-top:6px">PNG or JPG, up to 2MB.</div></div>
+              </div>
+              <div class="grid2">
+                <div class="frow"><label>Full name</label><input class="inp" value="Farah Karim" data-testid="set-name"></div>
+                <div class="frow"><label>Job title</label><input class="inp" value="Sales Executive" data-testid="set-title"></div>
+              </div>
+              <div class="frow" style="margin-top:16px"><label>Work email</label><input class="inp" value="farah.karim@riseuplabs.com" data-testid="set-email"><div class="hint">Used to sign in. Contact an admin to change your login email.</div></div>
+              <div class="savebar"><button class="btn btn-secondary" data-testid="set-profile-cancel">Cancel</button><button class="btn btn-primary" data-testid="set-profile-save"><i data-lucide="check" style="width:15px"></i>Save changes</button></div>
+            </div>
+          </section>
+
+          <!-- PREFERENCES -->
+          <section class="setpanel" id="sec-prefs">
+            <div class="card">
+              <h2>Defaults</h2>
+              <div class="desc">Pre-fill new leads and documents with your preferred defaults.</div>
+              <div class="hr"></div>
+              <div class="grid2">
+                <div class="frow"><label>Default proposal template</label>
+                  <select class="sel" data-testid="set-default-template"><option>Global</option><option>Local</option><option>Agency</option><option>Design Portfolio</option></select>
+                </div>
+                <div class="frow"><label>Default budget currency</label>
+                  <select class="sel" data-testid="set-default-currency"><option>USD $</option><option>EUR €</option><option>GBP £</option><option>BDT ৳</option><option>AED</option><option>SAR</option></select>
+                </div>
+                <div class="frow"><label>Proposal theme</label>
+                  <select class="sel" data-testid="set-default-theme"><option>Light</option><option>Dark</option><option>Mixture</option></select>
+                </div>
+                <div class="frow"><label>Language</label>
+                  <select class="sel" data-testid="set-language"><option>English</option><option>Bangla</option></select>
+                </div>
+              </div>
+              <div class="savebar"><button class="btn btn-primary" data-testid="set-prefs-save"><i data-lucide="check" style="width:15px"></i>Save preferences</button></div>
+            </div>
+          </section>
+
+          <!-- SECURITY -->
+          <section class="setpanel" id="sec-security">
+            <div class="card">
+              <h2>Password</h2>
+              <div class="desc">Choose a strong password you don't use elsewhere.</div>
+              <div class="hr"></div>
+              <div class="frow"><label>Current password</label><input class="inp" type="password" placeholder="••••••••" data-testid="set-cur-pw"></div>
+              <div class="grid2">
+                <div class="frow"><label>New password</label><input class="inp" type="password" placeholder="••••••••" data-testid="set-new-pw"></div>
+                <div class="frow"><label>Confirm new password</label><input class="inp" type="password" placeholder="••••••••" data-testid="set-confirm-pw"></div>
+              </div>
+              <div class="savebar" style="margin-top:16px"><button class="btn btn-primary" data-testid="set-pw-save"><i data-lucide="lock" style="width:15px"></i>Update password</button></div>
+            </div>
+            <div class="card">
+              <h2>Active sessions</h2>
+              <div class="desc">Devices currently signed in to your account.</div>
+              <div class="hr"></div>
+              <div class="sesrow"><div><div style="font-weight:500;font-size:14px">Chrome · Windows <span class="pill" style="margin-left:6px"><span class="dot"></span>This device</span></div><div class="d">Dhaka, BD · active now</div></div></div>
+              <div class="sesrow"><div><div style="font-weight:500;font-size:14px">Safari · iPhone</div><div class="d">Dhaka, BD · 2 days ago</div></div><button class="btn btn-ghost sm" data-testid="set-signout-1"><i data-lucide="log-out" style="width:14px"></i>Sign out</button></div>
+              <div class="savebar" style="margin-top:16px"><button class="btn btn-secondary" data-testid="set-signout-all"><i data-lucide="log-out" style="width:15px"></i>Sign out everywhere</button></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+lucide.createIcons();
+  window.toggleAcct=function(e){e.stopPropagation();var pop=e.currentTarget.parentNode.querySelector('.acctpop');var open=pop.classList.contains('show');document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});if(!open)pop.classList.add('show');};
+  document.addEventListener('click',function(){document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')})});
+document.querySelectorAll('.seti').forEach(function(a){a.addEventListener('click',function(){
+  document.querySelectorAll('.seti').forEach(function(x){x.classList.remove('active');});a.classList.add('active');
+  document.querySelectorAll('.setpanel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById('sec-'+a.dataset.sec);if(t)t.classList.add('active');
+});});
+var toastTimer;
+function toast(msg){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(12px)';},1600);}
+function on(testid,fn){var el=document.querySelector('[data-testid="'+testid+'"]');if(el)el.addEventListener('click',fn);}
+on('set-profile-save',function(){toast('Profile saved');});
+on('set-profile-cancel',function(){toast('Changes discarded');});
+on('set-prefs-save',function(){toast('Preferences saved');});
+on('set-avatar-upload',function(){toast('Photo upload started');});
+on('set-pw-save',function(){
+  var np=(document.querySelector('[data-testid="set-new-pw"]')||{}).value||'';
+  var cp=(document.querySelector('[data-testid="set-confirm-pw"]')||{}).value||'';
+  if(np!==cp){toast('New passwords do not match');return;}
+  toast('Password updated');
+});
+on('set-signout-1',function(){window.location.href='login.page.html';});
+on('set-signout-all',function(){window.location.href='login.page.html';});
+</script>
+</body>
+</html>

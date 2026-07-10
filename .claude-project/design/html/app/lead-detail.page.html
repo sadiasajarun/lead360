@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP Invoice Automation · Lead Detail · Lead360</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --bg:#FAFAF9;--panel:#FFFFFF;--panel-2:#F4F4F2;
+ --sidebar:#111111;--sidebar-text:#C4C0BB;--sidebar-text-active:#FFFFFF;--sidebar-hover:#1F1F1F;
+ --border:#E8E6E3;--border-strong:#D4D1CC;
+ --text:#0F0F0F;--text-muted:#6B6660;--text-subtle:#9A948E;
+ --primary:#EA5400;--primary-soft:rgba(234,84,0,.08);--primary-press:#CC4900;
+ --success:#0E7C5A;--warn:#B8710A;--danger:#B42318;--info:#175CD3;--steel:#475467;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+ -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.num{font-variant-numeric:tabular-nums}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;
+ font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .12s}
+.btn.sm{height:32px;padding:0 11px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-press)}
+.btn-secondary{background:var(--panel);border-color:var(--border-strong);color:var(--text)}.btn-secondary:hover{background:var(--panel-2)}
+.btn-ghost{background:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.btn-danger{background:var(--panel);border-color:var(--danger);color:var(--danger)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border:1px solid var(--border);
+ border-radius:4px;background:var(--panel);color:var(--text);font-size:12px;font-weight:600}
+.pill .dot{width:6px;height:6px;border-radius:50%}
+.dot-generated{background:var(--info)}.dot-pending{background:var(--warn)}.dot-approved{background:var(--success)}
+.dot-sent{background:var(--primary)}.dot-locked{background:var(--steel)}.dot-lost{background:var(--danger)}.dot-rejected{background:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{position:sticky;top:0;background:var(--panel-2);border-bottom:1px solid var(--border-strong);
+ text-align:left;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--text-subtle);text-transform:uppercase;padding:0 16px;height:40px}
+tbody td{border-bottom:1px solid var(--border);padding:0 16px;height:44px;color:var(--text)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.kpi{padding:24px}
+.kpi .label{margin-bottom:10px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.kpi .val{font-size:32px;font-weight:600;line-height:1}.kpi .delta{font-size:12px;font-weight:500;margin-left:8px}
+.delta.up{color:var(--success)}.delta.down{color:var(--danger)}
+/* readiness segment bar */
+.segbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--panel-2);position:relative}
+.segbar .z-danger{background:rgba(180,35,24,.18)}.segbar .z-warn{background:rgba(184,113,10,.18)}.segbar .z-success{background:rgba(14,124,90,.18)}
+.segbar .marker{position:absolute;top:-3px;width:3px;height:16px;background:var(--text);border-radius:2px}
+/* shell nav */
+.side{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--sidebar-text);font-size:14px;font-weight:500}
+.side i{width:16px;height:16px}
+.side:hover{background:var(--sidebar-hover);color:#fff}
+.side.active{background:var(--sidebar-hover);color:#fff;position:relative}
+.side.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.iconbtn{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;cursor:pointer;color:var(--text-muted)}
+.iconbtn:hover{background:var(--panel-2);color:var(--text)}
+/* ---- page-specific ---- */
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-subtle);margin-bottom:14px}
+.breadcrumb a:hover{color:var(--text)}
+.breadcrumb i{width:14px;height:14px}
+.pagehead{display:flex;align-items:flex-start;gap:16px;margin-bottom:24px}
+.pagehead h1{font-size:22px;font-weight:600;line-height:1.2}
+/* prototype-only status switcher */
+.demoswitch{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 6px 0 11px;border:1px dashed var(--border-strong);border-radius:7px;background:var(--panel);font-size:12px;font-weight:600;color:var(--text-subtle);white-space:nowrap;flex:0 0 auto}
+.demoswitch i{width:14px;height:14px;color:var(--primary)}
+.demoswitch select{height:28px;border:1px solid var(--border);border-radius:5px;background:var(--panel-2);font:inherit;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;padding:0 6px}
+/* status badges (archive / projects automation) */
+.sbadge{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:4px;font-size:11.5px;font-weight:600;border:1px solid var(--border)}
+.sbadge i{width:13px;height:13px}
+.sbadge.db{background:rgba(23,92,211,.07);border-color:rgba(23,92,211,.25);color:var(--info)}
+.sbadge.proj{background:var(--primary-soft);border-color:rgba(234,84,0,.22);color:var(--primary)}
+.sbadges{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.lossbox{margin-top:12px;padding:11px 13px;border:1px solid rgba(180,35,24,.25);background:rgba(180,35,24,.05);border-radius:7px}
+.lossbox .lt{font-size:11.5px;font-weight:600;color:var(--danger);text-transform:uppercase;letter-spacing:.05em}
+.lossbox .lv{font-size:13px;color:var(--text);margin-top:4px;line-height:1.5}
+.pagehead .meta{display:flex;align-items:center;gap:10px;margin-top:8px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 344px;gap:24px;align-items:start}
+/* tabs */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);padding:0 4px}
+.tab{appearance:none;background:transparent;border:none;font:inherit;font-size:14px;font-weight:500;color:var(--text-muted);
+ padding:12px 14px;cursor:pointer;position:relative;transition:color .12s}
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{color:var(--text)}
+.tab[aria-selected="true"]::after{content:'';position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--primary);border-radius:2px}
+.panel{display:none;padding:24px}
+.panel.active{display:block}
+.section-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.sub{font-size:13px;color:var(--text-muted);line-height:1.55}
+.divider{height:1px;background:var(--border);margin:20px 0}
+/* section header row (title + tab actions) */
+.themebar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+/* regenerate box */
+.regen{margin-top:20px;padding:16px;border:1px solid var(--border);border-radius:8px;background:var(--panel-2)}
+.regen textarea{width:100%;min-height:74px;border:1px solid var(--border-strong);border-radius:6px;padding:10px 12px;font:inherit;font-size:13px;
+ resize:vertical;background:var(--panel);color:var(--text);line-height:1.5}
+.regen textarea:focus{outline:none;border-color:var(--primary)}
+.actions-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+/* budget subtotal / total rows */
+.bt-dept td{font-weight:600}
+tr.bt-sub td{background:var(--panel-2);font-weight:600;border-top:1px solid var(--border-strong)}
+tr.bt-total td{background:#141310;color:#fff;font-weight:600;height:48px;border-bottom:none}
+tr.bt-total td .accent{color:var(--primary)}
+.notebar{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--text-muted)}
+.notebar i{width:15px;height:15px;color:var(--primary)}
+/* sales brief */
+.brief-sec{margin-bottom:22px}
+.brief-sec h3{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.brief-sec h3 .n{width:20px;height:20px;border-radius:5px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:11px;font-weight:700}
+.brief-sec p,.brief-sec li{font-size:13.5px;line-height:1.6;color:var(--text-muted)}
+.brief-sec ul{margin:0;padding-left:18px}
+.brief-sec li{margin-bottom:5px}
+.quote{border-left:3px solid var(--primary);padding:10px 14px;background:var(--panel-2);border-radius:0 6px 6px 0;font-size:13.5px;line-height:1.65;color:var(--text)}
+/* client activity */
+.thread{display:flex;flex-direction:column;gap:16px}
+.cmt{display:flex;gap:12px}
+.cmt .av{width:34px;height:34px;flex:0 0 34px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;background:var(--panel-2);color:var(--text)}
+.cmt .av.demo{background:var(--primary-soft);color:var(--primary)}
+.cmt .body{flex:1;min-width:0}
+.cmt .who{font-size:13px;font-weight:600}
+.cmt .when{font-size:12px;color:var(--text-subtle);margin-left:8px;font-weight:400}
+.cmt .txt{font-size:13.5px;line-height:1.55;color:var(--text-muted);margin-top:3px}
+.cmt .tag{font-size:11px;font-weight:600;color:var(--primary);display:inline-flex;align-items:center;gap:5px;margin-top:6px}
+.cmt .tag i{width:13px;height:13px}
+.reply{display:flex;gap:8px;margin-top:20px}
+.reply input{flex:1;height:36px;border:1px solid var(--border-strong);border-radius:6px;padding:0 12px;font:inherit;font-size:13px;background:var(--panel)}
+.reply input:focus{outline:none;border-color:var(--primary)}
+/* history */
+.hist{display:flex;flex-direction:column}
+.hist-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
+.hist-item:last-child{border-bottom:none}
+.hist-dot{width:9px;height:9px;border-radius:50%;background:var(--primary);margin-top:6px;flex:0 0 9px}
+.hist-dot.old{background:var(--border-strong)}
+.hist-body{flex:1}
+.hist-body .v{font-size:13.5px;font-weight:600}
+.hist-body .cur{font-size:11px;font-weight:600;color:var(--success);margin-left:8px}
+.hist-body .d{font-size:12.5px;color:var(--text-muted);margin-top:2px;line-height:1.5}
+/* right rail */
+.rail-card{padding:20px}
+.rail-card + .rail-card{margin-top:16px}
+.rail-h{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle);margin-bottom:14px}
+.status-controls{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.status-controls .btn{width:100%;justify-content:center}
+.kv{display:flex;flex-direction:column;gap:12px}
+.kv-row{display:flex;flex-direction:column;gap:2px}
+.kv-row .k{font-size:11.5px;color:var(--text-subtle);font-weight:500}
+.kv-row .v{font-size:13.5px;color:var(--text);font-weight:500}
+.kv-row .v a{color:var(--info)}
+.kv-row .v a:hover{text-decoration:underline}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border:1px solid var(--border-strong);border-radius:4px;font-size:12px;font-weight:500;color:var(--text);width:fit-content}
+.chip i{width:13px;height:13px;color:var(--primary)}
+.linkfield{display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:6px;background:var(--panel-2);padding:0 4px 0 10px;height:38px}
+.linkfield input{flex:1;min-width:0;border:none;background:transparent;font:inherit;font-size:12.5px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.linkfield input:focus{outline:none}
+.copybtn{width:30px;height:30px;flex:0 0 30px;border-radius:5px;border:1px solid var(--border-strong);background:var(--panel);display:grid;place-items:center;cursor:pointer;color:var(--text-muted)}
+.copybtn:hover{color:var(--text);background:var(--panel-2)}
+.copybtn i{width:15px;height:15px}
+.hint{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--warn);margin-top:8px}
+.hint i{width:13px;height:13px}
+/* approval trail */
+.trail{display:flex;flex-direction:column}
+.trail-item{display:flex;gap:12px;position:relative;padding-bottom:20px}
+.trail-item:last-child{padding-bottom:0}
+.trail-item::before{content:'';position:absolute;left:8px;top:20px;bottom:0;width:1.5px;background:var(--border)}
+.trail-item:last-child::before{display:none}
+.tr-icon{width:18px;height:18px;flex:0 0 18px;border-radius:50%;display:grid;place-items:center;z-index:1}
+.tr-icon i{width:11px;height:11px}
+.tr-icon.done{background:var(--success);color:#fff}
+.tr-icon.lost{background:var(--danger);color:#fff}
+.tr-icon.pending{background:var(--panel);border:1.5px dashed var(--border-strong);color:var(--text-subtle)}
+.tr-body .t{font-size:13px;font-weight:600;color:var(--text)}
+.tr-body .t.muted{color:var(--text-subtle);font-weight:500}
+.tr-body .s{font-size:12px;color:var(--text-muted);margin-top:1px}
+@media (max-width:1080px){.layout{grid-template-columns:1fr}.layout > aside{position:relative;top:0}}
+/* tab action group */
+.tab-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* editable budget */
+.ebud{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.ebud .bhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--panel-2);border-bottom:1px solid var(--border-strong)}
+.ebud .bhead .t{font-size:13px;font-weight:600}
+.ebud input.cell{width:64px;border:1px solid transparent;border-radius:5px;padding:5px 7px;font:inherit;font-size:13px;text-align:right;background:transparent;color:var(--text);font-variant-numeric:tabular-nums}
+.ebud input.cell:hover{border-color:var(--border-strong)}
+.ebud input.cell:focus{outline:none;border-color:var(--primary);background:var(--primary-soft)}
+.ccur{height:32px;border:1px solid var(--border-strong);border-radius:6px;padding:0 8px;font:inherit;font-size:13px;background:var(--panel);color:var(--text);cursor:pointer}
+.tgl{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--text-muted);cursor:pointer;user-select:none}
+.tgl input{accent-color:var(--primary)}
+.ebud tr.optrow td{background:rgba(184,113,10,.05)}
+/* enhanced budget editor: role/type selects, dept name, add/remove, milestones, adjustments */
+.ebud select.cell{height:28px;max-width:158px;border:1px solid transparent;border-radius:5px;padding:0 4px;font:inherit;font-size:13px;background:transparent;color:var(--text);cursor:pointer}
+.ebud select.cell:hover{border-color:var(--border-strong)}
+.ebud select.cell:focus{outline:none;border-color:var(--primary);background:var(--primary-soft)}
+.ebud input.depname{width:100%;max-width:170px;border:1px solid transparent;border-radius:5px;padding:5px 6px;font:inherit;font-size:13px;font-weight:600;background:transparent;color:var(--text)}
+.ebud input.depname:hover{border-color:var(--border-strong)}
+.ebud input.depname:focus{outline:none;border-color:var(--primary);background:var(--primary-soft)}
+.ebud .delrow{width:26px;height:26px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--text-subtle);cursor:pointer;display:grid;place-items:center}
+.ebud .delrow:hover{color:var(--danger);background:rgba(180,35,24,.07)}
+.ebud .delrow i{width:14px;height:14px}
+.addrole{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--primary);cursor:pointer;background:none;border:none;padding:4px 2px}
+.addrole:hover{text-decoration:underline}
+.pctin{width:50px;border:1px solid var(--border-strong);border-radius:5px;padding:4px 6px;font:inherit;font-size:12.5px;text-align:right;background:var(--panel);color:var(--text);font-variant-numeric:tabular-nums}
+.pctin:focus{outline:none;border-color:var(--primary);background:var(--primary-soft)}
+.mstabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.mstab{height:30px;padding:0 12px;border:1px solid var(--border-strong);border-radius:6px;background:var(--panel);font:inherit;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.mstab:hover{background:var(--panel-2)}
+.mstab.active{background:var(--text);color:#fff;border-color:var(--text)}
+.mstab.add{border-style:dashed;color:var(--text-subtle);font-weight:500}
+tr.adjrow td{background:var(--panel-2);font-weight:500}
+tr.adjrow td.lbl{color:var(--text-muted)}
+.ai-note{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--text-muted);background:var(--primary-soft);border:1px solid rgba(234,84,0,.18);border-radius:8px;padding:10px 12px;margin-bottom:14px;line-height:1.5}
+.ai-note i{width:15px;height:15px;color:var(--primary);flex:0 0 15px;margin-top:1px}
+.ai-note b{color:var(--text)}
+/* rail prompt box */
+.rail-prompt textarea{width:100%;min-height:68px;border:1px solid var(--border-strong);border-radius:6px;padding:9px 11px;font:inherit;font-size:13px;resize:vertical;background:var(--panel);color:var(--text);line-height:1.5;margin-bottom:10px}
+.rail-prompt textarea:focus{outline:none;border-color:var(--primary)}
+.rail-prompt .btn{width:100%;justify-content:center}
+.trail.top{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+/* right rail stays fixed while the proposal/budget scrolls */
+.layout > aside{position:sticky;top:76px;align-self:start}
+/* generate empty-state + regen boxes + pitch deck */
+.regenbox{margin-top:20px;padding:16px;border:1px solid var(--border);border-radius:8px;background:var(--panel-2)}
+.regenbox textarea{width:100%;min-height:64px;border:1px solid var(--border-strong);border-radius:6px;padding:10px 12px;font:inherit;font-size:13px;resize:vertical;background:var(--panel);color:var(--text);line-height:1.5}
+.regenbox textarea:focus{outline:none;border-color:var(--primary)}
+.genempty{text-align:center;padding:56px 24px;border:1px dashed var(--border-strong);border-radius:10px;background:var(--panel-2)}
+.genempty .genicon{width:48px;height:48px;border-radius:12px;background:var(--panel);border:1px solid var(--border);display:grid;place-items:center;margin:0 auto 16px;color:var(--primary)}
+.genempty .genicon i{width:22px;height:22px}
+.genempty .gt{font-size:16px;font-weight:600}
+.genempty .gs{font-size:13.5px;color:var(--text-muted);max-width:460px;margin:6px auto 18px;line-height:1.6}
+.deck{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.slide{aspect-ratio:16/9;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#161310;color:#fff;position:relative;padding:18px;display:flex;flex-direction:column;justify-content:flex-end}
+.slide .sn{position:absolute;top:12px;left:14px;font-size:11px;color:#9A948E}
+.slide .sh{position:absolute;top:12px;right:14px;width:16px;height:16px;border-radius:4px;background:var(--primary)}
+.slide h4{font-size:15px;font-weight:600;margin-bottom:4px}
+.slide p{font-size:12px;color:#B8B5B0;line-height:1.5}
+.slide.cover{background:linear-gradient(135deg,#1A1715,#3a2a20);justify-content:center}.slide.cover h4{font-size:20px}
+.slide .sbul{margin:6px 0 0;padding-left:15px;list-style:disc}
+.slide .sbul li{font-size:11px;color:#C4C0BB;line-height:1.45;margin-bottom:3px}
+.slide .ssub{font-size:10.5px;color:#8f8a83;margin-top:8px;line-height:1.4}
+/* account menu / role switcher (sidebar) */
+.acct{margin-top:auto;position:relative}
+.acctbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:none;border-top:1px solid #262626;background:transparent;cursor:pointer;font:inherit;text-align:left}
+.acctbtn:hover{background:var(--sidebar-hover)}
+.acctav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#2a2a2a;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.acctid{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.acctname{font-size:13px;color:#fff;font-weight:500}
+.acctrole{font-size:11px;color:var(--sidebar-text)}
+.acctchev{width:15px;height:15px;color:var(--sidebar-text);flex:0 0 15px}
+.acctpop{position:absolute;left:12px;right:12px;bottom:60px;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.3);padding:6px;z-index:60;display:none}
+.acctpop.show{display:block}
+.accthead{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.accthead .an{font-size:13.5px;color:var(--text);font-weight:600}
+.accthead .ae{font-size:12px;color:var(--text-muted);margin-top:2px}
+.acctitem{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.acctitem:hover{background:var(--panel-2)}
+.acctitem i{width:15px;height:15px;color:var(--text-muted)}
+.acctitem.danger{color:var(--danger)}.acctitem.danger i{color:var(--danger)}
+.acctsep{height:1px;background:var(--border);margin:6px 0}
+</style>
+</head>
+<body>
+<div style="display:flex;min-height:100vh">
+  <aside style="width:260px;flex:0 0 260px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;align-self:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 12px 22px">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px">L</span>
+      <span style="font-weight:600;font-size:16px;color:#fff">Lead360</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px" aria-label="Primary">
+      <a class="side active" data-testid="nav-leads" href="leads.page.html"><i data-lucide="list"></i>Leads</a>
+      <a class="side" data-testid="nav-projects" href="projects.page.html"><i data-lucide="folder"></i>Projects</a>
+      <a class="side" data-testid="nav-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="acct">
+      <button class="acctbtn" onclick="toggleAcct(event)" data-testid="acct-trigger" aria-haspopup="true">
+        <span class="acctav">FK</span>
+        <span class="acctid"><span class="acctname">Farah Karim</span><span class="acctrole">Sales / PM</span></span>
+        <i data-lucide="chevron-up" class="acctchev"></i>
+      </button>
+      <div class="acctpop" data-testid="acct-pop">
+        <div class="accthead"><div class="an">Farah Karim</div><div class="ae">farah.karim@riseuplabs.com</div></div>
+        <a class="acctitem" data-testid="acct-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+        <a class="acctitem" data-testid="acct-switch-view" href="../management/overview.page.html"><i data-lucide="repeat"></i>Switch to Admin view</a>
+        <div class="acctsep"></div>
+        <a class="acctitem danger" data-testid="acct-signout" href="login.page.html"><i data-lucide="log-out"></i>Sign out</a>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:0 32px;height:60px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <div style="position:relative;flex:1;max-width:420px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:9px;width:16px;color:var(--text-subtle)"></i>
+        <input data-testid="topbar-search" placeholder="Search leads, companies…" style="width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px">
+      </div>
+      <a class="btn btn-primary" data-testid="topbar-new-lead" href="new-lead-info.page.html"><i data-lucide="plus" style="width:16px"></i>New Lead</a>
+      <span style="width:32px;height:32px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--text-muted)">FK</span>
+    </header>
+
+    <main style="padding:32px;max-width:1400px;width:100%;margin:0 auto">
+
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a data-testid="lead-detail-breadcrumb-leads" href="leads.page.html">Leads</a>
+        <i data-lucide="chevron-right"></i>
+        <span style="color:var(--text)">AP Invoice Automation</span>
+      </nav>
+
+      <div class="pagehead">
+        <div style="flex:1;min-width:0">
+          <h1>AP Invoice Automation</h1>
+          <div class="meta">
+            <span class="pill" id="headStatusPill" data-testid="lead-detail-status-pill"><span class="dot dot-approved"></span>Approved</span>
+            <span style="font-size:13px;color:var(--text-muted)">ATEC Group · <span class="num">$86,000</span> · Global template</span>
+          </div>
+        </div>
+        <label class="demoswitch" title="Prototype only — preview each lead status">
+          <i data-lucide="flask-conical"></i>
+          <span>Demo status</span>
+          <select id="statusSel" onchange="setStatus(this.value)" data-testid="lead-detail-status-switcher">
+            <option value="generated">Generated</option>
+            <option value="pending">Pending Approval</option>
+            <option value="approved" selected>Approved</option>
+            <option value="sent">Sent</option>
+            <option value="locked">Locked</option>
+            <option value="lost">Lost</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="layout">
+        <!-- LEFT COLUMN -->
+        <section class="card" aria-label="Lead content">
+          <div class="tabs" role="tablist" aria-label="Lead detail sections">
+            <button class="tab" role="tab" aria-selected="true"  aria-controls="panel-proposal" id="tab-proposal" data-testid="lead-detail-tab-proposal" data-tab="proposal">Proposal</button>
+            <button class="tab" role="tab" aria-selected="false" aria-controls="panel-budget"   id="tab-budget"   data-testid="lead-detail-tab-budget"   data-tab="budget">Budget</button>
+            <button class="tab" role="tab" aria-selected="false" aria-controls="panel-brief"    id="tab-brief"    data-testid="lead-detail-tab-brief"    data-tab="brief">Sales Brief</button>
+            <button class="tab" role="tab" aria-selected="false" aria-controls="panel-pitch"    id="tab-pitch"    data-testid="lead-detail-tab-pitch"    data-tab="pitch">Pitch Deck</button>
+          </div>
+
+          <!-- PROPOSAL -->
+          <div class="panel active" id="panel-proposal" role="tabpanel" aria-labelledby="tab-proposal">
+            <div class="themebar">
+              <div>
+                <div class="section-title">Proposal</div>
+                <div class="sub">The interactive client-facing document — exactly what the client receives.</div>
+              </div>
+              <div class="tab-actions">
+                <button class="btn btn-primary sm" data-testid="lead-detail-download-pdf"><i data-lucide="download" style="width:15px"></i>Download PDF</button>
+                <a class="btn btn-secondary sm" href="../client/proposal-view.page.html" target="_blank" rel="noopener" data-testid="lead-detail-open-client-proposal"><i data-lucide="external-link" style="width:15px"></i>Open full</a>
+              </div>
+            </div>
+
+            <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+              <iframe class="autoframe" src="../client/proposal-view.page.html?embed=1" title="Proposal preview" scrolling="no" style="width:100%;height:1200px;border:0;background:#fff;display:block" data-testid="lead-detail-proposal-iframe"></iframe>
+            </div>
+            <div class="regenbox">
+              <div class="label" style="margin-bottom:8px">Regenerate proposal</div>
+              <textarea data-testid="lead-detail-proposal-regen-prompt" placeholder="Describe a change to the proposal, e.g. 'tighten the executive summary and add a phased rollout'…"></textarea>
+              <button class="btn btn-primary sm" style="margin-top:10px" data-testid="lead-detail-proposal-regenerate" onclick="regen('proposal')"><i data-lucide="refresh-cw" style="width:15px"></i>Regenerate proposal</button>
+            </div>
+          </div>
+
+          <!-- BUDGET -->
+          <div class="panel" id="panel-budget" role="tabpanel" aria-labelledby="tab-budget">
+            <div class="themebar">
+              <div>
+                <div class="section-title" id="bTitle">Budget</div>
+                <div class="sub"><b>Unit Cost = Units × Days × Per-Day Rate</b>, grouped by department (Riseup FIFA structure). AI drafts the resource plan; every line is editable.</div>
+              </div>
+              <div class="tab-actions">
+                <label class="tgl"><input type="checkbox" id="optToggle" onchange="renderBudget()" data-testid="lead-detail-budget-optional">Optional lines</label>
+                <select class="ccur" id="curSel" onchange="renderBudget()" data-testid="lead-detail-budget-currency">
+                  <option value="USD">USD $</option><option value="EUR">EUR €</option><option value="GBP">GBP £</option><option value="BDT">BDT ৳</option><option value="AED">AED</option><option value="SAR">SAR</option>
+                </select>
+                <button class="btn btn-ghost sm" onclick="resetBudget()" data-testid="lead-detail-budget-reset"><i data-lucide="rotate-ccw" style="width:15px"></i>Reset to AI estimate</button>
+                <button class="btn btn-secondary sm" data-testid="lead-detail-budget-export"><i data-lucide="sheet" style="width:15px"></i>Export .xlsx</button>
+                <a class="btn btn-ghost sm" href="../client/budget-view.page.html" target="_blank" rel="noopener" data-testid="lead-detail-open-client-budget"><i data-lucide="external-link" style="width:15px"></i>Open full</a>
+              </div>
+            </div>
+
+            <div class="ai-note"><i data-lucide="sparkles"></i><span><b>How this was built:</b> the AI classified the scope, mapped it to roles &amp; day-estimates from Riseup's rate card, and the app computed every total in code — no guessed numbers. Change the role, seniority (auto-fills the card rate), units, days or rate; add/remove lines; add a department or milestone; or set contingency / discount / VAT below. Totals recompute live.</span></div>
+
+            <div class="mstabs" id="msTabs" data-testid="lead-detail-budget-milestones"></div>
+
+            <div class="ebud">
+              <div class="bhead"><span class="t" id="bHead">Cost Breakdown · Development</span><span class="t num" id="bGrand">$14,440</span></div>
+              <div style="overflow-x:auto">
+              <table>
+                <thead><tr><th style="width:32px">Sl.</th><th style="min-width:150px">Department</th><th style="min-width:150px">Role / Head</th><th>Type</th><th class="num">Unit</th><th class="num">Days</th><th class="num">Rate</th><th class="num">Unit Cost</th><th style="width:34px"></th></tr></thead>
+                <tbody id="bBody"></tbody>
+              </table>
+              </div>
+            </div>
+            <button class="addrole" onclick="addDept()" style="margin-top:10px" data-testid="lead-detail-budget-add-dept"><i data-lucide="plus" style="width:14px"></i>Add department</button>
+
+            <div class="notebar"><i data-lucide="calendar-clock"></i><span id="bTimeline">Delivery timeline ≈ 12 weeks.</span>&nbsp;Full engagement total <span class="num" id="bEngage" style="font-weight:600;color:var(--text)">&nbsp;$86,000</span> across all milestones.</div>
+            <div class="regenbox">
+              <div class="label" style="margin-bottom:8px">Regenerate budget with AI</div>
+              <textarea data-testid="lead-detail-budget-regen-prompt" placeholder="Describe a change in plain English, e.g. 'reduce DevOps to 4 days, add a senior QA lead, and apply a 10% contingency'…"></textarea>
+              <button class="btn btn-primary sm" style="margin-top:10px" data-testid="lead-detail-budget-regenerate" onclick="regen('budget')"><i data-lucide="refresh-cw" style="width:15px"></i>Regenerate budget</button>
+            </div>
+          </div>
+
+          <!-- SALES BRIEF -->
+          <div class="panel" id="panel-brief" role="tabpanel" aria-labelledby="tab-brief">
+            <div class="themebar">
+              <div>
+                <div class="section-title">Sales Brief</div>
+                <div class="sub">Internal-only pitch pack. Generate it when you're ready to prep the meeting.</div>
+              </div>
+              <button class="btn btn-secondary sm" id="brief-dl" style="display:none" data-testid="lead-detail-brief-download"><i data-lucide="download" style="width:15px"></i>Download PDF</button>
+            </div>
+
+            <div id="brief-empty" class="genempty">
+              <div class="genicon"><i data-lucide="notebook-pen"></i></div>
+              <div class="gt">No sales brief yet</div>
+              <div class="gs">Generate a non-technical pitch pack — plain-English summary, talking points, objection handling and a ready-made 60-second pitch.</div>
+              <button class="btn btn-primary" data-testid="lead-detail-generate-brief" onclick="genBrief()"><i data-lucide="sparkles" style="width:16px"></i>Generate brief</button>
+            </div>
+
+            <div id="brief-content" style="display:none">
+            <div class="brief-sec">
+              <h3><span class="n">1</span>What we're proposing</h3>
+              <p>We're offering ATEC Group an AI-driven Accounts Payable automation system that reads incoming supplier invoices, pulls out the important figures on its own, checks them against purchase orders and goods receipts, and posts the clean results straight into SAP. The finance team stops re-keying invoices by hand and instead reviews only the exceptions the system flags. It's delivered in three milestones so value lands early rather than at the very end.</p>
+            </div>
+            <div class="brief-sec">
+              <h3><span class="n">2</span>Why it matters to this client</h3>
+              <p>ATEC's AP team is drowning in manual entry, and month-end close slips because of it. This directly attacks their two biggest pains: slow invoice throughput and error-prone three-way matching. Faster, auditable posting means a cleaner close and fewer supplier disputes.</p>
+            </div>
+            <div class="brief-sec">
+              <h3><span class="n">3</span>Key highlights</h3>
+              <ul>
+                <li>Straight-through posting for the majority of standard invoices.</li>
+                <li>Confidence-scored extraction with a human-review queue for anything uncertain.</li>
+                <li>Enforced three-way match before anything reaches SAP.</li>
+                <li>Idempotent SAP adapter with full audit trail and rollback.</li>
+                <li>Phased in three milestones — value from milestone one.</li>
+              </ul>
+            </div>
+            <div class="brief-sec">
+              <h3><span class="n">4</span>Talking points</h3>
+              <ul>
+                <li>"Your team keys thousands of invoices a month — we hand most of that back to them."</li>
+                <li>"Nothing posts to SAP until it passes a three-way match, so the audit trail stays clean."</li>
+                <li>"The model tells you how confident it is; low-confidence items go to a review queue, not into SAP."</li>
+                <li>"You'll see results in milestone one — we don't ask you to wait for a big-bang go-live."</li>
+                <li>"This is the same document-AI approach we ran for HR AI Automation's document + approval workflow."</li>
+              </ul>
+            </div>
+            <div class="brief-sec">
+              <h3><span class="n">5</span>Anticipated objections &amp; responses</h3>
+              <table>
+                <thead><tr><th>Objection</th><th>Response</th></tr></thead>
+                <tbody>
+                  <tr><td style="height:auto;padding:12px 16px">"Our invoice formats are too varied."</td><td style="height:auto;padding:12px 16px">Intake normalises email, scans and portal uploads; the model is trained per-source and improves over time.</td></tr>
+                  <tr><td style="height:auto;padding:12px 16px">"We can't risk bad data hitting SAP."</td><td style="height:auto;padding:12px 16px">Nothing posts without passing validation; low-confidence items are held in a review queue.</td></tr>
+                  <tr><td style="height:auto;padding:12px 16px">"Integration with SAP will be painful."</td><td style="height:auto;padding:12px 16px">We use a dedicated posting adapter with idempotency and rollback — see the SAP Integration Feasibility section.</td></tr>
+                  <tr><td style="height:auto;padding:12px 16px">"The timeline feels long."</td><td style="height:auto;padding:12px 16px">Milestone one delivers working intake and extraction, so benefits start before full rollout.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="brief-sec">
+              <h3><span class="n">6</span>Comparable Riseup projects</h3>
+              <ul>
+                <li><strong>HR AI Automation</strong> — automates onboarding, document generation and approvals. Why relevant: same document-AI + human-in-the-loop approval pattern.</li>
+                <li><strong>ContentOS</strong> — multi-agent AI pipeline for generation at scale. Why relevant: proven AI extraction accuracy on messy, varied inputs.</li>
+                <li><strong>OPS Web Application</strong> — enterprise app migrated for UNICEF ECARO (AWS → Azure). Why relevant: validated integration into an enterprise system of record, like SAP.</li>
+              </ul>
+            </div>
+            <div class="brief-sec">
+              <h3><span class="n">7</span>Ready-made 60-second pitch</h3>
+              <div class="quote">"ATEC's AP team keys thousands of invoices by hand every month, and close slips because of it. We're proposing an AI pipeline that reads each invoice, extracts the figures, three-way-matches them against your POs and goods receipts, and posts clean entries straight into SAP — with anything uncertain routed to a review queue instead of guessed. It's phased over three milestones so you get straight-through processing on standard invoices early, not after a year. We've run this same document-AI pattern for HR AI Automation and ContentOS, so the risky part is already proven. The result is a faster, cleaner, fully auditable close."</div>
+            </div>
+            <div class="brief-sec">
+              <h3><span class="n">8</span>Suggested close</h3>
+              <p style="color:var(--text);font-weight:500">"Shall we lock milestone one so your team feels the throughput gain before quarter-end?"</p>
+            </div>
+            </div>
+          </div>
+
+          <!-- PITCH DECK -->
+          <div class="panel" id="panel-pitch" role="tabpanel" aria-labelledby="tab-pitch">
+            <div class="themebar">
+              <div>
+                <div class="section-title">Pitch Deck</div>
+                <div class="sub">A presentation-ready slide deck generated from the proposal — for the client meeting.</div>
+              </div>
+              <button class="btn btn-secondary sm" id="pitch-dl" style="display:none" data-testid="lead-detail-pitch-download"><i data-lucide="download" style="width:15px"></i>Download slides</button>
+            </div>
+            <div id="pitch-empty" class="genempty">
+              <div class="genicon"><i data-lucide="presentation"></i></div>
+              <div class="gt">No pitch deck yet</div>
+              <div class="gs">Generate a presentation-ready deck from this proposal — cover, credibility, problem, solution, how-it-works, architecture, phases, proof, team, tech stack, objection-handling, milestone pricing and a clear next step.</div>
+              <button class="btn btn-primary" data-testid="lead-detail-generate-pitch" onclick="genPitch()"><i data-lucide="sparkles" style="width:16px"></i>Generate slides</button>
+            </div>
+            <div id="pitch-content" class="deck" style="display:none"></div>
+          </div>
+        </section>
+
+        <!-- RIGHT RAIL -->
+        <aside aria-label="Lead summary">
+          <div class="card rail-card">
+            <div class="rail-h">Status</div>
+            <span class="pill" id="railStatusPill" data-testid="lead-detail-rail-status"><span class="dot dot-approved"></span>Approved</span>
+            <div class="sbadges" id="statusBadges"></div>
+            <div class="lossbox" id="lossDisplay" style="display:none"><div class="lt">Loss reason</div><div class="lv" id="lossReasonText"></div></div>
+            <div class="status-controls" id="statusControls"></div>
+            <div class="hint" id="statusHint"><i data-lucide="info"></i><span id="statusHintText"></span></div>
+            <div class="trail top" id="statusTrail"></div>
+          </div>
+
+          <div class="card rail-card">
+            <div class="rail-h">Client</div>
+            <div class="kv">
+              <div class="kv-row"><span class="k">Company</span><span class="v">ATEC Group</span></div>
+              <div class="kv-row"><span class="k">Contact</span><span class="v">Rezaul Mahmud · Head of Finance</span></div>
+              <div class="kv-row"><span class="k">Email</span><span class="v"><a data-testid="lead-detail-client-email" href="mailto:rezaul.mahmud@atecgroup.com">rezaul.mahmud@atecgroup.com</a></span></div>
+              <div class="kv-row"><span class="k">Website</span><span class="v"><a data-testid="lead-detail-client-website" href="https://atecgroup.com" target="_blank" rel="noopener">atecgroup.com</a></span></div>
+            </div>
+          </div>
+
+          <div class="card rail-card">
+            <div class="rail-h">Details</div>
+            <div class="kv">
+              <div class="kv-row"><span class="k">Template</span><span class="chip" data-testid="lead-detail-template-chip"><i data-lucide="layout-template"></i>Global</span></div>
+              <div class="kv-row"><span class="k">Value</span><span class="v num">$86,000</span></div>
+              <div class="kv-row"><span class="k">Created</span><span class="v">Jun 24, 2026 · 10:12</span></div>
+              <div class="kv-row"><span class="k">Updated</span><span class="v">Jun 28, 2026 · 16:40</span></div>
+            </div>
+          </div>
+
+          <div class="card rail-card">
+            <div class="rail-h">Delivery status</div>
+            <div class="kv">
+              <div class="kv-row"><span class="k">Files</span><span class="v">proposal.pdf · budget.xlsx</span></div>
+              <div class="kv-row"><span class="k">Method</span><span class="v">Download &amp; send</span></div>
+              <div class="kv-row"><span class="k">Status</span><span class="pill" data-testid="lead-detail-delivery-status"><span class="dot dot-pending"></span>Not delivered yet</span></div>
+            </div>
+            <div class="hint"><i data-lucide="info"></i>Each lead delivers a branded <b>PDF</b> proposal + <b>Excel</b> budget. <span style="color:var(--text-subtle)">In-app email sending is developed but disabled for production.</span></div>
+          </div>
+        </aside>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  lucide.createIcons();
+  window.toggleAcct=function(e){e.stopPropagation();var pop=e.currentTarget.parentNode.querySelector('.acctpop');var open=pop.classList.contains('show');document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});if(!open)pop.classList.add('show');};
+  document.addEventListener('click',function(){document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')})});
+  // ESC closes any open popover / modal
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){
+    document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});
+    ['loss','send'].forEach(function(id){var o=document.getElementById(id+'-overlay'),m=document.getElementById(id+'-modal');if(o)o.classList.remove('show');if(m)m.classList.remove('show');});
+  }});
+
+  // ---- Tab switching ----
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.setAttribute('aria-selected', 'false'); });
+      panels.forEach(function (p) { p.classList.remove('active'); });
+      tab.setAttribute('aria-selected', 'true');
+      var target = document.getElementById('panel-' + tab.dataset.tab);
+      if (target) { target.classList.add('active'); }
+    });
+  });
+
+  // ---- Lead status state machine (demo switcher previews every stage) ----
+  var lossReason = '';
+  var STMETA = {
+    generated:{label:'Generated',dot:'dot-generated',badge:'none',
+      controls:'<button class="btn btn-primary" data-testid="lead-detail-send-approval" onclick="setStatus(\'pending\')"><i data-lucide="send-horizontal" style="width:16px"></i>Send for approval</button>',
+      hint:'Draft generated. Review the proposal &amp; budget, then send it to an admin to verify.'},
+    pending:{label:'Pending Approval',dot:'dot-pending',badge:'none',
+      controls:'<button class="btn btn-secondary" disabled><i data-lucide="clock" style="width:16px"></i>Awaiting admin verification</button>',
+      hint:'Submitted for verification. An admin will approve it or return it with notes.'},
+    approved:{label:'Approved',dot:'dot-approved',badge:'db',
+      controls:'<button class="btn btn-primary" data-testid="lead-detail-download-proposal-pdf" onclick="markDelivered()"><i data-lucide="file-text" style="width:16px"></i>Download proposal (PDF)</button><button class="btn btn-secondary" data-testid="lead-detail-download-budget-xlsx" onclick="markDelivered()"><i data-lucide="sheet" style="width:16px"></i>Download budget (Excel)</button><button class="btn btn-secondary" data-testid="lead-detail-mark-sent" onclick="setStatus(\'sent\')"><i data-lucide="check" style="width:16px"></i>Mark as sent</button>',
+      hint:'Approved. Download the branded PDF + Excel and send them to the client.'},
+    sent:{label:'Sent',dot:'dot-sent',badge:'db',
+      controls:'<button class="btn btn-primary" data-testid="lead-detail-mark-locked" onclick="setStatus(\'locked\')"><i data-lucide="lock" style="width:16px"></i>Mark Locked (won)</button><button class="btn btn-danger" data-testid="lead-detail-mark-lost" onclick="openLoss()"><i data-lucide="x-circle" style="width:16px"></i>Mark Lost</button>',
+      hint:'Sent to the client. Record the outcome when you hear back.'},
+    locked:{label:'Locked',dot:'dot-locked',badge:'both',
+      controls:'<button class="btn btn-secondary" disabled><i data-lucide="lock" style="width:16px"></i>Won — engagement locked</button>',
+      hint:'Won and locked. Archived to the Database and auto-added to Projects.'},
+    lost:{label:'Lost',dot:'dot-lost',badge:'db',lost:true,
+      controls:'<button class="btn btn-secondary" data-testid="lead-detail-reopen" onclick="setStatus(\'sent\')"><i data-lucide="rotate-ccw" style="width:16px"></i>Reopen as sent</button>',
+      hint:'Marked lost. The reason is recorded to sharpen future proposals.'}
+  };
+  function trailStep(done, title, sub){
+    return '<div class="trail-item"><span class="tr-icon '+(done?'done':'pending')+'"><i data-lucide="'+(done?'check':'clock')+'"></i></span>'
+      +'<div class="tr-body"><div class="t'+(done?'':' muted')+'">'+title+'</div><div class="s">'+sub+'</div></div></div>';
+  }
+  window.setStatus = function (st) {
+    var m = STMETA[st] || STMETA.approved;
+    ['headStatusPill','railStatusPill'].forEach(function (id) {
+      var p = document.getElementById(id); if (p) p.innerHTML = '<span class="dot '+m.dot+'"></span>'+m.label;
+    });
+    document.getElementById('statusControls').innerHTML = m.controls;
+    document.getElementById('statusHint').innerHTML = '<i data-lucide="info"></i><span>'+m.hint+'</span>';
+    var badges = '';
+    if (m.badge === 'db' || m.badge === 'both') badges += '<span class="sbadge db" data-testid="lead-detail-badge-db"><i data-lucide="database"></i>Archived to Database</span>';
+    if (m.badge === 'both') badges += '<span class="sbadge proj" data-testid="lead-detail-badge-projects"><i data-lucide="folder-plus"></i>Added to Projects</span>';
+    document.getElementById('statusBadges').innerHTML = badges;
+    var ld = document.getElementById('lossDisplay');
+    if (m.lost && lossReason) { ld.style.display = ''; document.getElementById('lossReasonText').textContent = lossReason; }
+    else { ld.style.display = 'none'; }
+    var idx = {generated:0,pending:1,approved:2,sent:3,locked:4,lost:4}[st];
+    var t = '';
+    t += trailStep(idx>=1, 'Submitted for approval', idx>=1 ? 'Farah Karim · Jun 25, 2026' : 'Not yet submitted');
+    t += trailStep(idx>=2, 'Verified by admin', idx>=2 ? 'Sadia Noor · Jun 26, 2026' : (st==='pending' ? 'Awaiting verification' : 'Pending'));
+    t += trailStep(idx>=3, 'Delivered to client', idx>=3 ? 'PDF + Excel sent to client' : 'Pending — download &amp; send');
+    if (st === 'locked') t += '<div class="trail-item"><span class="tr-icon done"><i data-lucide="lock"></i></span><div class="tr-body"><div class="t">Won — locked</div><div class="s">Auto-added to Projects</div></div></div>';
+    if (st === 'lost') t += '<div class="trail-item"><span class="tr-icon lost"><i data-lucide="x"></i></span><div class="tr-body"><div class="t">Lost</div><div class="s">'+(lossReason || 'Reason recorded')+'</div></div></div>';
+    document.getElementById('statusTrail').innerHTML = t;
+    // keep the Delivery-status rail pill consistent with the lead status
+    var dp = document.querySelector('[data-testid="lead-detail-delivery-status"]');
+    if (dp) {
+      dp.innerHTML = idx>=3 ? '<span class="dot dot-sent"></span>Delivered · sent to client'
+        : (st==='approved' ? '<span class="dot dot-pending"></span>Ready to download'
+        : (st==='lost' ? '<span class="dot dot-lost"></span>Not delivered (lost)'
+        : '<span class="dot dot-pending"></span>Not delivered yet'));
+    }
+    lucide.createIcons();
+  };
+  // ---- Loss-reason modal (required when marking a lead lost) ----
+  window.openLoss = function () { document.getElementById('loss-overlay').classList.add('show'); document.getElementById('loss-modal').classList.add('show'); };
+  window.closeLoss = function () { document.getElementById('loss-overlay').classList.remove('show'); document.getElementById('loss-modal').classList.remove('show'); };
+  window.confirmLoss = function () {
+    var sel = document.getElementById('lossSelect'); var note = document.getElementById('lossNote').value.trim();
+    if (!sel.value) { document.getElementById('lossErr').style.display = ''; return; }
+    document.getElementById('lossErr').style.display = 'none';
+    lossReason = sel.value + (note ? ' — ' + note : '');
+    closeLoss();
+    document.getElementById('statusSel').value = 'lost';
+    setStatus('lost');
+  };
+
+  // ---- Active delivery: download the PDF + Excel and send manually ----
+  window.markDelivered = function () {
+    var s = document.querySelector('[data-testid="lead-detail-delivery-status"]');
+    if (s) { s.innerHTML = '<span class="dot dot-sent"></span>Downloaded · just now'; }
+  };
+
+  // ---- Email delivery: DEVELOPED but DISABLED for production (feature-flagged off, e.g. EMAIL_ENABLED=false). ----
+  // The send-documents modal + functions below remain in the codebase but are NOT wired to any active control.
+  window.openSend = function () {
+    document.getElementById('send-overlay').classList.add('show');
+    document.getElementById('send-modal').classList.add('show');
+  };
+  window.closeSend = function () {
+    document.getElementById('send-overlay').classList.remove('show');
+    document.getElementById('send-modal').classList.remove('show');
+  };
+  window.confirmSend = function () {
+    var s = document.querySelector('[data-testid="lead-detail-delivery-status"]');
+    if (s) { s.innerHTML = '<span class="dot dot-sent"></span>Sent · just now'; }
+    closeSend();
+  };
+
+  // ---- Regenerate (single Prompt box, applies to active tab) ----
+  window.regen = function (which) {
+    var b = document.querySelector('[data-testid="lead-detail-'+which+'-regenerate"]');
+    if (!b) return; var o = b.innerHTML;
+    b.innerHTML = '<i data-lucide="loader"></i>Regenerating '+which+'…'; lucide.createIcons();
+    setTimeout(function () { b.innerHTML = o; lucide.createIcons(); }, 1200);
+  };
+  window.genBrief = function () {
+    var btn=document.querySelector('[data-testid="lead-detail-generate-brief"]'); if(btn){btn.innerHTML='<i data-lucide="loader"></i>Generating…';lucide.createIcons();}
+    setTimeout(function(){document.getElementById('brief-empty').style.display='none';document.getElementById('brief-content').style.display='block';var dl=document.getElementById('brief-dl');if(dl)dl.style.display='';lucide.createIcons();},900);
+  };
+  window.genPitch = function () {
+    var btn=document.querySelector('[data-testid="lead-detail-generate-pitch"]'); if(btn){btn.innerHTML='<i data-lucide="loader"></i>Generating…';lucide.createIcons();}
+    setTimeout(function(){
+      // Deck follows a proven proposal sequence: cover → credibility → problem → solution →
+      // how-it-works → architecture → phases → proof → team → stack → objections → price → CTA.
+      var slides=[
+        {c:'cover',n:'',h:'AP Invoice Automation',p:'Proposal for ATEC Group',s:'Prepared by Riseup Labs · Enterprise software & AI since 2009'},
+        {n:'01',h:'Why Riseup Labs',b:['Enterprise software & AI partner since 2009','250+ specialists — web, mobile, AI, QA','Delivered document-AI & enterprise integrations for global clients']},
+        {n:'02',h:'The problem',p:'ATEC\'s AP team keys thousands of supplier invoices by hand every month — slow month-end close and error-prone three-way matching.'},
+        {n:'03',h:'Our solution',p:'An AI pipeline reads each invoice, extracts the figures, three-way-matches them against POs & goods receipts, and posts clean entries straight into SAP — anything uncertain routed to a review queue.'},
+        {n:'04',h:'How it works',b:['Omni-channel intake — email, portal, drive, API','Layout-aware AI extraction with confidence scoring','3-way match → validation → idempotent SAP posting','Exception cockpit for the review queue']},
+        {n:'05',h:'Architecture',p:'Intake → Extraction AI → Validation → SAP posting, with a human-in-the-loop exception cockpit and a full audit trail.'},
+        {n:'06',h:'Scope & phases',b:['M1 · Discovery, SAP sandbox & intake (Wk 1–3)','M2 · Extraction, 3-way match & posting (Wk 4–8)','M3 · Cockpit, MIS, UAT & go-live (Wk 9–12)']},
+        {n:'07',h:'We\'ve done this before',b:['HR AI Automation — AI document generation + approvals','ContentOS — multi-agent AI content pipeline','OPS Web Application — UNICEF ECARO enterprise migration']},
+        {n:'08',h:'Your team',b:['Project Manager + Solution Architect','Technical Lead · Senior & Mid Backend/Frontend','DevOps · QA (Senior & Mid) · Product Analyst']},
+        {n:'09',h:'Tech stack',p:'React · Node.js / NestJS · Python (AI extraction) · PostgreSQL · AWS · SAP posting adapter · CI/CD.'},
+        {n:'10',h:'You might ask…',b:['"Our invoice formats vary" → trained per-source, improves over time','"Can\'t risk bad data in SAP" → nothing posts without validation','"Integration is painful" → dedicated adapter, idempotent + rollback']},
+        {n:'11',h:'Investment',b:['Fixed $86,000 across three milestones','30% kickoff · 30% build · 40% go-live','Optional add-ons: extended DevOps & training']},
+        {n:'12',h:'Next step',p:'Lock milestone one and feel the throughput gain before quarter-end. Shall we schedule the kickoff?'}
+      ];
+      var host=document.getElementById('pitch-content');
+      host.innerHTML=slides.map(function(s){
+        var body = s.b ? '<ul class="sbul">'+s.b.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>' : '<p>'+s.p+'</p>';
+        var sub = s.s ? '<div class="ssub">'+s.s+'</div>' : '';
+        return '<div class="slide '+(s.c||'')+'"><span class="sn">'+(s.n||'')+'</span><span class="sh"></span><h4>'+s.h+'</h4>'+body+sub+'</div>';
+      }).join('');
+      document.getElementById('pitch-empty').style.display='none';host.style.display='grid';
+      var dl=document.getElementById('pitch-dl');if(dl)dl.style.display='';
+    },1000);
+  };
+
+  // ---- Auto-height proposal embed (page scrolls, no inner box) ----
+  // Primary: the embedded doc posts its height (works across the file:// origin boundary).
+  window.addEventListener('message',function(e){if(e&&e.data&&e.data.t==='ld-h'&&e.data.h>200){var f=document.querySelector('iframe.autoframe');if(f)f.style.height=(e.data.h+8)+'px';}});
+  // Fallback: same-origin measurement if postMessage isn't received.
+  function fitFrames(){document.querySelectorAll('iframe.autoframe').forEach(function(f){try{var h=f.contentWindow.document.body.scrollHeight;if(h>80)f.style.height=(h+24)+'px';}catch(e){}});}
+  window.addEventListener('load',function(){setTimeout(fitFrames,350);setTimeout(fitFrames,1000);});
+  document.querySelectorAll('iframe.autoframe').forEach(function(f){f.addEventListener('load',function(){setTimeout(fitFrames,250);});});
+  document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){setTimeout(fitFrames,150);});});
+
+  // ---- Editable, AI-drafted budget (Riseup FIFA structure: resource count × days × per-day rate) ----
+  var CUR={USD:{r:1,s:'$'},EUR:{r:0.92,s:'€'},GBP:{r:0.79,s:'£'},BDT:{r:117,s:'৳'},AED:{r:3.67,s:'AED '},SAR:{r:3.75,s:'SAR '}};
+  // Rate card (USD/day) — learned from Riseup's real budgets, seniority-tiered. Any line stays editable.
+  var RATECARD={
+   'Project Manager':{Senior:120,Mid:95,Junior:70},'Product Designer':{Senior:90,Mid:75,Junior:55},
+   'Product Analyst':{Senior:100,Mid:80,Junior:60},'Game Designer':{Senior:100,Mid:80,Junior:60},
+   'UI/UX Designer':{Senior:90,Mid:70,Junior:50},'Graphics Designer':{Senior:80,Mid:60,Junior:45},
+   'Motion Graphics Designer':{Senior:85,Mid:65,Junior:48},'2D Artist':{Senior:80,Mid:60,Junior:45},
+   '3D Artist':{Senior:95,Mid:72,Junior:52},'Illustrator':{Senior:80,Mid:60,Junior:45},
+   'Technical Lead':{Senior:130,Mid:110,Junior:85},'Backend Developer':{Senior:110,Mid:85,Junior:60},
+   'Frontend Developer':{Senior:110,Mid:85,Junior:60},'Unity Game Developer':{Senior:115,Mid:90,Junior:62},
+   'VR Developer':{Senior:120,Mid:95,Junior:65},'DevOps':{Senior:110,Mid:90,Junior:65},
+   'Moodle Expert':{Senior:100,Mid:80,Junior:60},'eLearning Expert':{Senior:100,Mid:80,Junior:60},
+   'QA Expert':{Senior:80,Mid:60,Junior:45},'Trainer':{Senior:80,Mid:60,Junior:45},
+   'Solution Architect':{Senior:140,Mid:120,Junior:0}
+  };
+  var ALLROLES=Object.keys(RATECARD), TYPES=['Senior','Mid','Junior'];
+  // Riseup budgets = one sheet per milestone; each milestone has department groups of role lines.
+  // Seed = the AP Invoice Automation engagement. Base departments sum to exactly $86,000
+  // (matches the proposal price); optional add-ons are excluded unless toggled on.
+  //  MP 12,000 + Art 8,000 + Development 55,800 + Others 10,200 = 86,000.
+  var SEED=[
+   {name:'Development',adj:{cont:0,disc:0,vat:0},groups:[
+    {dep:'Managing & Planning',opt:false,rows:[{h:'Project Manager',ty:'Senior',u:1,d:50,r:120},{h:'Product Designer',ty:'Senior',u:1,d:40,r:90},{h:'Product Analyst',ty:'Mid',u:1,d:30,r:80}]},
+    {dep:'Art',opt:false,rows:[{h:'UI/UX Designer',ty:'Mid',u:2,d:40,r:70},{h:'Graphics Designer',ty:'Mid',u:1,d:40,r:60}]},
+    {dep:'Development',opt:false,rows:[{h:'Technical Lead',ty:'Senior',u:1,d:60,r:130},{h:'Solution Architect',ty:'Senior',u:1,d:50,r:140},{h:'Backend Developer',ty:'Senior',u:1,d:70,r:110},{h:'Backend Developer',ty:'Mid',u:2,d:90,r:85},{h:'Frontend Developer',ty:'Mid',u:2,d:80,r:85},{h:'DevOps',ty:'Senior',u:1,d:40,r:110}]},
+    {dep:'Others',opt:false,rows:[{h:'QA Expert',ty:'Mid',u:2,d:60,r:60},{h:'QA Expert',ty:'Senior',u:1,d:30,r:80},{h:'Trainer',ty:'Mid',u:1,d:10,r:60}]},
+    {dep:'Optional add-ons',opt:true,rows:[{h:'DevOps',ty:'Senior',u:1,d:20,r:110},{h:'Trainer',ty:'Mid',u:1,d:15,r:60}]}
+   ]}
+  ];
+  var MS=JSON.parse(JSON.stringify(SEED)), curMS=0;
+  function curGroups(){return MS[curMS].groups;}
+  function curObj(){return CUR[(document.getElementById('curSel')||{value:'USD'}).value];}
+  function money(usd){var c=curObj();return c.s+Math.round(usd*c.r).toLocaleString();}
+  function opts(list,sel){return list.map(function(o){return '<option'+(o===sel?' selected':'')+'>'+o+'</option>';}).join('');}
+  function renderTabs(){
+   var h=MS.map(function(m,i){return '<button class="mstab'+(i===curMS?' active':'')+'" onclick="switchMS('+i+')" data-testid="lead-detail-ms-'+i+'">'+m.name+'</button>';}).join('');
+   h+='<button class="mstab add" onclick="addMS()" data-testid="lead-detail-budget-add-ms"><i data-lucide="plus" style="width:13px"></i>Add milestone</button>';
+   document.getElementById('msTabs').innerHTML=h;
+  }
+  window.switchMS=function(i){curMS=i;renderBudget();};
+  window.addMS=function(){MS.push({name:'Milestone '+(MS.length+1),adj:{cont:0,disc:0,vat:0},groups:[{dep:'Development',opt:false,rows:[{h:'Backend Developer',ty:'Mid',u:1,d:5,r:85}]}]});curMS=MS.length-1;renderBudget();};
+  window.resetBudget=function(){MS=JSON.parse(JSON.stringify(SEED));curMS=0;renderBudget();};
+  window.addDept=function(){curGroups().push({dep:'New department',opt:false,rows:[{h:'Backend Developer',ty:'Mid',u:1,d:5,r:85}]});renderBudget();};
+  window.addRow=function(bi){curGroups()[bi].rows.push({h:'Backend Developer',ty:'Mid',u:1,d:5,r:85});renderBudget();};
+  window.delRow=function(bi,ri){var g=curGroups()[bi];g.rows.splice(ri,1);if(!g.rows.length)curGroups().splice(bi,1);renderBudget();};
+  window.depEdit=function(bi,v){curGroups()[bi].dep=v;renderBudget();};
+  window.roleEdit=function(sel){var row=curGroups()[+sel.dataset.bi].rows[+sel.dataset.ri];row.h=sel.value;var rc=RATECARD[row.h];if(rc&&rc[row.ty])row.r=rc[row.ty];renderBudget();};
+  window.typeEdit=function(sel){var row=curGroups()[+sel.dataset.bi].rows[+sel.dataset.ri];row.ty=sel.value;var rc=RATECARD[row.h];if(rc&&rc[row.ty])row.r=rc[row.ty];renderBudget();};
+  window.cellEdit=function(inp){var row=curGroups()[+inp.dataset.bi].rows[+inp.dataset.ri],k=inp.dataset.k,val=+inp.value||0;
+   if(k==='r'){row.r=val/curObj().r;}else{row[k]=val;} recalcAll();};
+  window.adjEdit=function(k,v){var val=Math.max(0,+v||0);if(k==='disc')val=Math.min(100,val);MS[curMS].adj[k]=val;recalcAll();};
+  window.renderBudget=function(){
+   renderTabs();
+   var m=MS[curMS],showOpt=document.getElementById('optToggle').checked,html='',sl=0;
+   m.groups.forEach(function(dep,bi){
+    if(dep.opt&&!showOpt)return; sl++;
+    dep.rows.forEach(function(row,ri){
+     html+='<tr'+(dep.opt?' class="optrow"':'')+'>';
+     if(ri===0){html+='<td class="num">'+sl+'</td><td rowspan="'+dep.rows.length+'"><input class="depname" value="'+dep.dep.replace(/"/g,'&quot;')+'" onchange="depEdit('+bi+',this.value)"></td>';}else{html+='<td></td>';}
+     html+='<td><select class="cell" data-bi="'+bi+'" data-ri="'+ri+'" onchange="roleEdit(this)">'+opts(ALLROLES.indexOf(row.h)<0?[row.h].concat(ALLROLES):ALLROLES,row.h)+'</select></td>'
+      +'<td><select class="cell" data-bi="'+bi+'" data-ri="'+ri+'" onchange="typeEdit(this)">'+opts(TYPES,row.ty)+'</select></td>'
+      +'<td class="num"><input class="cell" type="number" min="0" value="'+row.u+'" data-bi="'+bi+'" data-ri="'+ri+'" data-k="u" oninput="cellEdit(this)"></td>'
+      +'<td class="num"><input class="cell" type="number" min="0" value="'+row.d+'" data-bi="'+bi+'" data-ri="'+ri+'" data-k="d" oninput="cellEdit(this)"></td>'
+      +'<td class="num"><input class="cell" type="number" min="0" value="'+Math.round(row.r*curObj().r)+'" data-bi="'+bi+'" data-ri="'+ri+'" data-k="r" oninput="cellEdit(this)"></td>'
+      +'<td class="num uc" data-bi="'+bi+'" data-ri="'+ri+'"></td>'
+      +'<td class="num"><button class="delrow" title="Remove line" onclick="delRow('+bi+','+ri+')"><i data-lucide="x"></i></button></td></tr>';
+    });
+    html+='<tr'+(dep.opt?' class="optrow"':'')+'><td></td><td></td><td colspan="7"><button class="addrole" onclick="addRow('+bi+')"><i data-lucide="plus" style="width:13px"></i>Add role</button></td></tr>';
+    html+='<tr class="bt-sub'+(dep.opt?' optrow':'')+'"><td></td><td colspan="6">'+dep.dep+' — subtotal</td><td class="num sub" data-bi="'+bi+'"></td><td></td></tr>';
+   });
+   html+='<tr class="adjrow"><td></td><td class="lbl" colspan="6">Subtotal (all departments)</td><td class="num" id="bSubAll"></td><td></td></tr>';
+   html+='<tr class="adjrow"><td></td><td class="lbl" colspan="5">Contingency</td><td class="num"><input class="pctin" type="number" min="0" value="'+m.adj.cont+'" oninput="adjEdit(\'cont\',this.value)" data-testid="lead-detail-budget-contingency">%</td><td class="num" id="cAmt"></td><td></td></tr>';
+   html+='<tr class="adjrow"><td></td><td class="lbl" colspan="5">Discount</td><td class="num"><input class="pctin" type="number" min="0" value="'+m.adj.disc+'" oninput="adjEdit(\'disc\',this.value)" data-testid="lead-detail-budget-discount">%</td><td class="num" id="dAmt"></td><td></td></tr>';
+   html+='<tr class="adjrow"><td></td><td class="lbl" colspan="5">VAT / Tax</td><td class="num"><input class="pctin" type="number" min="0" value="'+m.adj.vat+'" oninput="adjEdit(\'vat\',this.value)" data-testid="lead-detail-budget-vat">%</td><td class="num" id="vAmt"></td><td></td></tr>';
+   html+='<tr class="bt-total"><td></td><td colspan="7">Total — '+m.name+' milestone</td><td class="num"><span class="accent" id="bTotalCell"></span></td></tr>';
+   document.getElementById('bBody').innerHTML=html;
+   document.getElementById('bTitle').textContent='Budget — '+m.name;
+   document.getElementById('bHead').textContent='Cost Breakdown · '+m.name;
+   if(window.lucide)lucide.createIcons();
+   recalcAll();
+  };
+  function msSub(m,showOpt){var s=0;m.groups.forEach(function(g){if(g.opt&&!showOpt)return;g.rows.forEach(function(r){s+=r.u*r.d*r.r;});});return s;}
+  function msTotal(m,showOpt){var sub=msSub(m,showOpt),a=m.adj,c=sub*a.cont/100,d=sub*a.disc/100,afterD=sub+c-d,v=afterD*a.vat/100;return afterD+v;}
+  window.recalcAll=function(){
+   var m=MS[curMS],showOpt=document.getElementById('optToggle').checked,subAll=0;
+   m.groups.forEach(function(dep,bi){var sub=0;
+    dep.rows.forEach(function(row,ri){var uc=row.u*row.d*row.r;sub+=uc;var c=document.querySelector('.uc[data-bi="'+bi+'"][data-ri="'+ri+'"]');if(c)c.textContent=money(uc);});
+    var sc=document.querySelector('.sub[data-bi="'+bi+'"]');if(sc)sc.textContent=money(sub);
+    if(!dep.opt||showOpt)subAll+=sub;});
+   var a=m.adj,cont=subAll*a.cont/100,disc=subAll*a.disc/100,afterD=subAll+cont-disc,vat=afterD*a.vat/100,total=afterD+vat;
+   function set(id,txt){var e=document.getElementById(id);if(e)e.textContent=txt;}
+   set('bSubAll',money(subAll));set('cAmt','+'+money(cont));set('dAmt','−'+money(disc));set('vAmt','+'+money(vat));
+   set('bTotalCell',money(total));set('bGrand',money(total));
+   var eng=0;MS.forEach(function(mm){eng+=msTotal(mm,showOpt);});
+   var e=document.getElementById('bEngage');if(e)e.innerHTML='&nbsp;'+money(eng);
+  };
+  renderBudget();
+  setStatus('approved');
+</script>
+
+<!-- LOSS-REASON MODAL — required when a sent lead is marked Lost (feeds the learning loop). -->
+<div class="send-overlay" id="loss-overlay" onclick="closeLoss()"></div>
+<div class="send-modal" id="loss-modal" role="dialog" aria-modal="true" aria-label="Mark lead as lost">
+  <div class="sm-head"><i data-lucide="x-circle" style="width:18px;color:var(--danger)"></i><span>Mark lead as Lost</span><i data-lucide="x" style="width:18px;margin-left:auto;cursor:pointer" onclick="closeLoss()" data-testid="lead-detail-loss-close"></i></div>
+  <div class="sm-body">
+    <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px">Recording why a lead was lost sharpens future proposals and budgets.</p>
+    <label class="sm-l">Reason</label>
+    <select class="sm-i" id="lossSelect" data-testid="lead-detail-loss-reason">
+      <option value="">Select a reason…</option>
+      <option>Budget too high</option>
+      <option>Scope mismatch</option>
+      <option>Timeline too long</option>
+      <option>Lost to competitor</option>
+      <option>No response</option>
+      <option>Other</option>
+    </select>
+    <label class="sm-l">Note (optional)</label>
+    <textarea class="sm-i" style="height:80px" id="lossNote" data-testid="lead-detail-loss-note" placeholder="Any extra context…"></textarea>
+    <p id="lossErr" style="display:none;font-size:12.5px;color:var(--danger);margin-top:8px">Please select a reason.</p>
+  </div>
+  <div class="sm-foot">
+    <button class="btn btn-secondary" onclick="closeLoss()" data-testid="lead-detail-loss-cancel">Cancel</button>
+    <button class="btn btn-danger" onclick="confirmLoss()" data-testid="lead-detail-loss-confirm"><i data-lucide="x-circle" style="width:15px"></i>Mark Lost</button>
+  </div>
+</div>
+
+<!-- SEND DOCUMENTS (EMAIL) MODAL — DISABLED for production (feature-flagged off). Kept in code for dev; not opened by any active control. -->
+<div class="send-overlay" id="send-overlay" onclick="closeSend()"></div>
+<div class="send-modal" id="send-modal" role="dialog" aria-modal="true" aria-label="Send documents">
+  <div class="sm-head"><i data-lucide="mail" style="width:18px;color:var(--primary)"></i><span>Send documents to client</span><i data-lucide="x" style="width:18px;margin-left:auto;cursor:pointer" onclick="closeSend()" data-testid="lead-detail-send-close"></i></div>
+  <div class="sm-body">
+    <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px">Emails the approved documents as attachments — no public link is created.</p>
+    <label class="sm-l">To</label>
+    <input class="sm-i" value="rezaul.mahmud@atecgroup.com" data-testid="lead-detail-send-to">
+    <label class="sm-l">Cc (optional)</label>
+    <input class="sm-i" placeholder="colleague@atecgroup.com" data-testid="lead-detail-send-cc">
+    <label class="sm-l">Subject</label>
+    <input class="sm-i" value="Riseup Labs — Proposal & Budget: AP Invoice Automation" data-testid="lead-detail-send-subject">
+    <label class="sm-l">Message</label>
+    <textarea class="sm-i" style="height:88px" data-testid="lead-detail-send-message">Dear Rezaul,
+
+Please find attached our proposal and budget for the AP Invoice Automation project. We'd be glad to walk you through it — just let us know a good time.
+
+Best regards,
+Farah Karim · Riseup Labs</textarea>
+    <label class="sm-l">Attachments</label>
+    <div class="sm-files">
+      <span class="sm-file"><i data-lucide="file-text" style="width:15px;color:var(--danger)"></i>proposal.pdf</span>
+      <span class="sm-file"><i data-lucide="sheet" style="width:15px;color:var(--success)"></i>budget.xlsx</span>
+    </div>
+  </div>
+  <div class="sm-foot">
+    <button class="btn btn-secondary" onclick="closeSend()" data-testid="lead-detail-send-cancel">Cancel</button>
+    <button class="btn btn-primary" onclick="confirmSend()" data-testid="lead-detail-send-confirm"><i data-lucide="send" style="width:15px"></i>Send email</button>
+  </div>
+</div>
+<style>
+.send-overlay{position:fixed;inset:0;background:rgba(15,15,15,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:90}
+.send-overlay.show{opacity:1;pointer-events:auto}
+.send-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%);width:min(560px,94vw);max-height:88vh;overflow:auto;background:#fff;
+ border:1px solid var(--border);border-radius:12px;box-shadow:0 30px 80px rgba(15,15,15,.28);z-index:95;opacity:0;pointer-events:none;transition:all .22s var(--ease,ease)}
+.send-modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.sm-head{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--border);font-weight:600}
+.sm-body{padding:18px 20px}
+.sm-l{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin:12px 0 5px}
+.sm-l:first-of-type{margin-top:0}
+.sm-i{width:100%;border:1px solid var(--border);border-radius:6px;padding:9px 11px;font:inherit;font-size:13px;color:var(--text);resize:vertical}
+.sm-files{display:flex;gap:8px;flex-wrap:wrap}
+.sm-file{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:7px 11px}
+.sm-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)}
+</style>
+</body>
+</html>

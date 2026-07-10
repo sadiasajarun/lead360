@@ -1,0 +1,5 @@
+# Backend scope rules (Lead360) — full rules in ../.claude/rules/stacks/nestjs.rules.md
+# Architecture: Controller -> Service -> Repository -> Entity; ALL layers extend src/core/base/*.
+# Guards/decorators/filters/interceptors/pipes live in src/core/ (NOT feature modules).
+# Each feature in src/modules/{feature}/ with entity, repository, service, controller, module + dtos/.
+# JWT in httpOnly cookies; JWT_SECRET required (no fallback). Money = integer minor units. No `any`.

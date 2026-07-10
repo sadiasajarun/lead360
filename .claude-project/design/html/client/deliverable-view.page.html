@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIFA Campaign Microsite — Proposal &amp; Budget · Prepared for FIFA Partner Co · Riseup Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --orange:#EA5400;--orange-2:#FF8A3D;--orange-press:#CC4900;--orange-soft:rgba(234,84,0,.08);
+ --charcoal:#1A1715;--white:#FFFFFF;--warm:#FBF7F3;--warm-2:#F5EEE7;
+ --hair:#EAE4DE;--muted:#6B6660;--subtle:#9A948E;
+ --teal:#0E9F8E;--amber:#F4A93C;
+ --grad:linear-gradient(120deg,#EA5400,#FF8A3D);
+ --ease:cubic-bezier(.2,.7,.2,1);
+ --shadow:0 8px 30px rgba(26,23,21,.08);
+ --shadow-lg:0 20px 60px rgba(26,23,21,.14);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--white);color:var(--charcoal);
+ -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;line-height:1.6;letter-spacing:-.01em}
+a{color:inherit;text-decoration:none}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.15}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 20px;border-radius:12px;border:1px solid transparent;
+ font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .3s var(--ease);white-space:nowrap}
+.btn.sm{height:34px;padding:0 14px;font-size:13px;border-radius:9px}
+.btn i{width:17px;height:17px}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 6px 18px rgba(234,84,0,.28)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(234,84,0,.36)}
+.btn-ghost{background:var(--white);border-color:var(--hair);color:var(--charcoal)}
+.btn-ghost:hover{background:var(--warm);border-color:#dcd4cb}
+.btn-dark{background:var(--charcoal);color:#fff}.btn-dark:hover{background:#000;transform:translateY(-1px)}
+
+/* ---------- top bar + progress ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;gap:14px;height:64px;padding:0 26px;
+ background:rgba(255,255,255,.82);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--hair)}
+.wordmark{display:flex;align-items:center;gap:11px;font-weight:700;font-size:16px}
+.wordmark .mk{width:30px;height:30px;border-radius:9px;background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;box-shadow:0 4px 12px rgba(234,84,0,.3)}
+.wordmark small{display:block;font-size:10px;font-weight:600;color:var(--subtle);letter-spacing:.08em;text-transform:uppercase;margin-top:-2px}
+.topbar .spacer{margin-left:auto}
+.topbar .actions{display:flex;align-items:center;gap:10px}
+.progress-track{position:fixed;top:64px;left:0;right:0;height:3px;background:transparent;z-index:60}
+.progress-bar{height:100%;width:0;background:var(--grad);transition:width .12s linear;box-shadow:0 0 12px rgba(234,84,0,.5)}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);gap:0;max-width:1220px;margin:0 auto;padding-top:64px}
+.sidenav{position:sticky;top:96px;align-self:start;height:calc(100vh - 120px);overflow-y:auto;padding:28px 14px 40px 26px;
+ display:flex;flex-direction:column;gap:2px;scrollbar-width:thin}
+.sidenav::-webkit-scrollbar{width:5px}.sidenav::-webkit-scrollbar-thumb{background:var(--hair);border-radius:4px}
+.sidenav .nav-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--subtle);padding:0 12px 12px}
+.sidenav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--muted);
+ transition:all .25s var(--ease);position:relative}
+.sidenav a .idx{font-size:11px;font-weight:700;color:var(--subtle);width:18px;flex:0 0 18px;text-align:center;transition:color .25s}
+.sidenav a:hover{background:var(--warm);color:var(--charcoal)}
+.sidenav a.active{background:var(--orange-soft);color:var(--orange)}
+.sidenav a.active .idx{color:var(--orange)}
+.sidenav a.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--grad)}
+
+.doc{min-width:0;padding:0 46px 160px}
+
+/* ---------- hero cover ---------- */
+.cover{position:relative;border-radius:26px;overflow:hidden;margin:16px 0 20px;box-shadow:var(--shadow-lg)}
+.cover .canvas{position:relative;padding:66px 56px 60px;background:
+ radial-gradient(1200px 500px at 88% -10%,rgba(255,138,61,.45),transparent 55%),
+ radial-gradient(900px 500px at 5% 120%,rgba(234,84,0,.4),transparent 55%),
+ linear-gradient(150deg,#1A1715 0%,#2a211c 55%,#3a2410 100%);color:#fff;overflow:hidden}
+.cover .orb{position:absolute;border-radius:50%;filter:blur(2px);opacity:.5;pointer-events:none}
+.cover .orb.a{width:200px;height:200px;right:8%;top:-30px;background:radial-gradient(circle,rgba(255,138,61,.7),transparent 62%);animation:float 9s var(--ease) infinite}
+.cover .orb.b{width:140px;height:140px;left:12%;bottom:-30px;background:radial-gradient(circle,rgba(234,84,0,.7),transparent 62%);animation:float 11s var(--ease) infinite reverse}
+@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(18px,-22px)}}
+.cover .grid-motif{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle at 70% 30%,#000,transparent 75%)}
+.cover-top{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2;margin-bottom:44px}
+.cover-mk{display:flex;align-items:center;gap:12px;font-weight:700;font-size:16px}
+.cover-mk .mk{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;font-weight:800;font-size:16px;box-shadow:0 6px 16px rgba(234,84,0,.4)}
+.cover-prepared{font-size:12.5px;color:rgba(255,255,255,.72);text-align:right;line-height:1.5}
+.cover-prepared b{color:#fff;font-weight:700}
+.cover .eyebrow{position:relative;z-index:2;display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--orange-2);margin-bottom:18px}
+.cover .eyebrow span{width:26px;height:1.5px;background:var(--orange-2)}
+.cover h1{position:relative;z-index:2;font-size:46px;font-weight:800;max-width:16ch;margin-bottom:18px}
+.cover .sub{position:relative;z-index:2;font-size:16.5px;color:rgba(255,255,255,.78);max-width:52ch;margin-bottom:36px}
+.cover .facts{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:14px}
+.cover .fact{display:flex;flex-direction:column;gap:3px;padding:14px 20px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(4px)}
+.cover .fact .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.cover .fact .v{font-size:20px;font-weight:800}
+.cover .fact .v small{font-size:12px;font-weight:600;color:rgba(255,255,255,.7)}
+
+/* ---------- sections ---------- */
+.section{scroll-margin-top:110px;padding:46px 0 8px;border-top:1px solid var(--hair)}
+.section:first-of-type{border-top:none}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.sec-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:22px}
+.sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:13px;background:var(--orange-soft);color:var(--orange);display:grid;place-items:center;font-weight:800;font-size:16px}
+.sec-titles{flex:1;min-width:0}
+.sec-kicker{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin-bottom:5px}
+.sec-titles h2{font-size:27px;font-weight:800}
+.sec-titles p.lead{color:var(--muted);font-size:15.5px;margin-top:8px;max-width:66ch}
+.comment-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:9px;border:1px solid var(--hair);
+ background:var(--white);color:var(--muted);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .25s var(--ease)}
+.comment-btn:hover{border-color:var(--orange);color:var(--orange);background:var(--orange-soft)}
+.comment-btn i{width:14px;height:14px}
+.comment-btn .cnt{background:var(--orange);color:#fff;border-radius:20px;min-width:16px;height:16px;display:none;place-items:center;font-size:10px;padding:0 4px}
+.comment-btn.has .cnt{display:grid}
+
+p.body{color:#3a3531;font-size:15.5px;margin-bottom:14px}
+.prose h3{font-size:17px;font-weight:700;margin:22px 0 10px}
+.callout{background:var(--warm);border:1px solid var(--hair);border-left:3px solid var(--orange);border-radius:14px;padding:18px 20px;margin:16px 0}
+.callout .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--orange);margin-bottom:6px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--white);border:1px solid var(--hair);border-radius:16px;padding:20px;transition:all .3s var(--ease)}
+.card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.card .ic{width:38px;height:38px;border-radius:11px;background:var(--orange-soft);color:var(--orange);display:grid;place-items:center;margin-bottom:12px}
+.card .ic i{width:19px;height:19px}
+.card h4{font-size:15.5px;font-weight:700;margin-bottom:6px}
+.card p{font-size:13.5px;color:var(--muted)}
+ul.ticks{list-style:none;display:flex;flex-direction:column;gap:9px;margin:10px 0}
+ul.ticks li{display:flex;gap:11px;font-size:14.5px;color:#3a3531}
+ul.ticks li i{flex:0 0 auto;width:20px;height:20px;border-radius:7px;background:var(--orange-soft);color:var(--orange);display:grid;place-items:center;margin-top:1px}
+ul.ticks li i svg{width:13px;height:13px}
+
+/* target website chips */
+.site-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.site-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border:1px solid var(--hair);border-radius:14px;background:var(--white);transition:all .25s var(--ease)}
+.site-row:hover{border-color:#dcd4cb;background:var(--warm)}
+.site-row .fav{width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px}
+.site-row .u{font-weight:700;font-size:14.5px}
+.site-row .d{font-size:13px;color:var(--muted)}
+.site-row .tag{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--teal);background:rgba(14,159,142,.1);padding:5px 11px;border-radius:20px}
+
+/* delivery methodology stepper */
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:12px;counter-reset:st}
+.step{position:relative;padding:0 20px 0 0}
+.step .dot{width:38px;height:38px;border-radius:12px;background:var(--white);border:1.5px solid var(--hair);display:grid;place-items:center;font-weight:800;color:var(--orange);margin-bottom:12px;position:relative;z-index:2;transition:all .3s var(--ease)}
+.step:hover .dot{border-color:var(--orange);background:var(--orange-soft)}
+.step::after{content:'';position:absolute;left:38px;top:19px;right:14px;height:1.5px;background:var(--hair)}
+.step:last-child::after{display:none}
+.step h4{font-size:14.5px;font-weight:700;margin-bottom:5px}
+.step p{font-size:13px;color:var(--muted)}
+
+/* tech chips */
+.chips{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.chip{position:relative;display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border-radius:14px;border:1px solid var(--hair);
+ background:var(--white);font-weight:700;font-size:14px;cursor:default;transition:all .28s var(--ease)}
+.chip:hover{border-color:var(--orange);box-shadow:var(--shadow);transform:translateY(-2px)}
+.chip img{width:20px;height:20px;object-fit:contain}
+.chip .logo{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px}
+.chip .tip{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%) translateY(6px);width:230px;
+ background:var(--charcoal);color:#fff;font-size:12.5px;font-weight:500;line-height:1.5;padding:11px 14px;border-radius:12px;
+ opacity:0;visibility:hidden;transition:all .28s var(--ease);z-index:10;box-shadow:var(--shadow-lg);text-align:left}
+.chip .tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:var(--charcoal)}
+.chip .tip b{color:var(--orange-2)}
+.chip:hover .tip{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.chip-group-label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--subtle);margin:18px 0 4px}
+
+/* scope tables */
+.tbl-wrap{border:1px solid var(--hair);border-radius:16px;overflow:hidden;margin-top:12px}
+table.hr{width:100%;border-collapse:collapse;font-size:14px}
+table.hr thead th{background:var(--warm);text-align:left;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:13px 18px;border-bottom:1px solid var(--hair)}
+table.hr tbody td{padding:13px 18px;border-bottom:1px solid var(--hair);color:#3a3531}
+table.hr tbody tr:last-child td{border-bottom:none}
+table.hr tbody tr:hover{background:var(--warm)}
+table.hr .role{font-weight:700;color:var(--charcoal)}
+.scope-toggle{display:flex;gap:8px;margin-top:14px;margin-bottom:2px}
+.scope-tab{height:36px;padding:0 16px;border-radius:10px;border:1px solid var(--hair);background:var(--white);font:inherit;font-size:13.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .25s var(--ease)}
+.scope-tab:hover{border-color:#dcd4cb}
+.scope-tab.active{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+
+/* deliverables timeline */
+.timeline{display:flex;flex-direction:column;gap:10px;margin-top:14px;position:relative}
+.tl-week{border:1px solid var(--hair);border-radius:16px;overflow:hidden;transition:all .3s var(--ease);background:var(--white)}
+.tl-week:hover{border-color:#dcd4cb}
+.tl-week.open{box-shadow:var(--shadow)}
+.tl-head{display:flex;align-items:center;gap:16px;padding:16px 20px;cursor:pointer}
+.tl-badge{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;width:60px;height:52px;border-radius:12px;background:var(--warm);color:var(--orange);font-weight:800;transition:all .3s var(--ease)}
+.tl-week.open .tl-badge,.tl-head:hover .tl-badge{background:var(--grad);color:#fff}
+.tl-badge small{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.tl-badge b{font-size:20px;line-height:1}
+.tl-head .info{flex:1;min-width:0}
+.tl-head .info h4{font-size:15.5px;font-weight:700}
+.tl-head .info p{font-size:13px;color:var(--muted);margin-top:2px}
+.tl-head .phase{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px}
+.phase.discovery{background:rgba(14,159,142,.12);color:var(--teal)}
+.phase.build{background:var(--orange-soft);color:var(--orange)}
+.phase.launch{background:rgba(244,169,60,.16);color:#b8710a}
+.tl-head .chev{transition:transform .3s var(--ease);color:var(--subtle)}
+.tl-week.open .chev{transform:rotate(180deg)}
+.tl-body{max-height:0;overflow:hidden;transition:max-height .4s var(--ease)}
+.tl-body-in{padding:4px 20px 20px 96px}
+.tl-body ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.tl-body li{display:flex;gap:10px;font-size:14px;color:#3a3531}
+.tl-body li i{flex:0 0 auto;width:18px;height:18px;color:var(--teal);margin-top:2px}
+
+/* diagrams */
+.diagram-tabs{display:flex;gap:8px;margin:6px 0 18px;flex-wrap:wrap}
+.dgm-tab{height:38px;padding:0 16px;border-radius:11px;border:1px solid var(--hair);background:var(--white);font:inherit;font-size:13.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .25s var(--ease);display:inline-flex;align-items:center;gap:8px}
+.dgm-tab i{width:15px;height:15px}
+.dgm-tab:hover{border-color:#dcd4cb}
+.dgm-tab.active{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(234,84,0,.25)}
+.diagram-stage{border:1px solid var(--hair);border-radius:20px;background:
+ radial-gradient(700px 300px at 20% 0%,rgba(234,84,0,.05),transparent 60%),var(--warm);padding:26px;position:relative;min-height:340px;overflow:hidden}
+.dgm{display:none}.dgm.active{display:block}
+.dgm svg{width:100%;height:auto;display:block;overflow:visible}
+.node rect,.node circle{transition:all .3s var(--ease)}
+.node text{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;fill:var(--charcoal)}
+.node .sub{font-weight:500;fill:var(--muted)}
+.node{cursor:pointer;opacity:0;transform:scale(.86);transform-origin:center;transform-box:fill-box}
+.diagram-stage.in .node{opacity:1;transform:scale(1)}
+.node:nth-child(1){transition-delay:.05s}.node:nth-child(2){transition-delay:.13s}.node:nth-child(3){transition-delay:.21s}
+.node:nth-child(4){transition-delay:.29s}.node:nth-child(5){transition-delay:.37s}.node:nth-child(6){transition-delay:.45s}
+.node{transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.node:hover .box{filter:drop-shadow(0 8px 20px rgba(234,84,0,.28))}
+.node.dim{opacity:.32}
+.edge{stroke:#c9beb3;stroke-width:2;fill:none;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke .3s}
+.edge.lit{stroke:var(--orange);stroke-width:2.6}
+.diagram-stage.in .edge{animation:draw .7s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.flow-dot{fill:var(--orange);opacity:0}
+.diagram-stage.in .flow-dot{opacity:1}
+.dgm-legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12.5px;color:var(--muted)}
+.dgm-legend span{display:inline-flex;align-items:center;gap:7px}
+.dgm-legend .sw{width:11px;height:11px;border-radius:4px}
+.node-tip{position:absolute;background:var(--charcoal);color:#fff;font-size:12.5px;font-weight:500;padding:9px 13px;border-radius:11px;
+ max-width:220px;line-height:1.5;pointer-events:none;opacity:0;transition:opacity .2s;z-index:20;box-shadow:var(--shadow-lg)}
+.node-tip.show{opacity:1}
+.node-tip b{color:var(--orange-2);display:block;margin-bottom:3px}
+
+/* complimentary support */
+.support-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:14px}
+.support-item{display:flex;gap:14px;padding:18px;border:1px solid var(--hair);border-radius:16px;background:var(--white);transition:all .3s var(--ease)}
+.support-item:hover{box-shadow:var(--shadow);border-color:#dcd4cb}
+.support-item .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(14,159,142,.14),rgba(14,159,142,.06));color:var(--teal);display:grid;place-items:center}
+.support-item h4{font-size:15px;font-weight:700;margin-bottom:4px}
+.support-item p{font-size:13.5px;color:var(--muted)}
+
+/* ---------- BUDGET (inline financial) ---------- */
+.budget-shell{border:1px solid var(--hair);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);background:var(--white);margin-top:16px}
+.budget-banner{padding:22px 26px;background:
+ radial-gradient(600px 240px at 92% -30%,rgba(255,138,61,.4),transparent 60%),linear-gradient(120deg,#1A1715,#2a211c);color:#fff;position:relative;overflow:hidden}
+.budget-banner .grid-motif{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:34px 34px;mask-image:radial-gradient(circle at 85% 20%,#000,transparent 72%)}
+.budget-banner .lbl{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange-2);position:relative;z-index:2}
+.budget-banner h3{font-size:23px;font-weight:800;margin-top:6px;position:relative;z-index:2}
+.budget-banner .note{font-size:13px;color:rgba(255,255,255,.72);margin-top:6px;position:relative;z-index:2}
+.milestone-tabs{display:flex;gap:8px;padding:16px 26px 0;border-bottom:1px solid var(--hair);position:relative}
+.ms-tab{position:relative;height:44px;padding:0 6px;background:none;border:none;font:inherit;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;margin-right:14px;transition:color .25s}
+.ms-tab:hover{color:var(--charcoal)}
+.ms-tab.active{color:var(--orange)}
+.ms-underline{position:absolute;bottom:-1px;height:2.5px;background:var(--grad);border-radius:2px;transition:all .35s var(--ease)}
+.budget-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:16px 26px;background:var(--warm);border-bottom:1px solid var(--hair)}
+.toggle{display:inline-flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;color:#3a3531;cursor:pointer;user-select:none}
+.toggle input{display:none}
+.toggle .sw{width:38px;height:22px;border-radius:20px;background:#d8cfc5;position:relative;transition:background .3s var(--ease)}
+.toggle .sw::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .3s var(--ease)}
+.toggle input:checked + .sw{background:var(--orange)}
+.toggle input:checked + .sw::after{transform:translateX(16px)}
+.budget-toolbar .grow{flex:1}
+.budget-scroll{overflow-x:auto}
+table.budget{width:100%;border-collapse:collapse;font-size:13.5px;min-width:820px}
+table.budget thead th{background:var(--warm-2);text-align:left;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:13px 14px;border-bottom:1.5px solid var(--hair);white-space:nowrap}
+table.budget th.n,table.budget td.n{text-align:right;font-variant-numeric:tabular-nums}
+table.budget tbody td{padding:12px 14px;border-bottom:1px solid var(--hair);color:#3a3531}
+.grp-head td{background:var(--white);cursor:pointer;transition:background .2s}
+.grp-head:hover td{background:var(--warm)}
+.grp-head .dept{font-weight:800;color:var(--charcoal);display:flex;align-items:center;gap:9px}
+.grp-head .chev{width:15px;height:15px;color:var(--subtle);transition:transform .3s var(--ease)}
+.grp-head.collapsed .chev{transform:rotate(-90deg)}
+.grp-head .sl{font-weight:800;color:var(--orange)}
+.grp-head .subtotal{font-weight:800;color:var(--charcoal)}
+.line-row td{font-size:13.5px}
+.line-row .role{font-weight:600;color:var(--charcoal)}
+.line-row:hover td{background:var(--warm)}
+.line-row.hidden-grp{display:none}
+.line-row.dev-hide{opacity:.34}
+.type-pill{display:inline-flex;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.type-pill.senior{background:var(--orange-soft);color:var(--orange)}
+.type-pill.mid{background:rgba(14,159,142,.12);color:var(--teal)}
+.opt-row{background:rgba(244,169,60,.06)}
+.opt-row td:first-child{position:relative}
+.opt-row .role::after{content:'Optional';margin-left:8px;font-size:10px;font-weight:700;color:#b8710a;background:rgba(244,169,60,.16);padding:2px 7px;border-radius:20px;vertical-align:middle}
+.grand-row td{background:var(--charcoal);color:#fff;font-weight:800;font-size:15px;padding:16px 14px}
+.grand-row .glabel{letter-spacing:.02em}
+.grand-row .gtotal{font-size:18px}
+.row-comment{opacity:0;transition:opacity .2s;background:none;border:none;color:var(--subtle);cursor:pointer;padding:2px}
+.line-row:hover .row-comment{opacity:1}
+.row-comment:hover{color:var(--orange)}
+.row-comment i{width:14px;height:14px}
+.budget-foot{padding:16px 26px;background:var(--warm);border-top:1px solid var(--hair);display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.budget-foot .tl-note{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:#3a3531}
+.budget-foot .tl-note i{width:15px;height:15px;color:var(--orange)}
+
+/* payment terms / assumptions */
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.pay-card{border:1px solid var(--hair);border-radius:16px;padding:20px;background:var(--white);position:relative;overflow:hidden;transition:all .3s var(--ease)}
+.pay-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.pay-card .pct{font-size:30px;font-weight:800;color:var(--orange)}
+.pay-card .ph{font-size:14px;font-weight:700;margin:2px 0 5px}
+.pay-card p{font-size:12.5px;color:var(--muted)}
+.pay-card::before{content:'';position:absolute;right:-20px;top:-20px;width:70px;height:70px;border-radius:50%;background:var(--orange-soft)}
+
+/* acceptance / signoff */
+.sign-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.sign-box{border:1.5px dashed var(--hair);border-radius:16px;padding:24px;background:var(--warm)}
+.sign-box .who{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--subtle);margin-bottom:20px}
+.sign-line{border-bottom:1.5px solid var(--charcoal);height:38px;margin-bottom:8px}
+.sign-box .lbl{font-size:12.5px;color:var(--muted)}
+.closing{margin-top:36px;border-radius:22px;padding:44px 40px;text-align:center;position:relative;overflow:hidden;
+ background:radial-gradient(600px 300px at 50% -20%,rgba(255,138,61,.35),transparent 60%),linear-gradient(130deg,#1A1715,#3a2410);color:#fff}
+.closing h3{font-size:26px;font-weight:800;margin-bottom:10px;position:relative;z-index:2}
+.closing p{font-size:15px;color:rgba(255,255,255,.78);max-width:52ch;margin:0 auto 24px;position:relative;z-index:2}
+.closing .btn-row{display:flex;gap:12px;justify-content:center;position:relative;z-index:2}
+
+/* footer */
+.doc-footer{margin-top:40px;padding-top:26px;border-top:1px solid var(--hair);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--subtle)}
+
+/* comment panel */
+.overlay{position:fixed;inset:0;background:rgba(26,23,21,.35);backdrop-filter:blur(2px);opacity:0;visibility:hidden;transition:all .3s var(--ease);z-index:70}
+.overlay.show{opacity:1;visibility:visible}
+.cpanel{position:fixed;top:0;right:0;bottom:0;width:400px;max-width:92vw;background:var(--white);box-shadow:-20px 0 60px rgba(26,23,21,.18);
+ transform:translateX(100%);transition:transform .4s var(--ease);z-index:80;display:flex;flex-direction:column}
+.cpanel.show{transform:none}
+.cpanel-head{padding:22px 24px;border-bottom:1px solid var(--hair);display:flex;align-items:flex-start;gap:12px}
+.cpanel-head .t{flex:1}
+.cpanel-head .k{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--orange)}
+.cpanel-head h3{font-size:18px;font-weight:800;margin-top:4px}
+.cpanel-head .x{width:34px;height:34px;border-radius:10px;border:1px solid var(--hair);background:var(--white);display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.cpanel-head .x:hover{background:var(--warm);color:var(--charcoal)}
+.cpanel-body{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+.comment{border:1px solid var(--hair);border-radius:14px;padding:15px 16px;background:var(--white)}
+.comment .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.comment .av{width:30px;height:30px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px}
+.comment .who{font-weight:700;font-size:13.5px}
+.comment .when{font-size:11.5px;color:var(--subtle);margin-left:auto}
+.comment p{font-size:13.5px;color:#3a3531}
+.comment .demo-flag{margin-top:10px;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--orange);background:var(--orange-soft);padding:5px 10px;border-radius:20px}
+.comment .demo-flag i{width:13px;height:13px}
+.cpanel-foot{padding:16px 24px;border-top:1px solid var(--hair);background:var(--warm)}
+.cpanel-foot textarea{width:100%;border:1px solid var(--hair);border-radius:12px;padding:12px 14px;font:inherit;font-size:13.5px;resize:none;min-height:74px;background:var(--white)}
+.cpanel-foot textarea:focus{outline:none;border-color:var(--orange)}
+.cpanel-foot .row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:10px}
+.cpanel-foot .flag-toggle{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer}
+.cpanel-foot .flag-toggle input{accent-color:var(--orange);width:16px;height:16px}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:24px;opacity:0;visibility:hidden;transition:all .3s var(--ease)}
+.modal.show{opacity:1;visibility:visible}
+.modal .backdrop{position:absolute;inset:0;background:rgba(26,23,21,.45);backdrop-filter:blur(3px)}
+.modal .box{position:relative;width:480px;max-width:100%;background:var(--white);border-radius:22px;box-shadow:var(--shadow-lg);overflow:hidden;transform:scale(.96) translateY(10px);transition:transform .3s var(--ease)}
+.modal.show .box{transform:none}
+.modal .m-top{padding:26px 28px 20px;background:radial-gradient(500px 200px at 90% -40%,rgba(255,138,61,.35),transparent 60%),linear-gradient(120deg,#1A1715,#2a211c);color:#fff;position:relative}
+.modal .m-top .k{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange-2)}
+.modal .m-top h3{font-size:22px;font-weight:800;margin-top:6px}
+.modal .m-top p{font-size:13.5px;color:rgba(255,255,255,.72);margin-top:6px}
+.modal .m-top .x{position:absolute;top:20px;right:20px;width:32px;height:32px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);display:grid;place-items:center;cursor:pointer;color:#fff}
+.modal .m-body{padding:24px 28px 28px;display:flex;flex-direction:column;gap:14px}
+.field label{display:block;font-size:12.5px;font-weight:700;margin-bottom:6px;color:#3a3531}
+.field input,.field textarea{width:100%;border:1px solid var(--hair);border-radius:12px;padding:11px 14px;font:inherit;font-size:14px;background:var(--white);transition:border-color .2s}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--orange)}
+.field.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal .m-body .btn{justify-content:center;margin-top:4px}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--charcoal);color:#fff;padding:13px 20px;border-radius:14px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;visibility:hidden;transition:all .3s var(--ease);z-index:100;display:flex;align-items:center;gap:10px}
+.toast.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.toast i{width:17px;height:17px;color:var(--teal)}
+
+/* share popover */
+.share-wrap{position:relative}
+.share-pop{position:absolute;top:calc(100% + 8px);right:0;width:200px;background:var(--white);border:1px solid var(--hair);border-radius:14px;box-shadow:var(--shadow-lg);padding:8px;opacity:0;visibility:hidden;transform:translateY(-6px);transition:all .25s var(--ease);z-index:70}
+.share-wrap.open .share-pop{opacity:1;visibility:visible;transform:none}
+.share-pop button{display:flex;align-items:center;gap:11px;width:100%;height:40px;padding:0 12px;border:none;background:none;border-radius:10px;font:inherit;font-size:13.5px;font-weight:600;color:#3a3531;cursor:pointer;transition:background .2s}
+.share-pop button:hover{background:var(--warm);color:var(--charcoal)}
+.share-pop button i{width:16px;height:16px;color:var(--muted)}
+.share-pop .sep{height:1px;background:var(--hair);margin:6px 8px}
+
+/* currency select */
+.cur-wrap{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
+.cur-wrap select{height:34px;padding:0 10px;border:1px solid var(--hair);border-radius:9px;font:inherit;font-size:13px;font-weight:700;color:var(--charcoal);background:var(--white);cursor:pointer}
+.cur-wrap select:focus{outline:none;border-color:var(--orange)}
+
+/* comment replies */
+.comment .replies{margin-top:12px;padding-top:10px;border-top:1px solid var(--hair);display:flex;flex-direction:column;gap:10px}
+.comment .reply{padding:10px 12px;background:var(--warm);border-radius:11px}
+.comment .reply .top{margin-bottom:5px}
+.comment .reply .av{width:24px;height:24px;font-size:10px}
+.comment .reply p{font-size:12.5px}
+.comment .reply .note{margin-top:6px;display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--teal);background:rgba(14,159,142,.1);padding:3px 8px;border-radius:20px}
+.comment .reply .note i{width:11px;height:11px}
+.comment .reply-open{margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:none;border:none;font:inherit;font-size:12px;font-weight:700;color:var(--orange);cursor:pointer;padding:0}
+.comment .reply-open i{width:13px;height:13px}
+.comment .reply-form{margin-top:10px;display:none;gap:8px}
+.comment .reply-form.open{display:flex}
+.comment .reply-form input{flex:1;min-width:0;border:1px solid var(--hair);border-radius:9px;padding:8px 11px;font:inherit;font-size:12.5px;background:var(--white)}
+.comment .reply-form input:focus{outline:none;border-color:var(--orange)}
+
+/* print-only ToC */
+.print-toc{display:none}
+
+/* embed mode */
+body.embed{padding-top:0!important;background:#fff}
+body.embed .topbar,body.embed .progress-track,body.embed .sidenav,body.embed .tok,body.embed .comment-btn,body.embed .row-comment,body.embed #shareWrap{display:none!important}
+body.embed .shell{grid-template-columns:minmax(0,1fr);padding-top:0}
+body.embed .doc{padding-top:16px}
+
+/* responsive */
+@media(max-width:1080px){.shell{grid-template-columns:1fr}.sidenav{display:none}.doc{padding:0 24px 120px}}
+@media(max-width:640px){.cover h1{font-size:34px}.doc{padding:0 16px 100px}.grid-2,.grid-3,.pay-grid,.support-grid,.sign-grid,.stepper{grid-template-columns:1fr}.topbar .actions .btn span{display:none}.cover .canvas{padding:40px 28px}}
+
+/* print */
+@page{size:A4;margin:14mm}
+@media print{
+ .topbar,.progress-track,.sidenav,.comment-btn,.overlay,.cpanel,.modal,.toast,.closing .btn-row,.node-tip,.row-comment,.share-wrap,.cur-wrap{display:none!important}
+ body{background:#fff}
+ .shell{display:block;padding-top:0;max-width:100%}
+ .doc{padding:0}
+ .print-toc{display:block!important;break-after:page;page-break-after:always;margin-bottom:24px}
+ .print-toc h2{font-size:24px;font-weight:800;margin-bottom:6px}
+ .print-toc .k{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#EA5400;margin-bottom:16px}
+ .print-toc ol{list-style:none;counter-reset:toc}
+ .print-toc li{counter-increment:toc;display:flex;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid #EAE4DE;font-size:15px;font-weight:600}
+ .print-toc li::before{content:counter(toc,decimal-leading-zero);color:#EA5400;font-weight:800;width:28px;flex:0 0 28px}
+ .section{break-inside:avoid;page-break-inside:avoid}
+ .reveal{opacity:1!important;transform:none!important}
+ .node{opacity:1!important;transform:none!important}
+ .edge{stroke-dashoffset:0!important}
+ .cover{box-shadow:none;border:1px solid #ddd}
+ .card:hover,.chip:hover{transform:none;box-shadow:none}
+ .tl-body{max-height:none!important}
+ .line-row.hidden-grp{display:table-row!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<header class="topbar" data-testid="deliverable-topbar">
+  <a class="wordmark" href="../index.html" data-testid="deliverable-wordmark">
+    <span class="mk">R</span>
+    <span>Riseup Labs<small>Proposal Studio</small></span>
+  </a>
+  <div class="spacer"></div>
+  <div class="tok" style="display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:1px solid var(--hair);border-radius:20px;background:var(--warm);font-size:11.5px;font-weight:600;color:var(--muted);margin-right:6px">
+    <i data-lucide="lock" style="width:13px;height:13px;color:var(--teal)"></i>Tokenized preview · read-only
+  </div>
+  <div class="actions">
+    <button class="btn btn-ghost sm" onclick="window.print()" data-testid="deliverable-download-pdf"><i data-lucide="download"></i><span>Download PDF</span></button>
+    <div class="share-wrap" id="shareWrap">
+      <button class="btn btn-ghost sm" onclick="toggleShare(event)" data-testid="deliverable-share"><i data-lucide="share-2"></i><span>Share</span></button>
+      <div class="share-pop" id="sharePop">
+        <button onclick="shareVia('Email')" data-testid="deliverable-share-email"><i data-lucide="mail"></i>Email</button>
+        <button onclick="shareVia('Slack')" data-testid="deliverable-share-slack"><i data-lucide="message-circle"></i>Slack</button>
+        <button onclick="shareVia('Zoom')" data-testid="deliverable-share-zoom"><i data-lucide="video"></i>Zoom</button>
+        <div class="sep"></div>
+        <button onclick="copyShareLink()" data-testid="deliverable-share-copy"><i data-lucide="link"></i>Copy link</button>
+      </div>
+    </div>
+    <button class="btn btn-primary sm" id="demoTopBtn" onclick="openModal()" data-testid="deliverable-request-demo"><i data-lucide="calendar-check"></i><span>Request a demo</span></button>
+  </div>
+</header>
+<div class="progress-track"><div class="progress-bar" id="progressBar" data-testid="deliverable-progress"></div></div>
+
+<div class="shell">
+  <!-- ============ SIDE NAV ============ -->
+  <nav class="sidenav" aria-label="Sections" data-testid="deliverable-sidenav">
+    <div class="nav-title">Contents</div>
+    <a href="#s1" data-nav="s1" data-testid="deliverable-nav-s1"><span class="idx">01</span>Introduction</a>
+    <a href="#s2" data-nav="s2" data-testid="deliverable-nav-s2"><span class="idx">02</span>Context &amp; Objectives</a>
+    <a href="#s3" data-nav="s3" data-testid="deliverable-nav-s3"><span class="idx">03</span>Approach &amp; Methodology</a>
+    <a href="#s4" data-nav="s4" data-testid="deliverable-nav-s4"><span class="idx">04</span>Technical Stack</a>
+    <a href="#s5" data-nav="s5" data-testid="deliverable-nav-s5"><span class="idx">05</span>Scope of Work</a>
+    <a href="#s6" data-nav="s6" data-testid="deliverable-nav-s6"><span class="idx">06</span>Deliverables</a>
+    <a href="#s7" data-nav="s7" data-testid="deliverable-nav-s7"><span class="idx">07</span>Technical Diagrams</a>
+    <a href="#s8" data-nav="s8" data-testid="deliverable-nav-s8"><span class="idx">08</span>Complimentary Support</a>
+    <a href="#s9" data-nav="s9" data-testid="deliverable-nav-s9"><span class="idx">09</span>Financial Proposal</a>
+    <a href="#s10" data-nav="s10" data-testid="deliverable-nav-s10"><span class="idx">10</span>Out of Scope</a>
+    <a href="#s11" data-nav="s11" data-testid="deliverable-nav-s11"><span class="idx">11</span>Acceptance &amp; Sign-off</a>
+  </nav>
+
+  <!-- ============ DOCUMENT ============ -->
+  <main class="doc">
+
+    <!-- PRINT-ONLY TABLE OF CONTENTS -->
+    <div class="print-toc" data-testid="deliverable-print-toc">
+      <div class="k">Contents</div>
+      <h2>Table of Contents</h2>
+      <ol>
+        <li>Introduction</li>
+        <li>Context &amp; Objectives</li>
+        <li>Approach &amp; Methodology</li>
+        <li>Technical Stack</li>
+        <li>Scope of Work</li>
+        <li>Deliverables</li>
+        <li>Technical Diagrams</li>
+        <li>Complimentary Support</li>
+        <li>Financial Proposal</li>
+        <li>Out of Scope</li>
+        <li>Acceptance &amp; Sign-off</li>
+      </ol>
+    </div>
+
+    <!-- HERO COVER -->
+    <section class="cover" data-testid="deliverable-cover">
+      <div class="canvas">
+        <div class="grid-motif"></div>
+        <div class="orb a"></div><div class="orb b"></div>
+        <div class="cover-top">
+          <div class="cover-mk"><img src="../assets/riseup-logo.png" alt="Riseup Labs" style="height:40px;width:auto;display:block"></div>
+          <div class="cover-prepared">Prepared for<br><b>FIFA Partner Co</b></div>
+        </div>
+        <div class="eyebrow"><span></span>Combined Proposal &amp; Budget</div>
+        <h1>FIFA Campaign Microsite</h1>
+        <p class="sub">A high-performance, multi-region campaign microsite with integrated lead capture and CRM sync — engineered to convert global fan excitement into qualified partner leads.</p>
+        <div class="facts">
+          <div class="fact"><span class="k">Engagement</span><span class="v">Agency Build</span></div>
+          <div class="fact"><span class="k">Timeline</span><span class="v"><span class="countup" data-to="6">0</span> <small>weeks</small></span></div>
+          <div class="fact"><span class="k">Investment</span><span class="v">$<span class="countup" data-to="58000">0</span></span></div>
+          <div class="fact"><span class="k">Issued</span><span class="v" style="font-size:16px">01 Jul 2026</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1 INTRODUCTION -->
+    <section class="section reveal" id="s1" data-testid="deliverable-section-s1">
+      <div class="sec-head">
+        <div class="sec-num">01</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Introduction</div>
+          <h2>A microsite built for a global moment</h2>
+          <p class="lead">Thank you for the opportunity. This document combines our full technical proposal and financial breakdown into a single, transparent view — everything you need to say yes with confidence.</p>
+        </div>
+        <button class="comment-btn" data-section="Introduction" data-testid="deliverable-comment-s1"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <div class="prose">
+        <p class="body">Riseup Labs proposes to design, build and launch a bespoke campaign microsite for FIFA Partner Co. The platform will showcase the campaign across multiple regions, capture high-intent visitor interest, and route every lead directly into your CRM — all while sustaining flawless performance under peak, event-driven traffic spikes.</p>
+        <div class="grid-3">
+          <div class="card"><div class="ic"><i data-lucide="zap"></i></div><h4>Built to scale</h4><p>Edge-delivered and cached to absorb match-day traffic bursts without breaking a sweat.</p></div>
+          <div class="card"><div class="ic"><i data-lucide="magnet"></i></div><h4>Lead-first</h4><p>Every interaction is a capture opportunity, wired straight into your sales pipeline.</p></div>
+          <div class="card"><div class="ic"><i data-lucide="globe"></i></div><h4>Multi-region</h4><p>Localised content and governance across your priority markets from day one.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 CONTEXT & OBJECTIVES -->
+    <section class="section reveal" id="s2" data-testid="deliverable-section-s2">
+      <div class="sec-head">
+        <div class="sec-num">02</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Project Context &amp; Objectives</div>
+          <h2>The opportunity &amp; what success looks like</h2>
+          <p class="lead">FIFA Partner Co is activating a global sponsorship. The microsite is the digital front door — it must inform, excite, and convert, across every target market.</p>
+        </div>
+        <button class="comment-btn" data-section="Context & Objectives" data-testid="deliverable-comment-s2"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <ul class="ticks">
+            <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Drive measurable qualified-lead volume during the campaign window.</li>
+            <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Deliver a premium brand experience worthy of a global event.</li>
+            <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Sustain sub-2.5s load times under peak concurrent traffic.</li>
+            <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Give marketing a self-serve CMS for rapid content updates.</li>
+          </ul>
+        </div>
+        <div class="callout">
+          <div class="k">Why it matters</div>
+          <p style="font-size:14.5px;color:#3a3531">A campaign lives or dies in its first hours. Every second of latency and every friction point in the capture flow is lost pipeline. We engineer for the spike, not the average.</p>
+        </div>
+      </div>
+      <h3 style="font-size:16px;font-weight:700;margin:26px 0 4px">Target Websites</h3>
+      <div class="site-list">
+        <div class="site-row"><span class="fav">C</span><div><div class="u">campaign.fifapartner.co</div><div class="d">Primary global landing experience &amp; hero activation</div></div><span class="tag">New build</span></div>
+        <div class="site-row"><span class="fav">L</span><div><div class="u">leads.fifapartner.co</div><div class="d">Gated lead-capture &amp; registration funnel</div></div><span class="tag">New build</span></div>
+        <div class="site-row"><span class="fav">R</span><div><div class="u">fifapartner.co/regions/*</div><div class="d">Localised regional sub-pages (EU · MENA · APAC)</div></div><span class="tag">Localised</span></div>
+      </div>
+    </section>
+
+    <!-- 3 APPROACH & METHODOLOGY -->
+    <section class="section reveal" id="s3" data-testid="deliverable-section-s3">
+      <div class="sec-head">
+        <div class="sec-num">03</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Proposed Technical Approach &amp; Methodology</div>
+          <h2>How we build — deliberately, transparently</h2>
+          <p class="lead">A headless, component-driven architecture delivered through short, review-gated iterations so you see progress every week and steer as we go.</p>
+        </div>
+        <button class="comment-btn" data-section="Approach & Methodology" data-testid="deliverable-comment-s3"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <p class="body">We separate presentation from content (headless CMS + statically-generated frontend) so marketing moves fast without engineering bottlenecks, and the site stays instant everywhere.</p>
+      <h3 style="font-size:16px;font-weight:700;margin:22px 0 6px">Delivery Methodology</h3>
+      <div class="stepper">
+        <div class="step"><div class="dot">1</div><h4>Discover &amp; Design</h4><p>Workshops, IA, wireframes and a locked visual system.</p></div>
+        <div class="step"><div class="dot">2</div><h4>Iterative Build</h4><p>Weekly increments with staging demos and your sign-off.</p></div>
+        <div class="step"><div class="dot">3</div><h4>Harden &amp; Launch</h4><p>Load testing, QA, and a monitored zero-downtime go-live.</p></div>
+      </div>
+      <h3 style="font-size:16px;font-weight:700;margin:26px 0 6px">Environments &amp; Governance</h3>
+      <div class="grid-3">
+        <div class="card"><div class="ic"><i data-lucide="git-branch"></i></div><h4>Dev → Staging → Prod</h4><p>Three isolated environments; nothing reaches production unreviewed.</p></div>
+        <div class="card"><div class="ic"><i data-lucide="shield-check"></i></div><h4>Access &amp; roles</h4><p>Least-privilege CMS roles; audit trail on every publish.</p></div>
+        <div class="card"><div class="ic"><i data-lucide="clipboard-check"></i></div><h4>Weekly demos</h4><p>Live staging walkthrough each week — decisions logged.</p></div>
+      </div>
+    </section>
+
+    <!-- 4 TECHNICAL STACK -->
+    <section class="section reveal" id="s4" data-testid="deliverable-section-s4">
+      <div class="sec-head">
+        <div class="sec-num">04</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Proposed Technical Stack</div>
+          <h2>Proven, modern, boring-in-the-best-way</h2>
+          <p class="lead">Every choice is deliberate. Hover any chip to see exactly why we chose it for this build.</p>
+        </div>
+        <button class="comment-btn" data-section="Technical Stack" data-testid="deliverable-comment-s4"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <div class="chip-group-label">Frontend</div>
+      <div class="chips">
+        <div class="chip" data-testid="deliverable-chip-nextjs"><span class="logo" style="background:#000">N</span>Next.js<span class="tip"><b>Why Next.js</b>Static generation + edge rendering gives instant loads worldwide and effortless caching for traffic spikes.</span></div>
+        <div class="chip" data-testid="deliverable-chip-react"><span class="logo" style="background:#087ea4">R</span>React<span class="tip"><b>Why React</b>Mature component model and the deepest talent pool — maintainable long after launch.</span></div>
+        <div class="chip" data-testid="deliverable-chip-tailwind"><span class="logo" style="background:#06b6d4">T</span>Tailwind CSS<span class="tip"><b>Why Tailwind</b>Design-system-driven styling ships a pixel-consistent, responsive UI fast.</span></div>
+      </div>
+      <div class="chip-group-label">Backend &amp; CMS</div>
+      <div class="chips">
+        <div class="chip" data-testid="deliverable-chip-node"><span class="logo" style="background:#539e43">N</span>Node.js<span class="tip"><b>Why Node.js</b>Non-blocking I/O handles concurrent lead submissions and CRM calls smoothly at peak.</span></div>
+        <div class="chip" data-testid="deliverable-chip-strapi"><span class="logo" style="background:#4945ff">S</span>Strapi CMS<span class="tip"><b>Why Strapi</b>Headless, role-based content editing that lets marketing publish without developer help.</span></div>
+        <div class="chip" data-testid="deliverable-chip-postgres"><span class="logo" style="background:#336791">P</span>PostgreSQL<span class="tip"><b>Why PostgreSQL</b>Rock-solid relational integrity for lead data with rich querying for reporting.</span></div>
+      </div>
+      <div class="chip-group-label">Infrastructure &amp; Ops</div>
+      <div class="chips">
+        <div class="chip" data-testid="deliverable-chip-aws"><span class="logo" style="background:#ff9900">A</span>AWS<span class="tip"><b>Why AWS</b>Global edge (CloudFront) + managed services keep the site fast and resilient under load.</span></div>
+        <div class="chip" data-testid="deliverable-chip-docker"><span class="logo" style="background:#2496ed">D</span>Docker<span class="tip"><b>Why Docker</b>Identical environments dev-to-prod eliminate "works on my machine" surprises.</span></div>
+        <div class="chip" data-testid="deliverable-chip-gha"><span class="logo" style="background:#2088ff">G</span>GitHub Actions<span class="tip"><b>Why GitHub Actions</b>Automated build, test and deploy on every merge — ship changes safely, daily.</span></div>
+      </div>
+    </section>
+
+    <!-- 5 SCOPE OF WORK -->
+    <section class="section reveal" id="s5" data-testid="deliverable-section-s5">
+      <div class="sec-head">
+        <div class="sec-num">05</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Scope of Work</div>
+          <h2>Exactly what we'll deliver — and who owns it</h2>
+          <p class="lead">Clear boundaries, clear responsibilities. Switch between Frontend and Backend &amp; CMS scope below.</p>
+        </div>
+        <button class="comment-btn" data-section="Scope of Work" data-testid="deliverable-comment-s5"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <div class="scope-toggle">
+        <button class="scope-tab active" data-scope="frontend" data-testid="deliverable-scope-frontend">Frontend Scope</button>
+        <button class="scope-tab" data-scope="backend" data-testid="deliverable-scope-backend">Backend &amp; CMS Scope</button>
+      </div>
+      <div class="scope-panel" data-panel="frontend">
+        <ul class="ticks" style="margin:16px 0">
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Responsive campaign landing + hero activation across all breakpoints.</li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Multi-step lead-capture funnel with inline validation &amp; success states.</li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Localised regional sub-pages (EU · MENA · APAC).</li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Accessibility (WCAG 2.1 AA) &amp; SEO baseline.</li>
+        </ul>
+        <div class="tbl-wrap">
+          <table class="hr"><thead><tr><th>Role</th><th>Responsibility</th><th>Allocation</th></tr></thead>
+          <tbody>
+            <tr><td class="role">Product Designer</td><td>Visual system, page comps, prototype</td><td>Senior</td></tr>
+            <tr><td class="role">UI/UX Designer</td><td>Component design, responsive states, handoff</td><td>Mid ×2</td></tr>
+            <tr><td class="role">Frontend Developer</td><td>Build, integration, performance tuning</td><td>Mid ×2</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <div class="scope-panel" data-panel="backend" style="display:none">
+        <ul class="ticks" style="margin:16px 0">
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Headless CMS modelling with role-based publishing workflow.</li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Lead-capture API with validation, rate-limiting &amp; anti-spam.</li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>CRM integration &amp; real-time lead sync with retry/queueing.</li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Analytics events &amp; reporting endpoints.</li>
+        </ul>
+        <div class="tbl-wrap">
+          <table class="hr"><thead><tr><th>Role</th><th>Responsibility</th><th>Allocation</th></tr></thead>
+          <tbody>
+            <tr><td class="role">Tech Lead</td><td>Architecture, CRM integration design, reviews</td><td>Senior</td></tr>
+            <tr><td class="role">Backend Developer</td><td>APIs, CMS modelling, data layer</td><td>Mid ×2</td></tr>
+            <tr><td class="role">DevOps Engineer</td><td>Environments, CI/CD, edge &amp; scaling</td><td>Senior</td></tr>
+            <tr><td class="role">QA Expert</td><td>Test plans, load testing, release QA</td><td>Mid</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 DELIVERABLES -->
+    <section class="section reveal" id="s6" data-testid="deliverable-section-s6">
+      <div class="sec-head">
+        <div class="sec-num">06</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Deliverables</div>
+          <h2>Week by week — what lands, and when</h2>
+          <p class="lead">A six-week plan with clear weekly outcomes. Click any week to expand what's delivered.</p>
+        </div>
+        <button class="comment-btn" data-section="Deliverables" data-testid="deliverable-comment-s6"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <div class="timeline" data-testid="deliverable-timeline">
+        <div class="tl-week open" data-testid="deliverable-week-1">
+          <div class="tl-head"><div class="tl-badge"><small>Week</small><b>1</b></div><div class="info"><h4>Discovery &amp; Design Kickoff</h4><p>Foundations locked, direction agreed</p></div><span class="phase discovery">Discovery</span><i class="chev" data-lucide="chevron-down"></i></div>
+          <div class="tl-body"><div class="tl-body-in"><ul>
+            <li><i data-lucide="check-circle-2"></i>Kickoff workshop &amp; requirements confirmation</li>
+            <li><i data-lucide="check-circle-2"></i>Information architecture &amp; sitemap</li>
+            <li><i data-lucide="check-circle-2"></i>Wireframes for key templates</li>
+          </ul></div></div>
+        </div>
+        <div class="tl-week" data-testid="deliverable-week-2">
+          <div class="tl-head"><div class="tl-badge"><small>Week</small><b>2</b></div><div class="info"><h4>Visual System &amp; Foundations</h4><p>Design language + project scaffold</p></div><span class="phase discovery">Design</span><i class="chev" data-lucide="chevron-down"></i></div>
+          <div class="tl-body"><div class="tl-body-in"><ul>
+            <li><i data-lucide="check-circle-2"></i>High-fidelity comps for landing &amp; funnel</li>
+            <li><i data-lucide="check-circle-2"></i>Design-system components in code</li>
+            <li><i data-lucide="check-circle-2"></i>Repo, environments &amp; CI pipeline live</li>
+          </ul></div></div>
+        </div>
+        <div class="tl-week" data-testid="deliverable-week-3">
+          <div class="tl-head"><div class="tl-badge"><small>Week</small><b>3</b></div><div class="info"><h4>Core Build — Frontend</h4><p>Pages come to life on staging</p></div><span class="phase build">Build</span><i class="chev" data-lucide="chevron-down"></i></div>
+          <div class="tl-body"><div class="tl-body-in"><ul>
+            <li><i data-lucide="check-circle-2"></i>Landing + hero activation built</li>
+            <li><i data-lucide="check-circle-2"></i>Responsive states across breakpoints</li>
+            <li><i data-lucide="check-circle-2"></i>Regional sub-page templates</li>
+          </ul></div></div>
+        </div>
+        <div class="tl-week" data-testid="deliverable-week-4">
+          <div class="tl-head"><div class="tl-badge"><small>Week</small><b>4</b></div><div class="info"><h4>CMS, Capture &amp; CRM</h4><p>The engine behind the site</p></div><span class="phase build">Build</span><i class="chev" data-lucide="chevron-down"></i></div>
+          <div class="tl-body"><div class="tl-body-in"><ul>
+            <li><i data-lucide="check-circle-2"></i>Headless CMS modelled &amp; wired</li>
+            <li><i data-lucide="check-circle-2"></i>Lead-capture API + validation</li>
+            <li><i data-lucide="check-circle-2"></i>CRM sync with retry/queue</li>
+          </ul></div></div>
+        </div>
+        <div class="tl-week" data-testid="deliverable-week-5">
+          <div class="tl-head"><div class="tl-badge"><small>Week</small><b>5</b></div><div class="info"><h4>QA, Load &amp; Hardening</h4><p>Making it bulletproof</p></div><span class="phase build">Test</span><i class="chev" data-lucide="chevron-down"></i></div>
+          <div class="tl-body"><div class="tl-body-in"><ul>
+            <li><i data-lucide="check-circle-2"></i>Full QA pass &amp; cross-browser testing</li>
+            <li><i data-lucide="check-circle-2"></i>Load testing against peak traffic model</li>
+            <li><i data-lucide="check-circle-2"></i>Accessibility &amp; SEO audit fixes</li>
+          </ul></div></div>
+        </div>
+        <div class="tl-week" data-testid="deliverable-week-6">
+          <div class="tl-head"><div class="tl-badge"><small>Week</small><b>6</b></div><div class="info"><h4>Launch &amp; Handover</h4><p>Go-live, monitored &amp; documented</p></div><span class="phase launch">Launch</span><i class="chev" data-lucide="chevron-down"></i></div>
+          <div class="tl-body"><div class="tl-body-in"><ul>
+            <li><i data-lucide="check-circle-2"></i>Zero-downtime production go-live</li>
+            <li><i data-lucide="check-circle-2"></i>Monitoring &amp; alerting configured</li>
+            <li><i data-lucide="check-circle-2"></i>CMS training &amp; handover docs</li>
+          </ul></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 TECHNICAL DIAGRAMS -->
+    <section class="section reveal" id="s7" data-testid="deliverable-section-s7">
+      <div class="sec-head">
+        <div class="sec-num">07</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Technical Diagrams</div>
+          <h2>See how it fits together</h2>
+          <p class="lead">Interactive diagrams — hover any node to highlight its connections. Switch views below.</p>
+        </div>
+        <button class="comment-btn" data-section="Technical Diagrams" data-testid="deliverable-comment-s7"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <div class="diagram-tabs">
+        <button class="dgm-tab active" data-dgm="arch" data-testid="deliverable-dgm-arch"><i data-lucide="network"></i>High-Level Architecture</button>
+        <button class="dgm-tab" data-dgm="flow" data-testid="deliverable-dgm-flow"><i data-lucide="git-merge"></i>Lead Capture / CRM Flow</button>
+        <button class="dgm-tab" data-dgm="cicd" data-testid="deliverable-dgm-cicd"><i data-lucide="repeat"></i>CI/CD Strategy</button>
+      </div>
+      <div class="diagram-stage" id="diagramStage" data-testid="deliverable-diagram-stage">
+        <div class="node-tip" id="nodeTip"></div>
+
+        <!-- ARCHITECTURE -->
+        <div class="dgm active" data-dgm="arch">
+          <svg viewBox="0 0 900 320" role="img" aria-label="High-level architecture">
+            <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c9beb3"/></marker></defs>
+            <path class="edge" data-conn="a1 a2" d="M150,90 H310" marker-end="url(#ah)"/>
+            <path class="edge" data-conn="a2 a3" d="M420,90 H580" marker-end="url(#ah)"/>
+            <path class="edge" data-conn="a3 a4" d="M690,120 V210" marker-end="url(#ah)"/>
+            <path class="edge" data-conn="a2 a5" d="M365,130 V210" marker-end="url(#ah)"/>
+            <path class="edge" data-conn="a3 a6" d="M635,90 H540 M540,90 V210 H420" marker-end="url(#ah)" fill="none"/>
+            <circle class="flow-dot" r="4"><animateMotion dur="4.5s" repeatCount="indefinite" path="M150,90 H310"/></circle>
+            <circle class="flow-dot" r="4"><animateMotion dur="5s" repeatCount="indefinite" path="M420,90 H580"/></circle>
+            <circle class="flow-dot" r="4"><animateMotion dur="5.5s" repeatCount="indefinite" path="M690,120 V210"/></circle>
+
+            <g class="node" id="a1" data-tip="Global visitors hitting the campaign from every region."><rect class="box" x="30" y="60" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="90" y="86" text-anchor="middle" font-size="14">Visitors</text><text x="90" y="103" text-anchor="middle" font-size="10.5" class="sub">Global · multi-region</text></g>
+            <g class="node" id="a2" data-tip="CDN edge network caches and serves pages instantly worldwide."><rect class="box" x="310" y="60" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="370" y="86" text-anchor="middle" font-size="14">CDN Edge</text><text x="370" y="103" text-anchor="middle" font-size="10.5" class="sub">CloudFront</text></g>
+            <g class="node" id="a3" data-tip="Next.js app renders and serves the microsite pages."><rect class="box" x="580" y="60" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="640" y="86" text-anchor="middle" font-size="14">Next.js App</text><text x="640" y="103" text-anchor="middle" font-size="10.5" class="sub">SSG + Edge</text></g>
+            <g class="node" id="a5" data-tip="Node.js API handles lead submissions and business logic."><rect class="box" x="305" y="210" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="365" y="236" text-anchor="middle" font-size="14">API Layer</text><text x="365" y="253" text-anchor="middle" font-size="10.5" class="sub">Node.js</text></g>
+            <g class="node" id="a6" data-tip="Strapi headless CMS feeds content to the frontend."><rect class="box" x="475" y="210" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="535" y="236" text-anchor="middle" font-size="14">Strapi CMS</text><text x="535" y="253" text-anchor="middle" font-size="10.5" class="sub">Headless</text></g>
+            <g class="node" id="a4" data-tip="PostgreSQL stores leads and content data durably."><rect class="box" x="630" y="210" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="690" y="236" text-anchor="middle" font-size="14">PostgreSQL</text><text x="690" y="253" text-anchor="middle" font-size="10.5" class="sub">Managed DB</text></g>
+          </svg>
+        </div>
+
+        <!-- LEAD / CRM FLOW -->
+        <div class="dgm" data-dgm="flow">
+          <svg viewBox="0 0 900 320" role="img" aria-label="Lead capture and CRM flow">
+            <defs><marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c9beb3"/></marker></defs>
+            <path class="edge" data-conn="f1 f2" d="M170,80 H300" marker-end="url(#ah2)"/>
+            <path class="edge" data-conn="f2 f3" d="M420,80 H550" marker-end="url(#ah2)"/>
+            <path class="edge" data-conn="f3 f4" d="M670,110 V190" marker-end="url(#ah2)"/>
+            <path class="edge" data-conn="f4 f5" d="M610,220 H420" marker-end="url(#ah2)"/>
+            <path class="edge" data-conn="f5 f6" d="M300,220 H190" marker-end="url(#ah2)"/>
+            <circle class="flow-dot" r="4"><animateMotion dur="4s" repeatCount="indefinite" path="M170,80 H300"/></circle>
+            <circle class="flow-dot" r="4"><animateMotion dur="4.6s" repeatCount="indefinite" path="M420,80 H550"/></circle>
+            <circle class="flow-dot" r="4"><animateMotion dur="5.2s" repeatCount="indefinite" path="M670,110 V190"/></circle>
+
+            <g class="node" id="f1" data-tip="Visitor completes the multi-step capture form."><rect class="box" x="50" y="50" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="110" y="76" text-anchor="middle" font-size="14">Capture Form</text><text x="110" y="93" text-anchor="middle" font-size="10.5" class="sub">Frontend</text></g>
+            <g class="node" id="f2" data-tip="Validation, rate-limiting and anti-spam screening."><rect class="box" x="300" y="50" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="360" y="76" text-anchor="middle" font-size="14">Validation</text><text x="360" y="93" text-anchor="middle" font-size="10.5" class="sub">API · anti-spam</text></g>
+            <g class="node" id="f3" data-tip="Lead persisted to the database with a queued CRM job."><rect class="box" x="550" y="50" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="610" y="76" text-anchor="middle" font-size="14">Persist + Queue</text><text x="610" y="93" text-anchor="middle" font-size="10.5" class="sub">Postgres</text></g>
+            <g class="node" id="f4" data-tip="Reliable sync into your CRM with automatic retries."><rect class="box" x="610" y="190" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="670" y="216" text-anchor="middle" font-size="14">CRM Sync</text><text x="670" y="233" text-anchor="middle" font-size="10.5" class="sub">Retry / queue</text></g>
+            <g class="node" id="f5" data-tip="Sales team receives qualified lead in real time."><rect class="box" x="300" y="190" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="360" y="216" text-anchor="middle" font-size="14">Sales CRM</text><text x="360" y="233" text-anchor="middle" font-size="10.5" class="sub">Pipeline</text></g>
+            <g class="node" id="f6" data-tip="Visitor sees an instant confirmation & next step."><rect class="box" x="70" y="190" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="130" y="216" text-anchor="middle" font-size="14">Confirmation</text><text x="130" y="233" text-anchor="middle" font-size="10.5" class="sub">Instant UX</text></g>
+          </svg>
+        </div>
+
+        <!-- CI/CD -->
+        <div class="dgm" data-dgm="cicd">
+          <svg viewBox="0 0 900 320" role="img" aria-label="CI/CD strategy">
+            <defs><marker id="ah3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c9beb3"/></marker></defs>
+            <path class="edge" data-conn="c1 c2" d="M180,90 H280" marker-end="url(#ah3)"/>
+            <path class="edge" data-conn="c2 c3" d="M400,90 H500" marker-end="url(#ah3)"/>
+            <path class="edge" data-conn="c3 c4" d="M620,90 H720" marker-end="url(#ah3)"/>
+            <path class="edge" data-conn="c4 c5" d="M780,120 V210" marker-end="url(#ah3)"/>
+            <circle class="flow-dot" r="4"><animateMotion dur="4.2s" repeatCount="indefinite" path="M180,90 H280"/></circle>
+            <circle class="flow-dot" r="4"><animateMotion dur="4.8s" repeatCount="indefinite" path="M400,90 H500"/></circle>
+            <circle class="flow-dot" r="4"><animateMotion dur="5.4s" repeatCount="indefinite" path="M620,90 H720"/></circle>
+
+            <g class="node" id="c1" data-tip="Developer pushes a commit to the repository."><rect class="box" x="60" y="60" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="120" y="86" text-anchor="middle" font-size="14">Git Push</text><text x="120" y="103" text-anchor="middle" font-size="10.5" class="sub">GitHub</text></g>
+            <g class="node" id="c2" data-tip="Automated build & lint on every push."><rect class="box" x="280" y="60" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="340" y="86" text-anchor="middle" font-size="14">Build</text><text x="340" y="103" text-anchor="middle" font-size="10.5" class="sub">GH Actions</text></g>
+            <g class="node" id="c3" data-tip="Unit, integration & accessibility tests run automatically."><rect class="box" x="500" y="60" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="560" y="86" text-anchor="middle" font-size="14">Test</text><text x="560" y="103" text-anchor="middle" font-size="10.5" class="sub">Automated QA</text></g>
+            <g class="node" id="c4" data-tip="Containerised deploy to the staging environment."><rect class="box" x="720" y="60" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="780" y="86" text-anchor="middle" font-size="14">Staging</text><text x="780" y="103" text-anchor="middle" font-size="10.5" class="sub">Docker</text></g>
+            <g class="node" id="c5" data-tip="Approved release promoted to production, zero-downtime."><rect class="box" x="720" y="210" width="120" height="60" rx="14" fill="#fff" stroke="#EAE4DE"/><text x="780" y="236" text-anchor="middle" font-size="14">Production</text><text x="780" y="253" text-anchor="middle" font-size="10.5" class="sub">Zero-downtime</text></g>
+          </svg>
+        </div>
+      </div>
+      <div class="dgm-legend">
+        <span><span class="sw" style="background:#fff;border:1px solid var(--hair)"></span>Component / service</span>
+        <span><span class="sw" style="background:var(--orange)"></span>Live data flow</span>
+        <span><i data-lucide="mouse-pointer-2" style="width:13px;height:13px;color:var(--muted)"></i>Hover a node to trace connections</span>
+      </div>
+    </section>
+
+    <!-- 8 COMPLIMENTARY SUPPORT -->
+    <section class="section reveal" id="s8" data-testid="deliverable-section-s8">
+      <div class="sec-head">
+        <div class="sec-num">08</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Complimentary Support · 1 Month</div>
+          <h2>We don't disappear at launch</h2>
+          <p class="lead">One full month of complimentary post-launch support is included — because the campaign's biggest moments come after go-live.</p>
+        </div>
+        <button class="comment-btn" data-section="Complimentary Support" data-testid="deliverable-comment-s8"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <div class="support-grid">
+        <div class="support-item"><div class="ic"><i data-lucide="bug"></i></div><div><h4>Bug fixes</h4><p>Any defects found in delivered scope fixed at no charge for 30 days.</p></div></div>
+        <div class="support-item"><div class="ic"><i data-lucide="activity"></i></div><div><h4>Monitoring &amp; response</h4><p>We watch performance and alerts, and respond to incidents promptly.</p></div></div>
+        <div class="support-item"><div class="ic"><i data-lucide="graduation-cap"></i></div><div><h4>Team enablement</h4><p>Follow-up CMS guidance so your marketers stay self-sufficient.</p></div></div>
+        <div class="support-item"><div class="ic"><i data-lucide="gauge"></i></div><div><h4>Minor tuning</h4><p>Small performance and content tweaks to keep the site sharp.</p></div></div>
+      </div>
+    </section>
+
+    <!-- 9 FINANCIAL PROPOSAL (INLINE BUDGET) -->
+    <section class="section reveal" id="s9" data-testid="deliverable-section-s9">
+      <div class="sec-head">
+        <div class="sec-num">09</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Financial Proposal</div>
+          <h2>Transparent, itemised investment</h2>
+          <p class="lead">Every role, day and rate — laid out in full. Collapse departments, hide dev cost, or reveal optional add-ons; the total updates live.</p>
+        </div>
+        <button class="comment-btn" data-section="Financial Proposal" data-testid="deliverable-comment-s9"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+
+      <div class="budget-shell" data-testid="deliverable-budget">
+        <div class="budget-banner">
+          <div class="grid-motif"></div>
+          <div class="lbl">Cost Breakdown for</div>
+          <h3>Milestone: Development</h3>
+          <div class="note">All figures in USD. Unit Cost = No. of Unit × No. of Days × Per Day Cost.</div>
+        </div>
+
+        <div class="milestone-tabs" data-testid="deliverable-milestone-tabs">
+          <button class="ms-tab active" data-testid="deliverable-milestone-development">Development · 9 roles</button>
+          <div class="ms-underline" id="msUnderline"></div>
+        </div>
+
+        <div class="budget-toolbar">
+          <label class="toggle" data-testid="deliverable-toggle-hidedev">
+            <input type="checkbox" id="hideDev"><span class="sw"></span>Hide dev cost
+          </label>
+          <label class="toggle" data-testid="deliverable-toggle-optional">
+            <input type="checkbox" id="showOpt"><span class="sw"></span>Show optional line items
+          </label>
+          <label class="cur-wrap"><i data-lucide="coins" style="width:15px;height:15px"></i>Currency
+            <select id="currency" data-testid="deliverable-currency">
+              <option value="USD">USD $</option>
+              <option value="EUR">EUR €</option>
+              <option value="GBP">GBP £</option>
+              <option value="BDT">BDT ৳</option>
+              <option value="AED">AED</option>
+              <option value="SAR">SAR</option>
+            </select>
+          </label>
+          <div class="grow"></div>
+          <div style="font-size:13px;color:var(--muted)">Grand Total: <b style="color:var(--charcoal);font-size:16px"><span class="cur-total" data-usd="58000">$58,000</span></b></div>
+        </div>
+
+        <div class="budget-scroll">
+          <table class="budget" data-testid="deliverable-budget-table">
+            <thead><tr>
+              <th style="width:44px">Sl.</th><th>Departments</th><th>Heads</th><th>Type</th>
+              <th class="n">Unit</th><th class="n">Days</th><th class="n">Per Day</th><th class="n">Unit Cost</th>
+            </tr></thead>
+            <tbody id="budgetBody">
+
+              <!-- GROUP: Managing & Planning (subtotal 2700) -->
+              <tr class="grp-head" data-group="mp" data-subtotal="8940" data-testid="deliverable-group-mp">
+                <td class="sl">1</td>
+                <td colspan="6"><span class="dept"><i class="chev" data-lucide="chevron-down"></i>Managing &amp; Planning</span></td>
+                <td class="n subtotal"><span class="cur" data-usd="8940">$8,940</span></td>
+              </tr>
+              <tr class="line-row" data-group="mp" data-cost="4800">
+                <td></td><td></td><td class="role">Project Manager</td><td><span class="type-pill senior">Senior</span></td>
+                <td class="n">1</td><td class="n">40</td><td class="n"><span class="cur" data-usd="120">$120</span></td><td class="n"><span class="cur" data-usd="4800">$4,800</span> <button class="row-comment" onclick="openComments('Project Manager line')" data-testid="deliverable-rowcomment-pm"><i data-lucide="message-square"></i></button></td>
+              </tr>
+              <tr class="line-row" data-group="mp" data-cost="4140">
+                <td></td><td></td><td class="role">Product Designer</td><td><span class="type-pill senior">Senior</span></td>
+                <td class="n">1</td><td class="n">46</td><td class="n"><span class="cur" data-usd="90">$90</span></td><td class="n"><span class="cur" data-usd="4140">$4,140</span></td>
+              </tr>
+
+              <!-- GROUP: Art (subtotal 1680) -->
+              <tr class="grp-head" data-group="art" data-subtotal="14000" data-testid="deliverable-group-art">
+                <td class="sl">2</td>
+                <td colspan="6"><span class="dept"><i class="chev" data-lucide="chevron-down"></i>Art</span></td>
+                <td class="n subtotal"><span class="cur" data-usd="14000">$14,000</span></td>
+              </tr>
+              <tr class="line-row" data-group="art" data-cost="14000">
+                <td></td><td></td><td class="role">UI/UX Designer</td><td><span class="type-pill mid">Mid</span></td>
+                <td class="n">2</td><td class="n">100</td><td class="n"><span class="cur" data-usd="70">$70</span></td><td class="n"><span class="cur" data-usd="14000">$14,000</span></td>
+              </tr>
+
+              <!-- GROUP: Development (subtotal 9460, dev) -->
+              <tr class="grp-head dev-group" data-group="dev" data-subtotal="27160" data-testid="deliverable-group-dev">
+                <td class="sl">3</td>
+                <td colspan="6"><span class="dept"><i class="chev" data-lucide="chevron-down"></i>Development</span></td>
+                <td class="n subtotal"><span class="cur dev-subtotal" data-usd="27160" data-usd-full="27160">$27,160</span></td>
+              </tr>
+              <tr class="line-row dev-line" data-group="dev" data-cost="7800">
+                <td></td><td></td><td class="role">Tech Lead</td><td><span class="type-pill senior">Senior</span></td>
+                <td class="n">1</td><td class="n">60</td><td class="n"><span class="cur" data-usd="130">$130</span></td><td class="n"><span class="cur" data-usd="7800">$7,800</span></td>
+              </tr>
+              <tr class="line-row dev-line" data-group="dev" data-cost="7480">
+                <td></td><td></td><td class="role">Backend Developer</td><td><span class="type-pill mid">Mid</span></td>
+                <td class="n">2</td><td class="n">44</td><td class="n"><span class="cur" data-usd="85">$85</span></td><td class="n"><span class="cur" data-usd="7480">$7,480</span></td>
+              </tr>
+              <tr class="line-row dev-line" data-group="dev" data-cost="7480">
+                <td></td><td></td><td class="role">Frontend Developer</td><td><span class="type-pill mid">Mid</span></td>
+                <td class="n">2</td><td class="n">44</td><td class="n"><span class="cur" data-usd="85">$85</span></td><td class="n"><span class="cur" data-usd="7480">$7,480</span></td>
+              </tr>
+              <tr class="line-row dev-line" data-group="dev" data-cost="4400">
+                <td></td><td></td><td class="role">DevOps Engineer</td><td><span class="type-pill senior">Senior</span></td>
+                <td class="n">1</td><td class="n">40</td><td class="n"><span class="cur" data-usd="110">$110</span></td><td class="n"><span class="cur" data-usd="4400">$4,400</span></td>
+              </tr>
+
+              <!-- GROUP: Others (subtotal 600) -->
+              <tr class="grp-head" data-group="oth" data-subtotal="7900" data-testid="deliverable-group-oth">
+                <td class="sl">4</td>
+                <td colspan="6"><span class="dept"><i class="chev" data-lucide="chevron-down"></i>Others</span></td>
+                <td class="n subtotal"><span class="cur" data-usd="7900">$7,900</span></td>
+              </tr>
+              <tr class="line-row" data-group="oth" data-cost="3480">
+                <td></td><td></td><td class="role">QA Expert</td><td><span class="type-pill mid">Mid</span></td>
+                <td class="n">1</td><td class="n">58</td><td class="n"><span class="cur" data-usd="60">$60</span></td><td class="n"><span class="cur" data-usd="3480">$3,480</span></td>
+              </tr>
+              <tr class="line-row" data-group="oth" data-cost="4420">
+                <td></td><td></td><td class="role">Motion Designer</td><td><span class="type-pill mid">Mid</span></td>
+                <td class="n">1</td><td class="n">68</td><td class="n"><span class="cur" data-usd="65">$65</span></td><td class="n"><span class="cur" data-usd="4420">$4,420</span></td>
+              </tr>
+
+              <!-- OPTIONAL line items (hidden by default) -->
+              <tr class="line-row opt-row opt-line" data-group="opt" data-cost="1200" style="display:none">
+                <td></td><td></td><td class="role">SEO Specialist</td><td><span class="type-pill mid">Mid</span></td>
+                <td class="n">1</td><td class="n">10</td><td class="n"><span class="cur" data-usd="120">$120</span></td><td class="n"><span class="cur" data-usd="1200">$1,200</span></td>
+              </tr>
+              <tr class="line-row opt-row opt-line" data-group="opt" data-cost="900" style="display:none">
+                <td></td><td></td><td class="role">3D / Animation Artist</td><td><span class="type-pill mid">Mid</span></td>
+                <td class="n">1</td><td class="n">6</td><td class="n"><span class="cur" data-usd="150">$150</span></td><td class="n"><span class="cur" data-usd="900">$900</span></td>
+              </tr>
+
+              <tr class="grand-row">
+                <td colspan="7" class="glabel">Total Project Cost</td>
+                <td class="n gtotal"><span class="cur-total" data-usd="58000">$58,000</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="budget-foot">
+          <span class="tl-note"><i data-lucide="calendar-clock"></i>Development Timeline = 6 weeks</span>
+          <div class="grow"></div>
+          <span>Optional line items are excluded from the base total unless enabled above.</span>
+        </div>
+      </div>
+
+      <!-- Payment terms -->
+      <h3 style="font-size:17px;font-weight:700;margin:30px 0 4px">Payment Terms</h3>
+      <div class="pay-grid">
+        <div class="pay-card"><div class="pct">40%</div><div class="ph">On Signing</div><p>Mobilisation &amp; discovery kickoff.</p></div>
+        <div class="pay-card"><div class="pct">30%</div><div class="ph">Mid-Build Milestone</div><p>On staging demo &amp; sign-off (Week 3).</p></div>
+        <div class="pay-card"><div class="pct">30%</div><div class="ph">On Launch</div><p>Go-live &amp; handover complete.</p></div>
+      </div>
+
+      <div class="grid-2" style="margin-top:24px">
+        <div class="callout">
+          <div class="k">Change-Request Policy</div>
+          <p style="font-size:14px;color:#3a3531">Work outside this scope is estimated and approved in writing before starting, billed at a blended day-rate. In-scope refinements during weekly demos are included at no charge.</p>
+        </div>
+        <div class="callout">
+          <div class="k">Assumptions</div>
+          <ul class="ticks" style="margin:4px 0 0">
+            <li style="font-size:13.5px"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>Brand assets &amp; approved copy provided by Week 1.</li>
+            <li style="font-size:13.5px"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>CRM API access &amp; sandbox available at kickoff.</li>
+            <li style="font-size:13.5px"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></i>One consolidated review round per weekly demo.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 OUT OF SCOPE -->
+    <section class="section reveal" id="s10" data-testid="deliverable-section-s10">
+      <div class="sec-head">
+        <div class="sec-num">10</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Proposed Out of Scope</div>
+          <h2>Clarity now saves surprises later</h2>
+          <p class="lead">To keep the estimate honest, the following are explicitly excluded — available as separate engagements if you'd like them.</p>
+        </div>
+        <button class="comment-btn" data-section="Out of Scope" data-testid="deliverable-comment-s10"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <div class="grid-2">
+        <ul class="ticks">
+          <li><i style="background:rgba(180,35,24,.1);color:#b42318"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg></i>Ongoing content authoring after launch.</li>
+          <li><i style="background:rgba(180,35,24,.1);color:#b42318"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg></i>Native mobile apps (iOS / Android).</li>
+        </ul>
+        <ul class="ticks">
+          <li><i style="background:rgba(180,35,24,.1);color:#b42318"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg></i>Paid media buying &amp; ad management.</li>
+          <li><i style="background:rgba(180,35,24,.1);color:#b42318"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg></i>Translation of copy beyond supplied localised content.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 11 ACCEPTANCE & SIGN-OFF -->
+    <section class="section reveal" id="s11" data-testid="deliverable-section-s11">
+      <div class="sec-head">
+        <div class="sec-num">11</div>
+        <div class="sec-titles">
+          <div class="sec-kicker">Acceptance &amp; Sign-off</div>
+          <h2>Ready when you are</h2>
+          <p class="lead">Approving this document confirms scope, timeline and investment. We'll issue the SOW and schedule kickoff within two business days.</p>
+        </div>
+        <button class="comment-btn" data-section="Acceptance & Sign-off" data-testid="deliverable-comment-s11"><i data-lucide="message-square-plus"></i>Comment<span class="cnt">0</span></button>
+      </div>
+      <div class="sign-grid">
+        <div class="sign-box"><div class="who">For FIFA Partner Co</div><div class="sign-line"></div><div class="lbl">Name &amp; signature</div><div class="sign-line" style="margin-top:24px"></div><div class="lbl">Date</div></div>
+        <div class="sign-box"><div class="who">For Riseup Labs</div><div class="sign-line"></div><div class="lbl">Name &amp; signature</div><div class="sign-line" style="margin-top:24px"></div><div class="lbl">Date</div></div>
+      </div>
+
+      <div class="closing">
+        <h3>Let's make this campaign unforgettable.</h3>
+        <p>Walk through the build with our team, or approve and we'll start Monday. Either way — we're excited.</p>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="openModal()" data-testid="deliverable-closing-demo"><i data-lucide="calendar-check"></i>Request a demo</button>
+          <button class="btn btn-ghost" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:#fff" onclick="window.print()" data-testid="deliverable-closing-download"><i data-lucide="download"></i>Download combined PDF</button>
+        </div>
+      </div>
+
+      <footer class="doc-footer">
+        <div style="display:flex;align-items:center;gap:10px"><img src="../assets/riseup-logo.png" alt="Riseup Labs" style="height:28px;width:auto;display:block"><span>© 2026 Riseup Labs · Prepared for FIFA Partner Co</span></div>
+        <div>Tokenized preview · read-only · Issued 01 Jul 2026</div>
+      </footer>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ COMMENT PANEL ============ -->
+<div class="overlay" id="overlay" onclick="closeComments()"></div>
+<aside class="cpanel" id="cpanel" aria-label="Comments" data-testid="deliverable-comment-panel">
+  <div class="cpanel-head">
+    <div class="t"><div class="k">Discussion</div><h3 id="cpanelTitle">Comments</h3></div>
+    <button class="x" onclick="closeComments()" data-testid="deliverable-comment-close"><i data-lucide="x"></i></button>
+  </div>
+  <div class="cpanel-body" id="cpanelBody"></div>
+  <div class="cpanel-foot">
+    <textarea id="commentInput" placeholder="Add a comment or question…" data-testid="deliverable-comment-input"></textarea>
+    <div class="row">
+      <label class="flag-toggle"><input type="checkbox" id="flagDemo" data-testid="deliverable-comment-flagdemo">Request a demo about this</label>
+      <button class="btn btn-primary sm" onclick="addComment()" data-testid="deliverable-comment-submit"><i data-lucide="send"></i>Post</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ============ REQUEST DEMO MODAL ============ -->
+<div class="modal" id="demoModal" data-testid="deliverable-demo-modal">
+  <div class="backdrop" onclick="closeModal()"></div>
+  <div class="box">
+    <div class="m-top">
+      <div class="k">Let's talk</div>
+      <h3>Request a demo</h3>
+      <p>Tell us when works — we'll walk you through the build live.</p>
+      <button class="x" onclick="closeModal()" data-testid="deliverable-modal-close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="m-body">
+      <div class="field"><label>Full name</label><input type="text" placeholder="Your name" data-testid="deliverable-modal-name"></div>
+      <div class="field"><label>Work email</label><input type="email" placeholder="you@fifapartner.co" data-testid="deliverable-modal-email"></div>
+      <div class="field two">
+        <div><label>Preferred from</label><input type="date" data-testid="deliverable-modal-from"></div>
+        <div><label>Preferred to</label><input type="date" data-testid="deliverable-modal-to"></div>
+      </div>
+      <div class="field"><label>Anything to focus on?</label><textarea rows="3" placeholder="e.g. CRM integration, load handling…" data-testid="deliverable-modal-note"></textarea></div>
+      <button class="btn btn-primary" onclick="submitDemo()" data-testid="deliverable-modal-submit"><i data-lucide="send"></i>Send request</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i data-lucide="check-circle-2"></i><span id="toastMsg">Done</span></div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+lucide.createIcons();
+
+/* ---------- helpers ---------- */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function toast(msg){const t=$('#toast');$('#toastMsg').textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ---------- URL params: embed / demo mode ---------- */
+const params=new URLSearchParams(location.search);
+const EMBED=params.get('embed')==='1';
+if(EMBED)document.body.classList.add('embed');
+const JOIN_DEMO=params.get('demo')==='join';
+if(JOIN_DEMO){
+ [$('#demoTopBtn'),$('[data-testid="deliverable-closing-demo"]')].forEach(b=>{
+   if(!b)return;
+   const link=document.createElement('button');link.type='button';link.className=b.className;
+   link.setAttribute('data-testid','deliverable-join-demo');
+   link.onclick=()=>toast('Opening the demo room…');
+   link.innerHTML='<i data-lucide="video"></i>'+(b.querySelector('span')?'<span>Join demo</span>':'Join demo');
+   b.replaceWith(link);
+ });
+}
+
+/* ---------- SHARE ---------- */
+function toggleShare(e){e.stopPropagation();$('#shareWrap').classList.toggle('open');}
+function shareVia(ch){$('#shareWrap').classList.remove('open');toast('Shared via '+ch);}
+function copyShareLink(){$('#shareWrap').classList.remove('open');
+ const url=location.href;
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(()=>toast('Link copied')).catch(()=>toast('Link copied'));}
+ else{const t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(_){}t.remove();toast('Link copied');}
+}
+document.addEventListener('click',e=>{const w=$('#shareWrap');if(w&&!w.contains(e.target))w.classList.remove('open');});
+
+/* ---------- scroll progress ---------- */
+const pbar=$('#progressBar');
+function updateProgress(){const h=document.documentElement;const sc=h.scrollTop||document.body.scrollTop;const max=h.scrollHeight-h.clientHeight;pbar.style.width=(max>0?(sc/max)*100:0)+'%';}
+window.addEventListener('scroll',updateProgress,{passive:true});updateProgress();
+
+/* ---------- scroll reveal ---------- */
+const revObs=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');revObs.unobserve(e.target);}});},{threshold:.12});
+$$('.reveal').forEach((el,i)=>{el.style.transitionDelay=(Math.min(i,3)*60)+'ms';revObs.observe(el);});
+
+/* ---------- section nav active highlight ---------- */
+const navLinks=$$('.sidenav a');
+const secObs=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){const id=e.target.id;navLinks.forEach(a=>a.classList.toggle('active',a.dataset.nav===id));}});},{rootMargin:'-45% 0px -50% 0px'});
+$$('.section').forEach(s=>secObs.observe(s));
+navLinks.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const t=$(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}));
+
+/* ---------- count-up ---------- */
+function countUp(el){const to=+el.dataset.to;const dur=1400;const start=performance.now();const fmt=to>=1000;
+ function tick(now){let p=Math.min((now-start)/dur,1);p=1-Math.pow(1-p,3);const v=Math.round(to*p);el.textContent=fmt?v.toLocaleString('en-US'):v;if(p<1)requestAnimationFrame(tick);}requestAnimationFrame(tick);}
+const cuObs=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){countUp(e.target);cuObs.unobserve(e.target);}});},{threshold:.6});
+$$('.countup').forEach(el=>cuObs.observe(el));
+
+/* ---------- deliverables timeline ---------- */
+$$('.tl-head').forEach(h=>{h.addEventListener('click',()=>{const w=h.closest('.tl-week');const body=$('.tl-body',w);const open=w.classList.toggle('open');body.style.maxHeight=open?body.scrollHeight+'px':'0';});});
+$$('.tl-week.open').forEach(w=>{const b=$('.tl-body',w);b.style.maxHeight=b.scrollHeight+'px';});
+
+/* ---------- scope tabs ---------- */
+$$('.scope-tab').forEach(t=>{t.addEventListener('click',()=>{
+ $$('.scope-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+ $$('.scope-panel').forEach(p=>p.style.display=p.dataset.panel===t.dataset.scope?'block':'none');
+});});
+
+/* ---------- diagram tabs + reveal + node hover ---------- */
+const dstage=$('#diagramStage');
+new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:.25}).observe(dstage);
+$$('.dgm-tab').forEach(t=>{t.addEventListener('click',()=>{
+ $$('.dgm-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+ $$('.dgm',dstage).forEach(d=>d.classList.toggle('active',d.dataset.dgm===t.dataset.dgm));
+ dstage.classList.remove('in');void dstage.offsetWidth;dstage.classList.add('in');
+});});
+const nodeTip=$('#nodeTip');
+dstage.addEventListener('mouseover',e=>{const n=e.target.closest('.node');if(!n)return;
+ const dgm=n.closest('.dgm');const id=n.id;
+ $$('.node',dgm).forEach(o=>o.classList.toggle('dim',o!==n));
+ $$('.edge',dgm).forEach(ed=>{const c=(ed.dataset.conn||'').split(' ');ed.classList.toggle('lit',c.includes(id));});
+ nodeTip.innerHTML='<b>'+($('text',n)?.textContent||'')+'</b>'+(n.dataset.tip||'');
+ nodeTip.classList.add('show');
+});
+dstage.addEventListener('mousemove',e=>{if(!nodeTip.classList.contains('show'))return;const r=dstage.getBoundingClientRect();let x=e.clientX-r.left+14,y=e.clientY-r.top+14;if(x>r.width-230)x=e.clientX-r.left-234;nodeTip.style.left=x+'px';nodeTip.style.top=y+'px';});
+dstage.addEventListener('mouseout',e=>{if(e.target.closest('.node')){const dgm=e.target.closest('.dgm');$$('.node',dgm).forEach(o=>o.classList.remove('dim'));$$('.edge',dgm).forEach(ed=>ed.classList.remove('lit'));nodeTip.classList.remove('show');}});
+
+/* ---------- CURRENCY ---------- */
+const RATES={USD:1,EUR:0.92,GBP:0.79,BDT:117,AED:3.67,SAR:3.75};
+const SYMBOLS={USD:'$',EUR:'€',GBP:'£',BDT:'৳',AED:'AED ',SAR:'SAR '};
+let CUR='USD';
+function money(usd){const r=RATES[CUR],s=SYMBOLS[CUR];const v=Math.round(usd*r);return s+v.toLocaleString('en-US');}
+function applyCurrency(){$$('.cur, .cur-total').forEach(el=>{const usd=+el.dataset.usd||0;el.textContent=money(usd);});}
+$('#currency').addEventListener('change',e=>{CUR=e.target.value;applyCurrency();});
+
+/* ---------- BUDGET ---------- */
+const BASE=58000, DEV=27160, OPT=2100;
+function fmt(n){return n.toLocaleString('en-US');}
+function recompute(){
+ let total=BASE;
+ const hideDev=$('#hideDev').checked, showOpt=$('#showOpt').checked;
+ if(hideDev)total-=DEV;
+ if(showOpt)total+=OPT;
+ animateTotal(total);
+ // toggle dev row visuals
+ $$('.dev-line').forEach(r=>r.classList.toggle('dev-hide',hideDev));
+ $('.dev-group').style.opacity=hideDev?'.34':'1';
+ // zero the Development subtotal cell when dev is hidden so visible subtotals still sum to the grand total
+ const devSub=$('.dev-subtotal');
+ if(devSub){const shown=hideDev?0:(+devSub.dataset.usdFull||0);devSub.dataset.usd=shown;devSub.textContent=money(shown);}
+ // optional rows
+ $$('.opt-line').forEach(r=>r.style.display=showOpt?'':'none');
+}
+let curTotal=BASE;
+function animateTotal(to){
+ const from=curTotal,start=performance.now(),dur=650;const els=$$('.cur-total');
+ els.forEach(el=>el.dataset.usd=to);
+ const r=RATES[CUR],s=SYMBOLS[CUR];
+ function tick(now){let p=Math.min((now-start)/dur,1);p=1-Math.pow(1-p,3);const v=Math.round((from+(to-from)*p)*r);els.forEach(el=>el.textContent=s+v.toLocaleString('en-US'));if(p<1)requestAnimationFrame(tick);else curTotal=to;}
+ requestAnimationFrame(tick);
+}
+$('#hideDev').addEventListener('change',recompute);
+$('#showOpt').addEventListener('change',recompute);
+
+/* collapsible department groups */
+$$('.grp-head').forEach(g=>{g.addEventListener('click',()=>{
+ const grp=g.dataset.group;const collapsed=g.classList.toggle('collapsed');
+ $$('.line-row[data-group="'+grp+'"]').forEach(r=>{
+   if(grp==='opt'){return;} // optional controlled by toggle
+   r.classList.toggle('hidden-grp',collapsed);
+ });
+});});
+
+/* milestone tabs + underline */
+const msUnderline=$('#msUnderline');
+function moveUnderline(tab){msUnderline.style.left=(tab.offsetLeft)+'px';msUnderline.style.width=(tab.offsetWidth)+'px';}
+const msTabs=$$('.ms-tab');
+msTabs.forEach(t=>{t.addEventListener('click',()=>{msTabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');moveUnderline(t);});});
+window.addEventListener('load',()=>{const a=$('.ms-tab.active');if(a)moveUnderline(a);});
+setTimeout(()=>{const a=$('.ms-tab.active');if(a)moveUnderline(a);},60);
+lucide.createIcons();
+
+/* ---------- COMMENTS ---------- */
+const seed={
+ 'Introduction':[{who:'Sara M.',ini:'SM',when:'2d',txt:'Love the framing — this reads like a partner, not a vendor.',demo:false}],
+ 'Financial Proposal':[{who:'Omar K.',ini:'OK',when:'1d',txt:'Can we see how the total shifts if we drop the optional items live?',demo:true}],
+ 'Technical Diagrams':[{who:'Sara M.',ini:'SM',when:'4h',txt:'The CRM retry/queue detail is exactly what our ops team asked about.',demo:false}]
+};
+let currentSection='Comments';
+function renderComments(){
+ const body=$('#cpanelBody');const list=seed[currentSection]||[];
+ if(!list.length){body.innerHTML='<div style="text-align:center;color:var(--subtle);padding:40px 0;font-size:14px">No comments yet — start the conversation.</div>';return;}
+ body.innerHTML=list.map((c,i)=>{
+  const replies=(c.replies||[]).map(r=>`<div class="reply"><div class="top"><div class="av">${esc(r.ini)}</div><div class="who">${esc(r.who)}</div><div class="when">${esc(r.when)} ago</div></div><p>${esc(r.txt)}</p><span class="note"><i data-lucide="bell"></i>${esc(r.note)}</span></div>`).join('');
+  return `<div class="comment" data-ci="${i}"><div class="top"><div class="av">${esc(c.ini)}</div><div class="who">${esc(c.who)}</div><div class="when">${esc(c.when)} ago</div></div><p>${esc(c.txt)}</p>${c.demo?'<span class="demo-flag"><i data-lucide="calendar-check"></i>Requested a demo about this</span>':''}${replies?`<div class="replies">${replies}</div>`:''}<button class="reply-open" onclick="toggleReply(${i})" data-testid="deliverable-comment-reply"><i data-lucide="reply"></i>Reply</button><div class="reply-form" id="replyForm-${i}"><input type="text" placeholder="Write a reply…" data-testid="deliverable-comment-reply-input"><button class="btn btn-primary sm" onclick="postReply(${i})" data-testid="deliverable-comment-reply-send"><i data-lucide="send"></i>Post</button></div></div>`;
+ }).join('');
+ lucide.createIcons();
+}
+function toggleReply(i){const f=$('#replyForm-'+i);if(f){f.classList.toggle('open');if(f.classList.contains('open'))$('input',f).focus();}}
+function postReply(i){
+ const f=$('#replyForm-'+i);const inp=$('input',f);const txt=(inp.value||'').trim();
+ if(!txt){toast('Write a reply first.');return;}
+ const c=(seed[currentSection]||[])[i];if(!c)return;
+ (c.replies=c.replies||[]).push({who:'You',ini:'You',when:'now',txt,note:'Client will see this · email notification sent'});
+ renderComments();
+ toast('Reply posted');
+}
+function openComments(section){currentSection=section;$('#cpanelTitle').textContent=section;renderComments();$('#overlay').classList.add('show');$('#cpanel').classList.add('show');}
+function closeComments(){$('#overlay').classList.remove('show');$('#cpanel').classList.remove('show');}
+function addComment(){const txt=$('#commentInput').value.trim();if(!txt){toast('Write something first.');return;}
+ const demo=$('#flagDemo').checked;(seed[currentSection]=seed[currentSection]||[]).unshift({who:'You',ini:'You',when:'now',txt,demo});
+ $('#commentInput').value='';$('#flagDemo').checked=false;renderComments();
+ // update badge
+ const btn=$$('.comment-btn').find(b=>b.dataset.section===currentSection);
+ if(btn){const cnt=$('.cnt',btn);cnt.textContent=seed[currentSection].length;btn.classList.add('has');}
+ toast(demo?'Comment posted · demo requested':'Comment posted');
+}
+$$('.comment-btn').forEach(b=>b.addEventListener('click',()=>openComments(b.dataset.section)));
+// pre-seed badges
+$$('.comment-btn').forEach(b=>{const s=seed[b.dataset.section];if(s&&s.length){const c=$('.cnt',b);c.textContent=s.length;b.classList.add('has');}});
+
+/* ---------- MODAL ---------- */
+function openModal(){$('#demoModal').classList.add('show');}
+function closeModal(){$('#demoModal').classList.remove('show');}
+function submitDemo(){closeModal();toast('Demo request sent — we\'ll be in touch shortly.');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeComments();$('#shareWrap')&&$('#shareWrap').classList.remove('open');}});
+
+applyCurrency();
+lucide.createIcons();
+</script>
+</body>
+</html>

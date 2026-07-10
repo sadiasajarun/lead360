@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead360 — Projects</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#FAFAF9;--panel:#FFFFFF;--panel-2:#F4F4F2;--sidebar:#111111;--sidebar-text:#C4C0BB;--sidebar-hover:#1F1F1F;
+ --border:#E8E6E3;--border-strong:#D4D1CC;--text:#0F0F0F;--text-muted:#6B6660;--text-subtle:#9A948E;
+ --primary:#EA5400;--primary-soft:rgba(234,84,0,.08);--primary-press:#CC4900;--success:#0E7C5A;--info:#175CD3;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .12s}
+.btn.sm{height:32px;padding:0 11px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-press)}
+.btn-secondary{background:var(--panel);border-color:var(--border-strong);color:var(--text)}.btn-secondary:hover{background:var(--panel-2)}
+.btn-ghost{background:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.side{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--sidebar-text);font-size:14px;font-weight:500}
+.side i{width:16px;height:16px}.side:hover{background:var(--sidebar-hover);color:#fff}
+.side.active{background:var(--sidebar-hover);color:#fff;position:relative}.side.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.iconbtn{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;cursor:pointer;color:var(--text-muted)}.iconbtn:hover{background:var(--panel-2);color:var(--text)}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+/* filters */
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--border-strong);background:var(--panel);color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer;transition:all .12s}
+.chip:hover{background:var(--panel-2);color:var(--text)}
+.chip.on{background:var(--text);color:#fff;border-color:var(--text)}
+.chip.on.cat{background:var(--primary);border-color:var(--primary)}
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.pcard{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .14s,box-shadow .14s,border-color .14s;display:flex;flex-direction:column}
+.pcard:hover{border-color:var(--border-strong);box-shadow:0 8px 24px rgba(15,15,15,.07);transform:translateY(-2px)}
+.pcover{height:84px;background:linear-gradient(120deg,#FCFBFA 0%,#F4F1EE 100%);position:relative;display:flex;align-items:flex-end;padding:12px;border-bottom:1px solid var(--border)}
+.pcover::before{content:'';position:absolute;left:0;top:0;right:0;height:3px;background:var(--primary)}
+.pcover::after{content:'';position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:var(--primary-soft)}
+.pcover .cats{display:flex;gap:6px;flex-wrap:wrap;position:relative;z-index:1}
+.pcover .cat{font-size:11px;font-weight:600;color:var(--primary);background:#fff;border:1px solid var(--border-strong);border-radius:5px;padding:2px 8px}
+.pcover .cat.alt{color:var(--text-muted);background:var(--panel-2)}
+.autobadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--primary);background:var(--primary-soft);border:1px solid rgba(234,84,0,.22);border-radius:999px;padding:3px 9px;margin-bottom:9px;align-self:flex-start}
+.autobadge i{width:12px;height:12px}
+.pbody{padding:14px 16px;flex:1;display:flex;flex-direction:column}
+.pbody h3{font-size:15px;font-weight:600;margin-bottom:5px}
+.pbody .desc{font-size:13px;color:var(--text-muted);line-height:1.5;flex:1}
+.techs{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
+.techs span{font-size:11px;color:var(--text-muted);background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:2px 7px}
+.synced{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-subtle)}
+.synced .dot{width:7px;height:7px;border-radius:50%;background:var(--success)}
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(15,15,15,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:80}
+.overlay.show{opacity:1;pointer-events:auto}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%);width:min(560px,94vw);max-height:88vh;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 30px 80px rgba(15,15,15,.28);z-index:85;opacity:0;pointer-events:none;transition:all .22s}
+.modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.mh{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--border);font-weight:600}
+.mb{padding:18px 20px}.mf{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)}
+.fl{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin:12px 0 5px}.fl:first-child{margin-top:0}
+.fi{width:100%;border:1px solid var(--border);border-radius:6px;padding:9px 11px;font:inherit;font-size:13px;resize:vertical}
+/* segmented tabs */
+.seg{display:inline-flex;gap:2px;padding:3px;background:var(--panel-2);border:1px solid var(--border);border-radius:8px}
+.seg .tab{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border:0;border-radius:6px;background:transparent;color:var(--text-muted);font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .12s}
+.seg .tab i{width:15px;height:15px}
+.seg .tab:hover{color:var(--text)}
+.seg .tab.on{background:var(--panel);color:var(--text);box-shadow:0 1px 2px rgba(15,15,15,.06);border:1px solid var(--border)}
+/* database library */
+.dblayout{display:grid;grid-template-columns:220px 1fr;gap:20px;margin-top:24px;align-items:start}
+.dbcats{display:flex;flex-direction:column;gap:2px}
+.dbcat{display:flex;align-items:center;gap:9px;height:38px;padding:0 12px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text-muted);font:inherit;font-size:14px;font-weight:500;cursor:pointer;text-align:left;transition:all .12s}
+.dbcat i{width:16px;height:16px}
+.dbcat .n{margin-left:auto;font-size:12px;color:var(--text-subtle);font-weight:600}
+.dbcat:hover{background:var(--panel-2);color:var(--text)}
+.dbcat.on{background:var(--panel);border-color:var(--border-strong);color:var(--text)}
+.dbcat.on::before{content:'';position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:2px;background:var(--primary)}
+.dbcat.on{position:relative}
+.dbmain{min-width:0}
+.dbsection{margin-bottom:24px}
+.dbsection:last-child{margin-bottom:0}
+.dbsec-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.dbsec-h .n{font-size:12px;color:var(--text-subtle);font-weight:600}
+.dbfiles{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--panel)}
+.dbrow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid var(--border)}
+.dbrow:first-child{border-top:0}
+.dbrow:hover{background:var(--panel-2)}
+.dbicon{width:30px;height:30px;flex:0 0 30px;border-radius:6px;display:grid;place-items:center;border:1px solid var(--border)}
+.dbicon i{width:16px;height:16px}
+.dbicon.pdf{color:#D92D20;background:rgba(217,45,32,.07)}
+.dbicon.docx{color:var(--info);background:rgba(23,92,211,.07)}
+.dbicon.xlsx{color:var(--success);background:rgba(14,124,90,.07)}
+.dbicon.pptx{color:var(--primary);background:var(--primary-soft)}
+.dbname{flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dbext{font-size:11px;font-weight:600;color:var(--text-subtle);text-transform:uppercase;flex:0 0 auto}
+.dbacts{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.dbnote{display:flex;align-items:center;gap:8px;margin-bottom:20px;padding:11px 14px;border:1px solid var(--border);border-radius:8px;background:var(--panel);font-size:13px;color:var(--text-muted)}
+.dbnote i{width:16px;height:16px;color:var(--primary);flex:0 0 auto}
+.dblabel{font-size:11px;font-weight:600;color:var(--text-subtle)}
+/* account menu / role switcher (sidebar) */
+.acct{margin-top:auto;position:relative}
+.acctbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:none;border-top:1px solid #262626;background:transparent;cursor:pointer;font:inherit;text-align:left}
+.acctbtn:hover{background:var(--sidebar-hover)}
+.acctav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#2a2a2a;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.acctid{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.acctname{font-size:13px;color:#fff;font-weight:500}
+.acctrole{font-size:11px;color:var(--sidebar-text)}
+.acctchev{width:15px;height:15px;color:var(--sidebar-text);flex:0 0 15px}
+.acctpop{position:absolute;left:12px;right:12px;bottom:60px;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.3);padding:6px;z-index:60;display:none}
+.acctpop.show{display:block}
+.accthead{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.accthead .an{font-size:13.5px;color:var(--text);font-weight:600}
+.accthead .ae{font-size:12px;color:var(--text-muted);margin-top:2px}
+.acctitem{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.acctitem:hover{background:var(--panel-2)}
+.acctitem i{width:15px;height:15px;color:var(--text-muted)}
+.acctitem.danger{color:var(--danger)}.acctitem.danger i{color:var(--danger)}
+.acctsep{height:1px;background:var(--border);margin:6px 0}
+</style>
+</head>
+<body>
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--text);color:#fff;font-size:13px;font-weight:500;padding:10px 16px;border-radius:8px;box-shadow:0 12px 32px rgba(15,15,15,.28);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:120"></div>
+<div class="overlay" id="overlay" onclick="closeAdd()"></div>
+<div style="display:flex;min-height:100vh">
+  <aside style="width:260px;flex:0 0 260px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;align-self:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 12px 22px">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px">L</span>
+      <span style="font-weight:600;font-size:16px;color:#fff">Lead360</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px" aria-label="Primary">
+      <a class="side" data-testid="nav-leads" href="leads.page.html"><i data-lucide="list"></i>Leads</a>
+      <a class="side active" data-testid="nav-projects" href="projects.page.html"><i data-lucide="folder"></i>Projects</a>
+      <a class="side" data-testid="nav-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="acct">
+      <button class="acctbtn" onclick="toggleAcct(event)" data-testid="acct-trigger" aria-haspopup="true">
+        <span class="acctav">FK</span>
+        <span class="acctid"><span class="acctname">Farah Karim</span><span class="acctrole">Sales / PM</span></span>
+        <i data-lucide="chevron-up" class="acctchev"></i>
+      </button>
+      <div class="acctpop" data-testid="acct-pop">
+        <div class="accthead"><div class="an">Farah Karim</div><div class="ae">farah.karim@riseuplabs.com</div></div>
+        <a class="acctitem" data-testid="acct-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+        <a class="acctitem" data-testid="acct-switch-view" href="../management/overview.page.html"><i data-lucide="repeat"></i>Switch to Admin view</a>
+        <div class="acctsep"></div>
+        <a class="acctitem danger" data-testid="acct-signout" href="login.page.html"><i data-lucide="log-out"></i>Sign out</a>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:0 32px;height:60px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <div style="position:relative;flex:1;max-width:420px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:9px;width:16px;color:var(--text-subtle)"></i>
+        <input id="search" data-testid="projects-search" placeholder="Search projects…" style="width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px">
+      </div>
+      <a class="btn btn-primary" data-testid="topbar-new-lead" href="new-lead-info.page.html"><i data-lucide="plus" style="width:16px"></i>New Lead</a>
+    </header>
+
+    <main style="padding:32px;max-width:1400px;width:100%;margin:0 auto">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px">
+        <div>
+          <h1 style="font-size:22px;font-weight:600">Projects</h1>
+          <div style="margin-top:6px" class="synced"><span class="dot"></span><span id="count">20</span> projects · synced from <a href="https://riseuplabs.com/portfolio/" target="_blank" rel="noopener" style="color:var(--primary);font-weight:500">riseuplabs.com/portfolio</a></div>
+          <div style="margin-top:5px;display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-subtle)"><i data-lucide="lock" style="width:13px;color:var(--primary)"></i>Locked leads are added here automatically.</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary" data-testid="projects-resync"><i data-lucide="refresh-cw" style="width:15px"></i>Re-sync</button>
+          <button class="btn btn-primary" data-testid="projects-add" onclick="openAdd()"><i data-lucide="plus" style="width:16px"></i>Add project</button>
+        </div>
+      </div>
+
+      <!-- VIEW TABS -->
+      <div style="margin:20px 0 4px" class="seg" role="tablist">
+        <button class="tab on" id="tab-portfolio" data-testid="projects-tab-portfolio" onclick="showTab('portfolio')"><i data-lucide="layout-grid"></i>Portfolio</button>
+        <button class="tab" id="tab-database" data-testid="projects-tab-database" onclick="showTab('database')"><i data-lucide="database"></i>Database</button>
+      </div>
+
+      <!-- PORTFOLIO PANEL -->
+      <div id="portfolio-panel">
+      <!-- CATEGORY FILTER -->
+      <div style="margin:20px 0 10px" class="label">Category</div>
+      <div id="cats" style="display:flex;flex-wrap:wrap;gap:8px">
+        <button class="chip cat on" data-cat="all" data-testid="projects-cat-all">All</button>
+        <button class="chip cat" data-cat="AI" data-testid="projects-cat-ai">AI</button>
+        <button class="chip cat" data-cat="Mobile Apps" data-testid="projects-cat-mobile">Mobile Apps</button>
+        <button class="chip cat" data-cat="Web Systems" data-testid="projects-cat-web">Web Systems</button>
+        <button class="chip cat" data-cat="Website" data-testid="projects-cat-website">Website</button>
+        <button class="chip cat" data-cat="eCommerce" data-testid="projects-cat-ecom">eCommerce</button>
+        <button class="chip cat" data-cat="Games" data-testid="projects-cat-games">Games</button>
+        <button class="chip cat" data-cat="eLearning" data-testid="projects-cat-elearning">eLearning</button>
+        <button class="chip cat" data-cat="AR/VR/MR" data-testid="projects-cat-arvr">AR/VR/MR</button>
+        <button class="chip cat" data-cat="IoT" data-testid="projects-cat-iot">IoT</button>
+        <button class="chip cat" data-cat="eGov" data-testid="projects-cat-egov">eGov</button>
+        <button class="chip cat" data-cat="UN-NGO" data-testid="projects-cat-unngo">UN-NGO</button>
+        <button class="chip cat" data-cat="Health Tech" data-testid="projects-cat-health">Health Tech</button>
+      </div>
+
+      <!-- TECH FILTER -->
+      <div style="margin:16px 0 10px" class="label">Tech stack</div>
+      <div id="techs" style="display:flex;flex-wrap:wrap;gap:8px">
+        <button class="chip" data-tech="React" data-testid="projects-tech-react">React</button>
+        <button class="chip" data-tech="Flutter" data-testid="projects-tech-flutter">Flutter</button>
+        <button class="chip" data-tech="Laravel" data-testid="projects-tech-laravel">Laravel</button>
+        <button class="chip" data-tech="Node.js" data-testid="projects-tech-node">Node.js</button>
+        <button class="chip" data-tech="Python" data-testid="projects-tech-python">Python</button>
+        <button class="chip" data-tech="Unity" data-testid="projects-tech-unity">Unity</button>
+        <button class="chip" data-tech="OpenAI" data-testid="projects-tech-openai">OpenAI</button>
+        <button class="chip" data-tech="AWS" data-testid="projects-tech-aws">AWS</button>
+        <button class="chip" data-tech="WordPress" data-testid="projects-tech-wordpress">WordPress</button>
+      </div>
+
+      <!-- GRID -->
+      <div class="grid" id="grid" style="margin-top:24px"></div>
+      <div id="empty" style="display:none;text-align:center;padding:60px;color:var(--text-muted)">
+        <i data-lucide="folder-search" style="width:28px"></i>
+        <div style="margin-top:10px">No projects match these filters. <button class="btn btn-ghost sm" onclick="clearFilters()" data-testid="projects-clear">Clear filters</button></div>
+      </div>
+      </div><!-- /portfolio-panel -->
+
+      <!-- DATABASE PANEL -->
+      <div id="database-panel" style="display:none">
+        <div class="dbnote">
+          <i data-lucide="info"></i>
+          <span>Synced from the Riseup Proposal &amp; Budget Database. PDFs preview inline; Office files download.</span>
+        </div>
+        <div class="dblayout">
+          <div class="dbcats" id="db-cats" role="tablist" aria-label="Database categories"></div>
+          <div class="dbmain" id="db-main"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ADD PROJECT MODAL -->
+<div class="modal" id="addModal" role="dialog" aria-modal="true" aria-label="Add project">
+  <div class="mh"><i data-lucide="folder-plus" style="width:18px;color:var(--primary)"></i><span>Add project</span><i data-lucide="x" style="width:18px;margin-left:auto;cursor:pointer" onclick="closeAdd()" data-testid="projects-add-close"></i></div>
+  <div class="mb">
+    <p style="font-size:13px;color:var(--text-muted);margin:0 0 6px">Add a project to the portfolio — it becomes reference evidence (RAG) for future proposals.</p>
+    <label class="fl">Project name</label><input class="fi" placeholder="e.g. Acme Wallet" data-testid="projects-add-name">
+    <label class="fl">Client / company</label><input class="fi" placeholder="e.g. NovaPay Inc" data-testid="projects-add-client">
+    <label class="fl">Categories</label><input class="fi" placeholder="AI, Mobile Apps, Fintech (comma-separated)" data-testid="projects-add-cats">
+    <label class="fl">Tech stack</label><input class="fi" placeholder="Flutter, NestJS, PostgreSQL" data-testid="projects-add-tech">
+    <label class="fl">Short summary</label><textarea class="fi" style="height:70px" placeholder="One or two sentences describing the project." data-testid="projects-add-desc"></textarea>
+    <label class="fl">Live link (optional)</label><input class="fi" placeholder="https://…" data-testid="projects-add-link">
+    <label class="fl">Cover image (optional)</label><input class="fi" type="file" data-testid="projects-add-cover">
+  </div>
+  <div class="mf">
+    <button class="btn btn-secondary" onclick="closeAdd()" data-testid="projects-add-cancel">Cancel</button>
+    <button class="btn btn-primary" onclick="addProject()" data-testid="projects-add-save"><i data-lucide="check" style="width:15px"></i>Add project</button>
+  </div>
+</div>
+
+<script>
+// Real Riseup Labs portfolio data (fetched from riseuplabs.com/portfolio)
+var PROJECTS = [
+ {n:"Trainr",c:["AI","Mobile Apps","Health Tech"],t:["Flutter","OpenAI","Firebase","PostgreSQL"],d:"Next-gen, AI-powered fitness & challenge engagement platform.",auto:true},
+ {n:"Cloud Couture",c:["AI","eCommerce"],t:["React","Next.js","Google Gemini","OpenAI"],d:"AI-driven B2B fashion marketplace with automated tech-pack generation."},
+ {n:"WriteRush",c:["AI","Web Systems"],t:["WordPress","OpenAI","Google Gemini","PHP"],d:"WordPress plugin automating blog creation and social posting."},
+ {n:"ContentOS",c:["AI"],t:["n8n","OpenAI","Langchain"],d:"Multi-agent AI pipeline for scaling SEO & AEO content."},
+ {n:"HR AI Automation",c:["AI","Web Systems"],t:["n8n","OpenAI","React","Looker Studio"],d:"Automates onboarding, document generation and approvals."},
+ {n:"OPS Web Application",c:["Web Systems"],t:["Python","PostgreSQL","Microsoft Azure","Docker"],d:"Migrated UNICEF ECARO's application from AWS to Azure."},
+ {n:"CNRS Graphoskop",c:["Web Systems"],t:["React","TypeScript","Tailwind CSS","Docker"],d:"Legacy Java desktop plugin converted to a scalable web app."},
+ {n:"Moodle Cloud Learning",c:["eLearning","Web Systems"],t:["Moodle Cloud","Xerte","Zoom"],d:"Scalable LMS featuring accessible learning pathways."},
+ {n:"Red Grocer",c:["eCommerce","Mobile Apps"],t:["Flutter","React Native","Android","iOS"],d:"Grocery eCommerce platform simplifying daily shopping in Bangladesh."},
+ {n:"COMPASS",c:["Health Tech","Web Systems"],t:["Laravel","Vue.js","MySQL"],d:"Sales prescription target management for pharmaceuticals."},
+ {n:"MOffice",c:["AR/VR/MR"],t:["Unity","C#"],d:"Collaborative virtual office in an immersive 3D environment."},
+ {n:"Conservation Quest",c:["Games"],t:["Unity","Blender","Android","iOS"],d:"Interactive puzzle game raising environmental awareness."},
+ {n:"HealthBuddy+",c:["Mobile Apps","UN-NGO","Health Tech"],t:["RapidPro","PHP","MySQL","Android"],d:"WHO-UNICEF chatbot delivering COVID-19 information."},
+ {n:"U-Report",c:["Mobile Apps","UN-NGO"],t:["RapidPro","Java","Firebase"],d:"Youth engagement platform — over 14 million young people."},
+ {n:"myGov",c:["eGov","Mobile Apps"],t:["Android"],d:"A single app for all government services."},
+ {n:"Teachers' Portal Uganda",c:["eGov","eLearning","Web Systems"],t:["Laravel","Vue.js","PHP","Figma"],d:"Skill-development platform for tech integration in teaching."},
+ {n:"Jeeto.Online",c:["Games"],t:["Node.js","React","Flutter","AWS","bKash"],d:"One of the most active and engaging gaming platforms."},
+ {n:"Choto.co",c:["Web Systems"],t:["Laravel","Next.js","Vue.js","AWS"],d:"Free link-shortener platform for URL management."},
+ {n:"eCook",c:["IoT","eCommerce","Mobile Apps"],t:["AWS","Android","iOS","PHP","bKash"],d:"Modern smart cooking stove with companion mobile apps."},
+ {n:"NPS Desk",c:["Website","Web Systems"],t:["React","Laravel","AWS","Android","iOS"],d:"NPS calculator measuring customer loyalty and satisfaction."}
+];
+
+var toastTimer;
+function toast(msg){var t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(12px)';},1600);}
+function userProjects(){try{return JSON.parse(localStorage.getItem('lead360_projects')||'[]');}catch(e){return [];}}
+function getAll(){return userProjects().concat(PROJECTS);}
+var activeCat="all", activeTech=null, q="";
+var grid=document.getElementById('grid'), empty=document.getElementById('empty'), countEl=document.getElementById('count');
+
+function coverCats(cats){return cats.slice(0,3).map(function(c,i){return '<span class="cat'+(i>0?' alt':'')+'">'+c+'</span>';}).join('');}
+function render(){
+  var list=getAll().filter(function(p){
+    var okC=activeCat==="all"||p.c.indexOf(activeCat)>-1;
+    var okT=!activeTech||p.t.indexOf(activeTech)>-1;
+    var okQ=!q||(p.n+' '+p.c.join(' ')+' '+p.t.join(' ')+' '+p.d).toLowerCase().indexOf(q)>-1;
+    return okC&&okT&&okQ;
+  });
+  countEl.textContent=list.length;
+  grid.innerHTML=list.map(function(p){
+    var slug=p.n.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    return '<a class="pcard" href="project-detail.page.html?p='+slug+'" data-testid="projects-card-'+slug+'">'
+      +'<div class="pcover"><div class="cats">'+coverCats(p.c)+'</div></div>'
+      +'<div class="pbody">'+(p.auto?'<span class="autobadge"><i data-lucide="lock"></i>Auto-added from a locked lead</span>':'')+'<h3>'+p.n+'</h3><div class="desc">'+p.d+'</div>'
+      +'<div class="techs">'+p.t.slice(0,4).map(function(t){return '<span>'+t+'</span>';}).join('')+'</div></div></a>';
+  }).join('');
+  empty.style.display=list.length?'none':'block';
+  lucide.createIcons();
+}
+document.querySelectorAll('#cats .chip').forEach(function(b){b.addEventListener('click',function(){
+  document.querySelectorAll('#cats .chip').forEach(function(x){x.classList.remove('on');});b.classList.add('on');activeCat=b.dataset.cat;render();});});
+document.querySelectorAll('#techs .chip').forEach(function(b){b.addEventListener('click',function(){
+  if(b.classList.contains('on')){b.classList.remove('on');activeTech=null;}
+  else{document.querySelectorAll('#techs .chip').forEach(function(x){x.classList.remove('on');});b.classList.add('on');activeTech=b.dataset.tech;}render();});});
+document.getElementById('search').addEventListener('input',function(e){q=e.target.value.toLowerCase();render();});
+function clearFilters(){activeCat="all";activeTech=null;q="";document.getElementById('search').value="";
+  document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});document.querySelector('[data-cat="all"]').classList.add('on');render();}
+// add project modal
+function openAdd(){document.getElementById('overlay').classList.add('show');document.getElementById('addModal').classList.add('show');}
+function closeAdd(){document.getElementById('overlay').classList.remove('show');document.getElementById('addModal').classList.remove('show');
+  document.querySelectorAll('#addModal .fi').forEach(function(f){f.value='';});}
+function addProject(){
+  var name=document.querySelector('[data-testid="projects-add-name"]').value||"Untitled project";
+  var cats=(document.querySelector('[data-testid="projects-add-cats"]').value||"Web Systems").split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var tech=(document.querySelector('[data-testid="projects-add-tech"]').value||"").split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var desc=document.querySelector('[data-testid="projects-add-desc"]').value||"Newly added project.";
+  var link=(document.querySelector('[data-testid="projects-add-link"]')||{}).value||"";
+  var client=(document.querySelector('[data-testid="projects-add-client"]')||{}).value||"";
+  var up=userProjects();up.unshift({n:name,c:cats,t:tech,d:desc,client:client,link:link});
+  try{localStorage.setItem('lead360_projects',JSON.stringify(up));}catch(e){}
+  closeAdd();render();
+}
+
+// ===== DATABASE (Riseup Proposal & Budget Database) =====
+var DB = {
+  "Agency": {
+    "Client requirement": [
+      "Hummm - UX_UI Estimation (Final) - Dev Draft.pdf",
+      "KHDMETI - SCOPE RECOMMENDATION v2.pdf",
+      "Sentinel Risk Intelligence Labs eyes-on-glass Swarm & System Functional Requirements.pdf",
+      "Kwando - Calendar Visibility & Overlay Logic.docx",
+      "Kwando Technical Scope - Dev.xlsx",
+      "Kwando Technical Scope admin console requirements - Dev.xlsx",
+      "Lightweight webpage _ Partiful flow.pptx"
+    ],
+    "Proposal": [
+      "Eyes_on_Glass_Cloud_Deployment_Technical_and_Financial_Proposal.docx",
+      "Humm_Technical_and_Financial_Proposal_iOS_Development.docx",
+      "KHDMETI_Technical_and_Financial_Proposal with updated budget.docx",
+      "Kwando_iOS_MVP_Development_Maintenance_Technical_and_Financial_Proposal_Rev_Admin_Laravel(Updated).docx"
+    ]
+  },
+  "Design Portfolio": {
+    "Proposal": [
+      "Untitled document (1).pdf",
+      "Untitled document.pdf"
+    ]
+  },
+  "Global": {
+    "Client requirement": [
+      "Blitz Clone Proposal.pdf",
+      "PROJECT OVERVIEW- Steel Welding.docx",
+      "Scope of Work_Survivor Alliance Moodle Localization Project.docx",
+      "TAD Gulf Website - SEO & Sitemap (1).xlsx",
+      "Tournament_System_24_7_Functionality_Brief.pdf"
+    ],
+    "Proposal": [
+      "Blitz_Clone_Technical_Proposal_Games_Scope.docx",
+      "Moodle_Multilingual_Course_Build_Technical_Proposal.docx",
+      "Steel_Welding_VR_Training_Technical_Proposal_Revised_Duration_Options.docx",
+      "TAD_Gulf_Website_Technical_Proposal_Updated.docx"
+    ],
+    "Budget": [
+      "Blitz Clone Budget.xlsx",
+      "Steel_Welding_VR_Training_Technical_Proposal Budget V2.xlsx",
+      "Survivor Alliance Moodle Localization Project Budget.xlsx",
+      "TAD Gulf Website - SEO & Sitemap (1).xlsx"
+    ]
+  },
+  "Local": {
+    "Client requirement": [
+      "AI-Based Early Warning System ToR.pdf",
+      "BRAC_Online_Module_Summary.pdf",
+      "BRAC_Online_Module_ToR.pdf",
+      "Terms of reference-E-Learning.pdf",
+      "ToR - Strengthening IPEMIS.pdf"
+    ],
+    "Proposal": [
+      "Agvisely_AI_Early_Warning_Technical_Proposal.docx",
+      "BRAC_Online_Module_Development_Technical_Proposal_Updated.docx",
+      "IPEMIS_Technical_Proposal_Updated_Methodology (1).docx",
+      "Technical_Proposal_E_Learning_Digital_Accessibility_Disability_Inclusion.docx"
+    ],
+    "Budget": [
+      "Agvisely_AI_Early_Warning_ budget.xlsx",
+      "Develop and Deliver Two E-Learning Courses on Digital Accessibility and Disability Budget.xlsx",
+      "Online Module Development Budget.xlsx",
+      "Technical Support for Strengthening, and Enhancement of Integrated Primary Education Management Information System (IPEMIS)- Budget.xlsx"
+    ]
+  }
+};
+var DB_CATS = [
+  {key:"Agency",          icon:"building-2",     testid:"db-cat-agency"},
+  {key:"Design Portfolio",icon:"palette",        testid:"db-cat-design"},
+  {key:"Global",          icon:"globe",          testid:"db-cat-global"},
+  {key:"Local",           icon:"map-pin",        testid:"db-cat-local"}
+];
+var SECTION_ORDER = ["Client requirement","Proposal","Budget"];
+var SECTION_ICON = {"Client requirement":"clipboard-list","Proposal":"file-signature","Budget":"wallet"};
+var activeDbCat = "Agency";
+var fileIndex = 0;
+
+function fileMeta(name){
+  var ext = (name.split('.').pop()||'').toLowerCase();
+  if(ext==='pdf')  return {ext:'pdf', icon:'file-text',    office:false};
+  if(ext==='docx'||ext==='doc') return {ext:'docx', icon:'file-text', office:true};
+  if(ext==='xlsx'||ext==='xls') return {ext:'xlsx', icon:'sheet',     office:true};
+  if(ext==='pptx'||ext==='ppt') return {ext:'pptx', icon:'presentation', office:true};
+  return {ext:ext||'file', icon:'file', office:true};
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function renderDbCats(){
+  var host=document.getElementById('db-cats');
+  host.innerHTML=DB_CATS.map(function(c){
+    var count=Object.keys(DB[c.key]).reduce(function(a,s){return a+DB[c.key][s].length;},0);
+    return '<button class="dbcat'+(c.key===activeDbCat?' on':'')+'" role="tab" data-cat="'+esc(c.key)+'" data-testid="'+c.testid+'" onclick="selectDbCat(\''+c.key.replace(/'/g,"\\'")+'\')">'
+      +'<i data-lucide="'+c.icon+'"></i><span>'+esc(c.key)+'</span><span class="n">'+count+'</span></button>';
+  }).join('');
+}
+function renderDbMain(){
+  var cat=DB[activeDbCat];
+  var main=document.getElementById('db-main');
+  fileIndex=0;
+  var secs=SECTION_ORDER.filter(function(s){return cat[s];});
+  main.innerHTML=secs.map(function(sec){
+    var rows=cat[sec].map(function(name){
+      var m=fileMeta(name);
+      var idx=fileIndex++;
+      var href='db/'+encodeURI(activeDbCat+'/'+sec+'/'+name).replace(/&/g,'%26').replace(/#/g,'%23');
+      var preview = m.office
+        ? '<a class="btn btn-ghost sm" href="'+href+'" title="Open (Office files download to view)" data-testid="db-file-preview-'+idx+'"><i data-lucide="eye" style="width:14px"></i>Preview</a>'
+        : '<a class="btn btn-ghost sm" href="'+href+'" target="_blank" rel="noopener" title="Preview inline" data-testid="db-file-preview-'+idx+'"><i data-lucide="eye" style="width:14px"></i>Preview</a>';
+      return '<div class="dbrow" data-testid="db-file-row-'+idx+'">'
+        +'<div class="dbicon '+m.ext+'"><i data-lucide="'+m.icon+'"></i></div>'
+        +'<div class="dbname" title="'+esc(name)+'">'+esc(name)+'</div>'
+        +'<span class="dbext">'+m.ext+'</span>'
+        +'<div class="dbacts">'+preview
+        +'<a class="btn btn-secondary sm" href="'+href+'" download title="Download" data-testid="db-file-download-'+idx+'"><i data-lucide="download" style="width:14px"></i>Download</a>'
+        +'</div></div>';
+    }).join('');
+    return '<div class="dbsection"><div class="dbsec-h"><i data-lucide="'+(SECTION_ICON[sec]||'folder')+'" style="width:15px;color:var(--text-subtle)"></i><span class="dblabel">'+esc(sec)+'</span><span class="n" style="font-size:12px;color:var(--text-subtle);font-weight:600">'+cat[sec].length+'</span></div><div class="dbfiles">'+rows+'</div></div>';
+  }).join('');
+  lucide.createIcons();
+}
+function selectDbCat(key){activeDbCat=key;renderDbCats();renderDbMain();lucide.createIcons();}
+
+function showTab(which){
+  var isDb = which==='database';
+  document.getElementById('portfolio-panel').style.display = isDb?'none':'';
+  document.getElementById('database-panel').style.display = isDb?'':'none';
+  document.getElementById('tab-portfolio').classList.toggle('on',!isDb);
+  document.getElementById('tab-database').classList.toggle('on',isDb);
+  if(isDb){renderDbCats();renderDbMain();}
+  lucide.createIcons();
+}
+
+render();
+renderDbCats();
+// re-sync portfolio (prototype feedback)
+var resyncBtn=document.querySelector('[data-testid="projects-resync"]');
+if(resyncBtn)resyncBtn.addEventListener('click',function(){toast('Portfolio re-synced');});
+// ESC closes the Add-project modal
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.getElementById('addModal').classList.contains('show'))closeAdd();
+});
+  window.toggleAcct=function(e){e.stopPropagation();var pop=e.currentTarget.parentNode.querySelector('.acctpop');var open=pop.classList.contains('show');document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});if(!open)pop.classList.add('show');};
+  document.addEventListener('click',function(){document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')})});
+</script>
+</body>
+</html>

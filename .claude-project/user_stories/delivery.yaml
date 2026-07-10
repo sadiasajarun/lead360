@@ -1,0 +1,10 @@
+story: Deliverables are PDF + Excel per lead (email disabled)
+persona: Sales/PM
+acceptance_criteria:
+  - Approved lead exposes Download proposal (PDF) and Download budget (Excel); files are branded (Riseup logo).
+  - Marking Sent → Locked auto-creates a Project; Lost requires a loss reason (feeds the learning loop).
+  - Approved leads are archived to the Database; the delivery-status pill reflects the lead status.
+error_scenarios:
+  - In-app email is built but DISABLED (EMAIL_ENABLED=false) — the send action is not wired in production.
+boundary_cases:
+  - Locked lead shows "Added to Projects"; delivery pill shows Delivered when Sent+.

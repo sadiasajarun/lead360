@@ -1,0 +1,50 @@
+# ─── deps ────────────────────────────────────────────────────────────────────
+node_modules/
+**/node_modules/
+
+# ─── builds ──────────────────────────────────────────────────────────────────
+dist/
+build/
+.cache/
+.react-router/
+
+# ─── env & secrets (NEVER commit) ────────────────────────────────────────────
+# Only *.env.example templates are tracked. If you add a new env file, assume it is secret.
+.env
+.env.*
+!.env.example
+**/.env
+!**/.env.example
+*.pem
+*.key
+*.p12
+secrets.json
+
+# ─── agent tooling ───────────────────────────────────────────────────────────
+# The Claude skill library and project rules are development-time only; a developer cloning this
+# repo does not need them. This also neutralises .claude/operations/scripts/bolta/.gitignore,
+# whose `!.env.1password.*` rule force-includes env files — a parent-directory ignore cannot be
+# re-included, so nothing under here can leak.
+.claude/
+
+# ─── runtime storage (user uploads + generated deliverables) ─────────────────
+# NOT the seed corpus. backend/data/kb-seed/ IS committed — it is the source the ingest script
+# rebuilds the knowledge base from on a fresh clone. See SETUP.md.
+uploads/
+tmp/
+storage/
+
+# ─── logs & agent output ─────────────────────────────────────────────────────
+*.log
+.claude-project/agent-logs/
+
+# ─── test / coverage ─────────────────────────────────────────────────────────
+coverage/
+playwright-report/
+test-results/
+storageState-*.json
+
+# ─── os / editor ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/

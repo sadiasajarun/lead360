@@ -1,0 +1,12 @@
+story: Authentication & role-based access
+persona: Riseup staff (Sales/PM, Admin)
+acceptance_criteria:
+  - Valid credentials (from _fixtures.yaml) log in; JWT set as httpOnly cookies; Sales lands on /leads, Admin on /overview.
+  - Logout works even with an expired token; cookies cleared.
+  - Sales/PM cannot access admin-only routes (Approvals, Admin Settings) — 403 + UI guard.
+  - Session validated on app load; refresh rotates the refresh token (old one deleted).
+error_scenarios:
+  - Wrong password → 401, inline error, no cookie set.
+  - Missing JWT_SECRET at boot → app refuses to start.
+boundary_cases:
+  - Expired access token + valid refresh → silent refresh once; second failure → logout.

@@ -1,0 +1,40 @@
+# Lead360 — local development infrastructure.
+#
+# Provides ONLY the database. The backend and frontend are run directly with npm (see
+# .claude-project/docs/DEVELOPER_HANDOFF.md) so you get hot reload.
+#
+# Values come from the repo-root `.env` (copy it from `.env.example` first). They must match the
+# DATABASE_* values in backend/.env.
+#
+#   cp .env.example .env
+#   docker compose up -d
+#
+# Production hosting is decided by Riseup Labs' lead devops — see DEVELOPER_HANDOFF.md.
+
+services:
+  db:
+    # Postgres 16 with the pgvector extension preinstalled. The app runs
+    # `CREATE EXTENSION IF NOT EXISTS vector` itself, so no init script is needed.
+    image: pgvector/pgvector:pg16
+    container_name: lead360-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lead360}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the root .env}
+      POSTGRES_DB: ${POSTGRES_DB:-lead360}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - lead360_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lead360} -d ${POSTGRES_DB:-lead360}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# NOTE: a Redis service used to be defined here for BullMQ. Nothing in the codebase connects to
+# Redis today — no queue, no cache. It was removed rather than left running to avoid implying a
+# dependency that does not exist. Re-add it when background jobs are actually implemented.
+
+volumes:
+  lead360_pgdata:

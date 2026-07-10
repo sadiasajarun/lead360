@@ -1,0 +1,14 @@
+story: Editable budget (resource × days × rate) with adjustments
+persona: Sales/PM
+acceptance_criteria:
+  - Budget lists roles grouped by department; Unit Cost = Units × Days × Rate; dept subtotals sum to grand total.
+  - Editing role/seniority auto-fills the rate card day-rate (still overridable); units/days/rate recompute live.
+  - Add/remove role lines, add/rename department, add milestone all work.
+  - Contingency/Discount/VAT % apply to the milestone total; discount clamped ≤100%.
+  - Currency switch converts the whole table consistently (rates stored in USD base).
+  - The client budget document total matches the proposal price for the same lead.
+error_scenarios:
+  - Concurrent edit of the same budget → second save gets 409 (optimistic lock), not silent overwrite.
+boundary_cases:
+  - "Hide dev cost" zeroes the Development subtotal so visible subtotals still reconcile to the grand total.
+  - Optional add-on lines excluded from the base total unless toggled on.

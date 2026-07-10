@@ -1,0 +1,12 @@
+story: New lead wizard → generate proposal + budget
+persona: Sales/PM
+acceptance_criteria:
+  - Wizard steps Info → Requirement → Readiness → Template → Generate all use the app shell; Back/Save-exit work.
+  - Requirement accepts file upload (real storage) and/or pasted text.
+  - Readiness shows a score + open queries; <80 requires an explicit "Continue anyway (override)"; ≥80 shows Ready.
+  - Choosing a template carries to Generate; generation produces a proposal + budget and opens Lead Detail.
+  - Generated lead starts in status "Generated".
+error_scenarios:
+  - Continue with empty required fields (company/contact/email) → blocked with inline errors.
+boundary_cases:
+  - Override at readiness <80 proceeds but records the risk.

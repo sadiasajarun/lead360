@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Approvals · Lead360 Management</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --bg:#FAFAF9;--panel:#FFFFFF;--panel-2:#F4F4F2;
+ --sidebar:#111111;--sidebar-text:#C4C0BB;--sidebar-text-active:#FFFFFF;--sidebar-hover:#1F1F1F;
+ --border:#E8E6E3;--border-strong:#D4D1CC;
+ --text:#0F0F0F;--text-muted:#6B6660;--text-subtle:#9A948E;
+ --primary:#EA5400;--primary-soft:rgba(234,84,0,.08);--primary-press:#CC4900;
+ --success:#0E7C5A;--warn:#B8710A;--danger:#B42318;--info:#175CD3;--steel:#475467;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+ -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.num{font-variant-numeric:tabular-nums}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;
+ font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .12s}
+.btn.sm{height:32px;padding:0 11px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-press)}
+.btn-secondary{background:var(--panel);border-color:var(--border-strong);color:var(--text)}.btn-secondary:hover{background:var(--panel-2)}
+.btn-ghost{background:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.btn-danger{background:var(--panel);border-color:var(--danger);color:var(--danger)}
+.btn-danger:hover{background:rgba(180,35,24,.06)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pill{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border:1px solid var(--border);
+ border-radius:4px;background:var(--panel);color:var(--text);font-size:12px;font-weight:600}
+.pill .dot{width:6px;height:6px;border-radius:50%}
+.dot-generated{background:var(--info)}.dot-pending{background:var(--warn)}.dot-approved{background:var(--success)}
+.dot-sent{background:var(--primary)}.dot-locked{background:var(--steel)}.dot-lost{background:var(--danger)}.dot-rejected{background:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{position:sticky;top:0;background:var(--panel-2);border-bottom:1px solid var(--border-strong);
+ text-align:left;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--text-subtle);text-transform:uppercase;padding:0 16px;height:40px}
+tbody td{border-bottom:1px solid var(--border);padding:0 16px;height:44px;color:var(--text)}
+tbody tr:hover{background:var(--panel-2);cursor:pointer}
+tbody tr.selected{background:var(--primary-soft)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.kpi{padding:24px}
+.kpi .label{margin-bottom:10px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.kpi .val{font-size:32px;font-weight:600;line-height:1}.kpi .delta{font-size:12px;font-weight:500;margin-left:8px}
+.delta.up{color:var(--success)}.delta.down{color:var(--danger)}
+.segbar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--panel-2);position:relative}
+.segbar .z-danger{background:rgba(180,35,24,.18)}.segbar .z-warn{background:rgba(184,113,10,.18)}.segbar .z-success{background:rgba(14,124,90,.18)}
+.segbar .marker{position:absolute;top:-3px;width:3px;height:16px;background:var(--text);border-radius:2px}
+/* shell */
+.side{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--sidebar-text);font-size:14px;font-weight:500}
+.side i{width:16px;height:16px}.side:hover{background:var(--sidebar-hover);color:#fff}
+.side.active{background:var(--sidebar-hover);color:#fff;position:relative}
+.side.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.iconbtn{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;cursor:pointer;color:var(--text-muted)}
+.iconbtn:hover{background:var(--panel-2);color:var(--text)}
+/* page-specific */
+.pagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px}
+.pagetitle{font-size:22px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.pagetitle .count{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:var(--primary-soft);color:var(--primary);font-size:13px;font-weight:600}
+.pagesub{font-size:14px;color:var(--text-muted);margin-top:4px}
+.waitchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:0 9px;height:22px;border-radius:4px;background:rgba(184,113,10,.1);color:var(--warn)}
+.waitchip.urgent{background:rgba(180,35,24,.1);color:var(--danger)}
+.tmplchip{display:inline-flex;align-items:center;height:22px;padding:0 9px;border:1px solid var(--border);border-radius:4px;background:var(--panel-2);font-size:12px;font-weight:500;color:var(--text-muted)}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);display:inline-grid;place-items:center;font-size:11px;font-weight:600;color:var(--text-muted)}
+.ownercell{display:inline-flex;align-items:center;gap:8px}
+/* prototype-only queue-state switcher + all-caught-up empty */
+.demoswitch{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 6px 0 11px;border:1px dashed var(--border-strong);border-radius:7px;background:var(--panel);font-size:12px;font-weight:600;color:var(--text-subtle);white-space:nowrap}
+.demoswitch i{width:14px;height:14px;color:var(--primary)}
+.demoswitch select{height:26px;border:1px solid var(--border);border-radius:5px;background:var(--panel-2);font:inherit;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;padding:0 6px}
+.caughtup{display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:72px 24px;text-align:center}
+.caughtup .cuic{width:52px;height:52px;border-radius:14px;background:rgba(14,124,90,.1);display:grid;place-items:center;color:var(--success)}
+.caughtup .cuic i{width:26px;height:26px}
+.caughtup h3{font-size:16px;font-weight:600}
+.caughtup p{font-size:13.5px;color:var(--text-muted);max-width:380px;line-height:1.55}
+/* review panel layout */
+.review{display:grid;grid-template-columns:1fr;gap:16px}
+.reviewhead{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)}
+.reviewtitle{font-size:16px;font-weight:600}
+.reviewmeta{font-size:13px;color:var(--text-muted);margin-top:3px;display:flex;gap:14px;flex-wrap:wrap}
+.reviewmeta b{color:var(--text);font-weight:500}
+.sxs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.sxs>div{background:var(--panel)}
+.docpane{padding:20px 22px}
+.docpane h4{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.docpane h4 i{width:15px;height:15px}
+.propsec{margin-bottom:16px}
+.propsec .st{font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px}
+.propsec p{font-size:13px;line-height:1.55;color:var(--text-muted)}
+.mini{width:100%;font-size:13px}
+.mini th{height:34px;font-size:11px}
+.mini td{height:36px}
+.mini tfoot td{height:40px;font-weight:600;color:var(--text);background:var(--panel-2);border-top:1px solid var(--border-strong)}
+/* comment thread */
+.thread{padding:20px 22px;border-top:1px solid var(--border)}
+.comment{display:flex;gap:11px;padding:12px 0}
+.comment+.comment{border-top:1px solid var(--border)}
+.cav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--text-muted)}
+.cbody .cmeta{font-size:13px;font-weight:600;margin-bottom:3px}
+.cbody .cmeta span{font-weight:400;color:var(--text-subtle);font-size:12px;margin-left:8px}
+.cbody p{font-size:13px;line-height:1.55;color:var(--text-muted)}
+.decisionbar{display:flex;align-items:center;gap:12px;padding:18px 22px;border-top:1px solid var(--border);background:var(--panel-2);border-radius:0 0 8px 8px}
+.notefield{flex:1;height:36px;padding:0 12px;border:1px solid var(--border-strong);border-radius:6px;background:var(--panel);font:inherit;font-size:13px}
+.notefield::placeholder{color:var(--text-subtle)}
+/* account menu / role switcher (sidebar) */
+.acct{margin-top:auto;position:relative}
+.acctbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:none;border-top:1px solid #262626;background:transparent;cursor:pointer;font:inherit;text-align:left}
+.acctbtn:hover{background:var(--sidebar-hover)}
+.acctav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#2a2a2a;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.acctid{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.acctname{font-size:13px;color:#fff;font-weight:500}
+.acctrole{font-size:11px;color:var(--sidebar-text)}
+.acctchev{width:15px;height:15px;color:var(--sidebar-text);flex:0 0 15px}
+.acctpop{position:absolute;left:12px;right:12px;bottom:60px;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.3);padding:6px;z-index:60;display:none}
+.acctpop.show{display:block}
+.accthead{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.accthead .an{font-size:13.5px;color:var(--text);font-weight:600}
+.accthead .ae{font-size:12px;color:var(--text-muted);margin-top:2px}
+.acctitem{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.acctitem:hover{background:var(--panel-2)}
+.acctitem i{width:15px;height:15px;color:var(--text-muted)}
+.acctitem.danger{color:var(--danger)}.acctitem.danger i{color:var(--danger)}
+.acctsep{height:1px;background:var(--border);margin:6px 0}
+</style>
+</head>
+<body>
+<div style="display:flex;min-height:100vh">
+  <aside style="width:260px;flex:0 0 260px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;align-self:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 12px 22px">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px">L</span>
+      <span style="font-weight:600;font-size:16px;color:#fff">Lead360</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px" aria-label="Primary">
+      <a class="side" data-testid="nav-overview" href="overview.page.html"><i data-lucide="layout-dashboard"></i>Overview</a>
+      <a class="side active" data-testid="nav-approvals" href="approvals.page.html"><i data-lucide="check-square"></i>Approvals</a>
+      <a class="side" data-testid="nav-leads" href="leads.page.html"><i data-lucide="list"></i>Leads</a>
+      <a class="side" data-testid="nav-projects" href="../app/projects.page.html"><i data-lucide="folder"></i>Projects</a>
+      <a class="side" data-testid="nav-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="acct">
+      <button class="acctbtn" onclick="toggleAcct(event)" data-testid="acct-trigger" aria-haspopup="true">
+        <span class="acctav">SN</span>
+        <span class="acctid"><span class="acctname">Sadia Noor</span><span class="acctrole">Admin</span></span>
+        <i data-lucide="chevron-up" class="acctchev"></i>
+      </button>
+      <div class="acctpop" data-testid="acct-pop">
+        <div class="accthead"><div class="an">Sadia Noor</div><div class="ae">sadia.noor@riseuplabs.com</div></div>
+        <a class="acctitem" data-testid="acct-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+        <a class="acctitem" data-testid="acct-switch-view" href="../app/leads.page.html"><i data-lucide="repeat"></i>Switch to Sales view</a>
+        <div class="acctsep"></div>
+        <a class="acctitem danger" data-testid="acct-signout" href="../app/login.page.html"><i data-lucide="log-out"></i>Sign out</a>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:0 32px;height:60px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <div style="position:relative;flex:1;max-width:420px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:9px;width:16px;color:var(--text-subtle)"></i>
+        <input data-testid="topbar-search" placeholder="Search leads, companies…" style="width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px">
+      </div>
+      <span style="width:32px;height:32px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);display:grid;place-items:center;font-size:12px;font-weight:600" data-testid="topbar-avatar">SN</span>
+    </header>
+    <main style="padding:32px;max-width:1400px;width:100%;margin:0 auto">
+
+      <div class="pagehead">
+        <div>
+          <h1 class="pagetitle">Approvals — verify each project <span class="count" data-testid="approvals-queue-count">4</span></h1>
+          <p class="pagesub">Verify each project before it can be sent. Leads pending approval, oldest first — review the proposal and budget side-by-side, then approve or reject.</p>
+        </div>
+        <label class="demoswitch" title="Prototype only — preview queue states"><i data-lucide="flask-conical"></i><span>State</span>
+          <select id="queueSel" onchange="setQueueState(this.value)" data-testid="approvals-state-switch"><option value="data">Pending (4)</option><option value="empty">All caught up</option></select>
+        </label>
+      </div>
+
+      <!-- Queue -->
+      <section class="card" style="overflow:hidden;margin-bottom:24px">
+        <div style="overflow-x:auto">
+        <table data-testid="approvals-queue">
+          <thead>
+            <tr>
+              <th>Client / Lead</th>
+              <th>Template</th>
+              <th>Submitted by</th>
+              <th class="num">Value</th>
+              <th>Submitted</th>
+              <th class="num">Waiting</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="selected" data-testid="approvals-row-urmi" aria-selected="true" data-client="Urmi Group" data-project="Urmi Commerce Revamp" data-template="Local" data-owner="Tanvir Rahman" data-value="$42,000">
+              <td><div style="font-weight:600">Urmi Group</div><div style="font-size:12px;color:var(--text-muted)">Urmi Commerce Revamp</div></td>
+              <td><span class="tmplchip">Local</span></td>
+              <td><span class="ownercell"><span class="avatar">TR</span>Tanvir Rahman</span></td>
+              <td class="num">$42,000</td>
+              <td style="font-size:13px;color:var(--text-muted)">Jun 28, 09:12</td>
+              <td class="num"><span class="waitchip urgent"><i data-lucide="clock" style="width:13px;height:13px"></i>3d 4h</span></td>
+              <td class="num"><a class="btn btn-secondary sm" data-testid="approvals-review-urmi" href="#review"><i data-lucide="eye" style="width:14px"></i>Review</a></td>
+            </tr>
+            <tr data-testid="approvals-row-writerush" data-client="WriteRush" data-project="WriteRush Rebrand" data-template="Design Portfolio" data-owner="Farah Karim" data-value="$31,000">
+              <td><div style="font-weight:600">WriteRush</div><div style="font-size:12px;color:var(--text-muted)">WriteRush Rebrand</div></td>
+              <td><span class="tmplchip">Design Portfolio</span></td>
+              <td><span class="ownercell"><span class="avatar">FK</span>Farah Karim</span></td>
+              <td class="num">$31,000</td>
+              <td style="font-size:13px;color:var(--text-muted)">Jun 29, 14:40</td>
+              <td class="num"><span class="waitchip">1d 22h</span></td>
+              <td class="num"><a class="btn btn-secondary sm" data-testid="approvals-review-writerush" href="#review"><i data-lucide="eye" style="width:14px"></i>Review</a></td>
+            </tr>
+            <tr data-testid="approvals-row-meridian" data-client="Meridian Retail" data-project="Meridian POS Integration" data-template="Global" data-owner="Nabil Hasan" data-value="$67,500">
+              <td><div style="font-weight:600">Meridian Retail</div><div style="font-size:12px;color:var(--text-muted)">Meridian POS Integration</div></td>
+              <td><span class="tmplchip">Global</span></td>
+              <td><span class="ownercell"><span class="avatar">NH</span>Nabil Hasan</span></td>
+              <td class="num">$67,500</td>
+              <td style="font-size:13px;color:var(--text-muted)">Jun 30, 10:05</td>
+              <td class="num"><span class="waitchip">1d 3h</span></td>
+              <td class="num"><a class="btn btn-secondary sm" data-testid="approvals-review-meridian" href="#review"><i data-lucide="eye" style="width:14px"></i>Review</a></td>
+            </tr>
+            <tr data-testid="approvals-row-kestrel" data-client="Kestrel Logistics" data-project="Fleet Tracking Portal" data-template="Agency" data-owner="Tanvir Rahman" data-value="$49,000">
+              <td><div style="font-weight:600">Kestrel Logistics</div><div style="font-size:12px;color:var(--text-muted)">Fleet Tracking Portal</div></td>
+              <td><span class="tmplchip">Agency</span></td>
+              <td><span class="ownercell"><span class="avatar">TR</span>Tanvir Rahman</span></td>
+              <td class="num">$49,000</td>
+              <td style="font-size:13px;color:var(--text-muted)">Jun 30, 16:22</td>
+              <td class="num"><span class="waitchip">20h</span></td>
+              <td class="num"><a class="btn btn-secondary sm" data-testid="approvals-review-kestrel" href="#review"><i data-lucide="eye" style="width:14px"></i>Review</a></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+
+      <!-- Review panel -->
+      <section class="card" id="review" data-testid="approvals-review-panel" style="overflow:hidden">
+        <div class="reviewhead">
+          <div>
+            <div class="reviewtitle" data-testid="approvals-review-title">Urmi Commerce Revamp</div>
+            <div class="reviewmeta">
+              <span>Client <b data-review-client>Urmi Group</b></span>
+              <span>Template <b data-review-template>Local</b></span>
+              <span>Submitted by <b data-review-owner>Tanvir Rahman</b></span>
+              <span>Value <b data-review-value>$42,000</b></span>
+              <span class="pill" style="height:22px"><span class="dot dot-pending"></span>Pending Approval</span>
+            </div>
+          </div>
+          <a class="btn btn-ghost sm" data-testid="approvals-open-full" href="../app/lead-detail.page.html"><i data-lucide="external-link" style="width:14px"></i>Open full lead</a>
+        </div>
+
+        <!-- side-by-side proposal + budget -->
+        <div class="sxs">
+          <div class="docpane" data-testid="approvals-proposal-pane">
+            <h4><i data-lucide="file-text"></i>Proposal</h4>
+            <div class="propsec">
+              <div class="st">1 · Executive Summary</div>
+              <p>Urmi Group's storefront is migrating to a headless commerce stack. Riseup Labs will rebuild the customer-facing experience, re-platform the checkout, and integrate the existing ERP for real-time inventory.</p>
+            </div>
+            <div class="propsec">
+              <div class="st">2 · Understanding of Requirements</div>
+              <p>Faster page loads, unified inventory across three warehouses, and a redesigned checkout to reduce cart abandonment on mobile.</p>
+            </div>
+            <div class="propsec">
+              <div class="st">3 · Proposed Solution Capabilities</div>
+              <p>Headless React storefront, GraphQL commerce layer, ERP sync worker, and an analytics dashboard for the merchandising team.</p>
+            </div>
+            <div class="propsec" style="margin-bottom:0">
+              <div class="st">4 · Deliverables</div>
+              <p>Storefront, checkout, ERP integration, admin analytics, and a one-month hypercare window.</p>
+            </div>
+          </div>
+
+          <div class="docpane" data-testid="approvals-budget-pane">
+            <h4><i data-lucide="table"></i>Budget — Local structure</h4>
+            <table class="mini">
+              <thead>
+                <tr><th>Dept / Head</th><th class="num">Days</th><th class="num">Rate</th><th class="num">Total</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Project Manager</td><td class="num">15</td><td class="num">$120</td><td class="num">$1,800</td></tr>
+                <tr><td>UI/UX Designer ×2</td><td class="num">12</td><td class="num">$70</td><td class="num">$1,680</td></tr>
+                <tr><td>Tech Lead</td><td class="num">18</td><td class="num">$130</td><td class="num">$2,340</td></tr>
+                <tr><td>Backend Dev ×2</td><td class="num">20</td><td class="num">$85</td><td class="num">$3,400</td></tr>
+                <tr><td>Frontend Dev ×2</td><td class="num">18</td><td class="num">$85</td><td class="num">$3,060</td></tr>
+                <tr><td>QA Expert</td><td class="num">10</td><td class="num">$60</td><td class="num">$600</td></tr>
+              </tbody>
+              <tfoot>
+                <tr><td>Total (Development milestone)</td><td class="num"></td><td class="num"></td><td class="num">$42,000</td></tr>
+              </tfoot>
+            </table>
+            <p style="font-size:12px;color:var(--text-subtle);margin-top:12px">Development timeline = 4 weeks. Values mirror the exported .xlsx structure.</p>
+          </div>
+        </div>
+
+        <!-- sales comment thread ABOVE decision buttons -->
+        <div class="thread" data-testid="approvals-comment-thread">
+          <h4 style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle);margin-bottom:6px">Sales comments</h4>
+          <div class="comment">
+            <span class="cav">TR</span>
+            <div class="cbody">
+              <div class="cmeta">Tanvir Rahman <span>Jun 28, 09:12</span></div>
+              <p>Client confirmed the $42k ceiling verbally. I trimmed the DevOps line to stay under budget — flagging in case you want it added back before we send.</p>
+            </div>
+          </div>
+          <div class="comment">
+            <span class="cav">TR</span>
+            <div class="cbody">
+              <div class="cmeta">Tanvir Rahman <span>Jun 29, 11:30</span></div>
+              <p>ERP is SAP B1, not the generic connector — solution section updated accordingly. Ready for your review.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="decisionbar">
+          <input class="notefield" data-testid="approvals-note" placeholder="Add a note (required to reject)…" aria-label="Decision note">
+          <button class="btn btn-danger" data-testid="approvals-reject"><i data-lucide="x" style="width:15px"></i>Reject</button>
+          <button class="btn btn-primary" data-testid="approvals-approve"><i data-lucide="check" style="width:15px"></i>Approve</button>
+        </div>
+      </section>
+
+      <!-- All caught up (shown when the queue is empty) -->
+      <section class="card caughtup" data-testid="approvals-empty">
+        <div class="cuic"><i data-lucide="check-check"></i></div>
+        <h3>All caught up</h3>
+        <p>No proposals are waiting for verification right now. New submissions from the sales team will appear here for review.</p>
+      </section>
+
+    </main>
+  </div>
+</div>
+<div id="toast" style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);background:#111;color:#fff;font-size:13px;font-weight:500;padding:10px 16px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:200"></div>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>lucide.createIcons();
+  window.toggleAcct=function(e){e.stopPropagation();var pop=e.currentTarget.parentNode.querySelector('.acctpop');var open=pop.classList.contains('show');document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});if(!open)pop.classList.add('show');};
+  document.addEventListener('click',function(){document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')})});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});});
+  var _tt;window.toast=function(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';t.style.pointerEvents='none';clearTimeout(_tt);_tt=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(12px)';},1600);};
+
+  var countEl=document.querySelector('[data-testid="approvals-queue-count"]');
+  var panel=document.querySelector('[data-testid="approvals-review-panel"]');
+  var queueSec=document.querySelector('[data-testid="approvals-queue"]').closest('section');
+  var emptyState=document.querySelector('[data-testid="approvals-empty"]');
+  var note=document.querySelector('[data-testid="approvals-note"]');
+
+  function liveRows(){return document.querySelectorAll('[data-testid="approvals-queue"] tbody tr');}
+  function syncCount(){countEl.textContent=String(liveRows().length);}
+  function selectedRow(){return document.querySelector('[data-testid="approvals-queue"] tbody tr.selected')||liveRows()[0];}
+
+  function refreshEmpty(){
+    var n=liveRows().length;
+    syncCount();
+    if(n===0){queueSec.style.display='none';panel.style.display='none';emptyState.style.display='flex';}
+    else{queueSec.style.display='';panel.style.display='';emptyState.style.display='none';}
+  }
+
+  function selectRow(row){
+    if(!row)return;
+    liveRows().forEach(function(r){r.classList.remove('selected');r.setAttribute('aria-selected','false');});
+    row.classList.add('selected');row.setAttribute('aria-selected','true');
+    panel.querySelector('[data-testid="approvals-review-title"]').textContent=row.dataset.project||'';
+    var set=function(sel,v){var el=panel.querySelector(sel);if(el)el.textContent=v||'';};
+    set('[data-review-client]',row.dataset.client);
+    set('[data-review-template]',row.dataset.template);
+    set('[data-review-owner]',row.dataset.owner);
+    set('[data-review-value]',row.dataset.value);
+  }
+
+  // Review buttons: select row + update panel header (no scroll jump beyond anchor)
+  document.querySelectorAll('[data-testid^="approvals-review-"]').forEach(function(btn){
+    btn.addEventListener('click',function(){selectRow(btn.closest('tr'));});
+  });
+
+  document.querySelector('[data-testid="approvals-approve"]').addEventListener('click',function(){
+    var row=selectedRow();if(!row)return;
+    toast('Approved — sent back to Sales to deliver');
+    var next=row.nextElementSibling||row.previousElementSibling;
+    row.remove();note.value='';
+    if(next)selectRow(next);
+    refreshEmpty();
+  });
+
+  document.querySelector('[data-testid="approvals-reject"]').addEventListener('click',function(){
+    if(!note.value.trim()){
+      note.style.borderColor='var(--danger)';note.focus();
+      toast('Add a note to reject');
+      return;
+    }
+    note.style.borderColor='';
+    var row=selectedRow();if(!row)return;
+    toast('Returned to Sales with notes');
+    var next=row.nextElementSibling||row.previousElementSibling;
+    row.remove();note.value='';
+    if(next)selectRow(next);
+    refreshEmpty();
+  });
+
+  // prototype-only: preview pending-queue vs all-caught-up
+  window.setQueueState=function(s){
+    var empty=s==='empty';
+    queueSec.style.display=empty?'none':'';
+    panel.style.display=empty?'none':'';
+    emptyState.style.display=empty?'flex':'none';
+    countEl.textContent=empty?'0':String(liveRows().length);
+  };
+
+  syncCount();
+</script>
+</body>
+</html>

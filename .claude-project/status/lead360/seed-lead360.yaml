@@ -1,0 +1,95 @@
+# Seed Specification
+# Generated: 2026-06-29
+# Ambiguity Score: 0.12
+# Source: .claude-project/docs/Lead360_PRD.md (PRD gap analysis, PM-track P1-spec)
+
+goal: "Build Lead360 — an internal AI proposal & budget studio for Riseup Labs that turns a client brief into a living, interactive, RAG-grounded proposal and budget, and runs the lead → proposal → lock journey across Sales, PM, Management, and external Client roles."
+
+constraints:
+  # Hard — technical
+  - "Backend: NestJS 4-layer (Controller→Service→Repository→Entity), all layers extend src/core/base/*; TypeORM + PostgreSQL; UUID PKs; soft delete via BaseEntity."
+  - "Frontend: React Router 7 framework mode (app/ dir, ~/ alias), Tailwind CSS v4, Redux Toolkit async thunks (no TanStack Query)."
+  - "RAG via pgvector co-located in PostgreSQL (no separate vector DB for MVP)."
+  - "LLM provider is Anthropic Claude only (Opus 4.8 for generation, Sonnet 4.6 for cheaper readiness passes)."
+  - "Auth: JWT in httpOnly cookie (secure, sameSite=strict), refresh-token rotation; JWT_SECRET required (no fallback)."
+  - "Client share access is tokenized (signed, scoped, revocable) — NOT a user account; no login."
+  - "Real-time comments + notifications via Socket.IO NestJS gateway authenticated by cookie (staff) or share token (client)."
+  # Hard — business / scope
+  - "Internal tool: no payment processing, no public signup; staff accounts only (sales, pm, management)."
+  - "Generation is async (Redis-queued) to absorb LLM latency."
+  - "Management verification is a hard gate: share links cannot go live until a deal reaches Verified."
+  # Soft / deferred
+  - "DEFERRED (user to provide later): the claude-base brand/case-study asset pack to seed RAG + proposal portfolio."
+  - "DEFERRED (user to provide later): exact content/structure of the 4 proposal templates (Global, Local, Agency, Design Portfolio)."
+  - "DEFERRED: staff auth method final choice (default email/password company-domain; SSO possible later)."
+
+acceptance_criteria:
+  - "Sales can create a Deal (client + company), upload a brief (PDF/DOCX/TXT/MD ≤25MB), and see extracted requirements."
+  - "System computes a Readiness Score (0–100) + gap/query checklist, and blocks generation below threshold (default 70) unless Sales overrides with a recorded reason."
+  - "Generation produces an interactive proposal and a budget per chosen template; Agency & Design Portfolio combine proposal+budget in one file, Global & Local keep budget separate (web spreadsheet → .xlsx export)."
+  - "Both proposal and budget can be regenerated from a free-text prompt, producing a new version (history retained)."
+  - "RAG retrieves relevant past Riseup case studies for a brief and surfaces 'similar successful projects' that Sales can attach to the proposal."
+  - "Each Deal exposes separate per-client tokenized links (proposal, budget); the client views without login, comments inline (proposal sections + budget cells), and can request a demo — all in real time to Sales."
+  - "Management can verify/reject a generated proposal+budget; only Verified deals can be shared/submitted; rejection returns the deal with a reason."
+  - "Management analytics show median lead→lock cycle time, win-rate, deals-by-status funnel, and loss reasons; closed-lost deals require a loss reason."
+  - "A Riseup projects dashboard lets any internal user search past projects by category and tech stack."
+  - "After submission, a Next-Meeting Kit (summary, key highlights, how-to-convince) is generated, incorporating the client's comments."
+  - "PM role can view deal context, proposal, budget, and meeting kit but cannot edit sales artifacts."
+
+ontology_schema:
+  name: "Lead360Domain"
+  description: "Sales engagement lifecycle from lead capture to deal lock, with versioned AI-generated artifacts and tokenized client collaboration."
+  entities:
+    - name: "User"
+      description: "Internal staff account (sales | pm | management) with status + soft delete."
+    - name: "ClientCompany"
+      description: "Prospective client organization; has many Deals."
+    - name: "Deal"
+      description: "One engagement: company + owner(sales) + optional pm + template + status lifecycle (Draft→Ready→Generated→Verified→Submitted→Locked/Pending/Lost) + readinessScore + lossReason."
+    - name: "Brief"
+      description: "Uploaded requirement/MoM file (S3) + extracted text; generation input."
+    - name: "ProposalVersion"
+      description: "Versioned structured proposal (jsonb) + optional PDF; carries generating model + regeneration prompt."
+    - name: "BudgetVersion"
+      description: "Versioned budget line items (jsonb grid) + total + currency + optional .xlsx export."
+    - name: "Comment"
+      description: "Anchored comment on proposal section or budget cell; author is staff or client(token)."
+    - name: "ShareLink"
+      description: "Signed, scoped (proposal|budget), expirable/revocable tokenized client link for one Deal."
+    - name: "StatusEvent"
+      description: "Audit record of a Deal status transition (from/to/reason/actor)."
+    - name: "CaseStudy"
+      description: "Indexed past Riseup project (categoryTags[], techStack[], outcome, budgetRange, cover); RAG source."
+    - name: "CaseStudyChunk"
+      description: "Embedded text chunk (vector(1536)) of a CaseStudy for pgvector similarity search."
+
+evaluation_principles:
+  - name: "Functional completeness"
+    description: "All acceptance criteria implemented and demonstrable end-to-end."
+    weight: 0.30
+  - name: "Generation quality"
+    description: "Proposals/budgets are grounded (RAG proof projects), template-correct, and visibly 'lively' (interactive, animated, commentable)."
+    weight: 0.25
+  - name: "Role & permission correctness"
+    description: "Sales/PM/Management/Client boundaries + verification gate + tokenized links enforced at route and UI level."
+    weight: 0.20
+  - name: "Architecture compliance"
+    description: "Conforms to project NestJS + React Router 7 rules, base classes, httpOnly auth, pgvector RAG."
+    weight: 0.15
+  - name: "Pipeline analytics integrity"
+    description: "Cycle-time, win-rate, and loss-reason metrics computed from real status events, not placeholders."
+    weight: 0.10
+
+exit_conditions:
+  - name: "success"
+    description: "All acceptance criteria verified end-to-end with passing gates."
+    criteria: "evaluation_score >= 0.8"
+  - name: "max_iterations"
+    description: "Safety valve."
+    criteria: "iterations > 10"
+
+metadata:
+  version: "1.0"
+  ambiguity_score: 0.12
+  source_prd: ".claude-project/docs/Lead360_PRD.md"
+  created_at: "2026-06-29"

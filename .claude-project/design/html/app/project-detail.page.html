@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead360 — Project</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#FAFAF9;--panel:#FFFFFF;--panel-2:#F4F4F2;--sidebar:#111111;--sidebar-text:#C4C0BB;--sidebar-hover:#1F1F1F;
+ --border:#E8E6E3;--border-strong:#D4D1CC;--text:#0F0F0F;--text-muted:#6B6660;--text-subtle:#9A948E;
+ --primary:#EA5400;--primary-soft:rgba(234,84,0,.08);--primary-press:#CC4900;--success:#0E7C5A;--danger:#B42318;--info:#175CD3;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:6px;border:1px solid transparent;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .12s}
+.btn.sm{height:32px;padding:0 11px;font-size:13px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-press)}
+.btn-secondary{background:var(--panel);border-color:var(--border-strong);color:var(--text)}.btn-secondary:hover{background:var(--panel-2)}
+.btn-ghost{background:transparent;color:var(--text-muted)}.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.side{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:6px;color:var(--sidebar-text);font-size:14px;font-weight:500}
+.side i{width:16px;height:16px}.side:hover{background:var(--sidebar-hover);color:#fff}
+.side.active{background:var(--sidebar-hover);color:#fff;position:relative}.side.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--primary)}
+.iconbtn{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;cursor:pointer;color:var(--text-muted)}.iconbtn:hover{background:var(--panel-2);color:var(--text)}
+.crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted);margin-bottom:16px}
+.hero{border-radius:10px;overflow:hidden;background:linear-gradient(120deg,#211E1F,#3a3330);color:#fff;padding:36px 32px;position:relative}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(234,84,0,.35);filter:blur(30px)}
+.hero h1{font-size:28px;font-weight:600;position:relative}
+.hero .cats{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;position:relative}
+.hero .cat{font-size:12px;font-weight:600;background:rgba(255,255,255,.14);border-radius:5px;padding:4px 10px}
+.hero .cat.p{background:var(--primary)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:28px;margin-top:24px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px}
+.sec{padding:24px}
+.sec h2{font-size:15px;font-weight:600;margin-bottom:10px}
+.sec p{color:#39332e;line-height:1.65;font-size:14px}
+.summary-card{padding:32px}
+.summary-card .label{margin-bottom:14px}
+.summary-lead{font-size:24px;line-height:1.45;font-weight:500;color:var(--text);letter-spacing:-.01em}
+.label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-subtle)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips span{font-size:12px;color:var(--text-muted);background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:4px 9px}
+.rail{position:sticky;top:24px;display:flex;flex-direction:column;gap:16px;align-self:start}
+.m{padding:11px 0;border-bottom:1px solid var(--border);font-size:14px}.m:last-child{border-bottom:0}
+.mk{font-size:12px;color:var(--text-subtle);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.toggle-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.tl{font-size:13px;font-weight:600}.th{font-size:12px;color:var(--text-muted);margin-top:2px}
+.switch{width:38px;height:22px;border-radius:999px;background:var(--border-strong);position:relative;cursor:pointer;flex:0 0 38px;transition:background .15s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch.on{background:var(--primary)}.switch.on::after{transform:translateX(16px)}
+.prop-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:7px}
+.iconlink{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);display:grid;place-items:center;color:var(--text-muted);cursor:pointer}.iconlink:hover{background:var(--panel-2);color:var(--text)}
+.shot{aspect-ratio:16/10;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;display:grid;place-items:center;color:var(--text-subtle)}
+/* modal */
+.pd-overlay{position:fixed;inset:0;background:rgba(15,15,15,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:80}
+.pd-overlay.show{opacity:1;pointer-events:auto}
+.pd-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%);width:min(540px,94vw);max-height:88vh;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 30px 80px rgba(15,15,15,.28);z-index:85;opacity:0;pointer-events:none;transition:all .22s}
+.pd-modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.pdm-head{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--border);font-weight:600}
+.pdm-body{padding:18px 20px}.pdm-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)}
+.pdm-l{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin:12px 0 5px}.pdm-l:first-child{margin-top:0}
+.pdm-i{width:100%;border:1px solid var(--border);border-radius:6px;padding:9px 11px;font:inherit;font-size:13px;color:var(--text)}
+.pdm-seg{display:flex;gap:6px}
+.pdm-opt{display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center;height:36px;border:1px solid var(--border-strong);border-radius:6px;background:var(--panel);color:var(--text-muted);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.pdm-opt.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary)}
+/* account menu / role switcher (sidebar) */
+.acct{margin-top:auto;position:relative}
+.acctbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:none;border-top:1px solid #262626;background:transparent;cursor:pointer;font:inherit;text-align:left}
+.acctbtn:hover{background:var(--sidebar-hover)}
+.acctav{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#2a2a2a;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600}
+.acctid{display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0}
+.acctname{font-size:13px;color:#fff;font-weight:500}
+.acctrole{font-size:11px;color:var(--sidebar-text)}
+.acctchev{width:15px;height:15px;color:var(--sidebar-text);flex:0 0 15px}
+.acctpop{position:absolute;left:12px;right:12px;bottom:60px;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.3);padding:6px;z-index:60;display:none}
+.acctpop.show{display:block}
+.accthead{padding:8px 10px 10px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.accthead .an{font-size:13.5px;color:var(--text);font-weight:600}
+.accthead .ae{font-size:12px;color:var(--text-muted);margin-top:2px}
+.acctitem{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.acctitem:hover{background:var(--panel-2)}
+.acctitem i{width:15px;height:15px;color:var(--text-muted)}
+.acctitem.danger{color:var(--danger)}.acctitem.danger i{color:var(--danger)}
+.acctsep{height:1px;background:var(--border);margin:6px 0}
+</style>
+</head>
+<body>
+<div class="pd-overlay" id="pd-overlay" onclick="closeAddProposal()"></div>
+<div style="display:flex;min-height:100vh">
+  <aside style="width:260px;flex:0 0 260px;background:var(--sidebar);display:flex;flex-direction:column;padding:20px 12px;position:sticky;top:0;height:100vh;align-self:flex-start">
+    <div style="display:flex;align-items:center;gap:9px;padding:6px 12px 22px">
+      <span style="width:24px;height:24px;border-radius:6px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px">L</span>
+      <span style="font-weight:600;font-size:16px;color:#fff">Lead360</span>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:1px" aria-label="Primary">
+      <a class="side" data-testid="nav-leads" href="leads.page.html"><i data-lucide="list"></i>Leads</a>
+      <a class="side active" data-testid="nav-projects" href="projects.page.html"><i data-lucide="folder"></i>Projects</a>
+      <a class="side" data-testid="nav-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="acct">
+      <button class="acctbtn" onclick="toggleAcct(event)" data-testid="acct-trigger" aria-haspopup="true">
+        <span class="acctav">FK</span>
+        <span class="acctid"><span class="acctname">Farah Karim</span><span class="acctrole">Sales / PM</span></span>
+        <i data-lucide="chevron-up" class="acctchev"></i>
+      </button>
+      <div class="acctpop" data-testid="acct-pop">
+        <div class="accthead"><div class="an">Farah Karim</div><div class="ae">farah.karim@riseuplabs.com</div></div>
+        <a class="acctitem" data-testid="acct-settings" href="settings.page.html"><i data-lucide="settings"></i>Settings</a>
+        <a class="acctitem" data-testid="acct-switch-view" href="../management/overview.page.html"><i data-lucide="repeat"></i>Switch to Admin view</a>
+        <div class="acctsep"></div>
+        <a class="acctitem danger" data-testid="acct-signout" href="login.page.html"><i data-lucide="log-out"></i>Sign out</a>
+      </div>
+    </div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:0 32px;height:60px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <div style="position:relative;flex:1;max-width:420px">
+        <i data-lucide="search" style="position:absolute;left:11px;top:9px;width:16px;color:var(--text-subtle)"></i>
+        <input data-testid="topbar-search" placeholder="Search projects…" style="width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px">
+      </div>
+      <a class="btn btn-primary" data-testid="topbar-new-lead" href="new-lead-info.page.html"><i data-lucide="plus" style="width:16px"></i>New Lead</a>
+    </header>
+
+    <main style="padding:32px;max-width:1400px;width:100%;margin:0 auto">
+      <div class="crumb"><a href="projects.page.html" data-testid="projectdetail-crumb-projects">Projects</a><i data-lucide="chevron-right" style="width:14px"></i><span id="crumb-name">Project</span></div>
+
+      <div class="hero">
+        <h1 id="proj-name" data-testid="projectdetail-name">Project</h1>
+        <div class="cats" id="proj-cats"></div>
+      </div>
+
+      <div class="cols">
+        <!-- LEFT -->
+        <section>
+          <div class="card summary-card" style="margin-bottom:16px">
+            <div class="label">Summary</div>
+            <p class="summary-lead" id="proj-summary" data-testid="projectdetail-summary">—</p>
+          </div>
+          <div class="card sec">
+            <h2>What we delivered</h2>
+            <p id="proj-delivered">—</p>
+          </div>
+        </section>
+
+        <!-- RIGHT rail -->
+        <aside class="rail" aria-label="Project details">
+          <div class="card sec" data-testid="projectdetail-meta">
+            <div class="m"><div class="mk">Client</div><div id="proj-client">—</div></div>
+            <div class="m"><div class="mk">Category</div><div id="proj-cat-list">—</div></div>
+            <div class="m"><div class="mk">Tech stack</div><div class="chips" id="proj-tech"></div></div>
+            <div class="m"><div class="mk">Source</div><div><a id="proj-link" href="https://riseuplabs.com/portfolio/" target="_blank" rel="noopener" style="color:var(--primary);font-weight:500;display:inline-flex;align-items:center;gap:6px" data-testid="projectdetail-view-live"><i data-lucide="external-link" style="width:14px"></i>View on portfolio</a></div></div>
+          </div>
+
+          <div class="card sec">
+            <div class="toggle-row">
+              <div><div class="tl">Use as reference in RAG</div><div class="th">Include this project in proposal generation retrieval.</div></div>
+              <div class="switch on" role="switch" aria-checked="true" tabindex="0" data-testid="projectdetail-rag-toggle" onclick="this.classList.toggle('on');this.setAttribute('aria-checked',this.classList.contains('on'))"></div>
+            </div>
+          </div>
+
+          <div class="card sec">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div class="label">Proposals</div>
+              <button class="btn btn-secondary sm" onclick="openAddProposal()" data-testid="projectdetail-add-proposal"><i data-lucide="plus" style="width:15px"></i>Add proposal</button>
+            </div>
+            <div id="proposalList" style="display:flex;flex-direction:column;gap:8px"></div>
+            <div id="proposalEmpty" style="font-size:13px;color:var(--text-muted);padding:6px 0">No proposals linked yet.</div>
+            <div style="font-size:12px;color:var(--text-subtle);margin-top:10px;line-height:1.5">Linked proposals let this project's winning pitch be reused as evidence when generating new proposals.</div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ADD PROPOSAL MODAL -->
+<div class="pd-modal" id="pd-modal" role="dialog" aria-modal="true" aria-label="Add proposal">
+  <div class="pdm-head"><i data-lucide="file-plus" style="width:18px;color:var(--primary)"></i><span>Add proposal to this project</span><i data-lucide="x" style="width:18px;margin-left:auto;cursor:pointer" onclick="closeAddProposal()" data-testid="projectdetail-addprop-close"></i></div>
+  <div class="pdm-body">
+    <label class="pdm-l">How</label>
+    <div class="pdm-seg">
+      <button class="pdm-opt on" data-mode="upload" data-testid="projectdetail-addprop-upload" onclick="setMode(this)"><i data-lucide="upload" style="width:15px"></i>Upload file</button>
+      <button class="pdm-opt" data-mode="lead" data-testid="projectdetail-addprop-lead" onclick="setMode(this)"><i data-lucide="link" style="width:15px"></i>Link a lead</button>
+      <button class="pdm-opt" data-mode="generate" data-testid="projectdetail-addprop-generate" onclick="setMode(this)"><i data-lucide="sparkles" style="width:15px"></i>Generate new</button>
+    </div>
+    <div class="pdm-pane" data-pane="upload">
+      <label class="pdm-l">Proposal title</label><input class="pdm-i" placeholder="e.g. Winning proposal (2026)" data-testid="projectdetail-addprop-title">
+      <label class="pdm-l">Outcome</label><select class="pdm-i" data-testid="projectdetail-addprop-outcome"><option>Won</option><option>Sent</option><option>Draft</option></select>
+      <label class="pdm-l">File (PDF)</label><input class="pdm-i" type="file" data-testid="projectdetail-addprop-file">
+    </div>
+    <div class="pdm-pane" data-pane="lead" style="display:none">
+      <label class="pdm-l">Choose a lead</label>
+      <select class="pdm-i" data-testid="projectdetail-addprop-leadselect"><option>AP Invoice Automation · ATEC Group</option><option>Vault Health Platform · Vital Labs</option><option>Urmi Commerce Revamp · Urmi Group</option></select>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:10px">Links that lead's generated proposal to this project as reference evidence.</p>
+    </div>
+    <div class="pdm-pane" data-pane="generate" style="display:none">
+      <label class="pdm-l">Template</label>
+      <select class="pdm-i" data-testid="projectdetail-addprop-template"><option>Global</option><option>Local</option><option>Agency</option><option>Design Portfolio</option></select>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:10px">Starts a new proposal using this project as a similar-work reference in RAG.</p>
+    </div>
+  </div>
+  <div class="pdm-foot">
+    <button class="btn btn-secondary" onclick="closeAddProposal()" data-testid="projectdetail-addprop-cancel">Cancel</button>
+    <button class="btn btn-primary" onclick="saveProposal()" data-testid="projectdetail-addprop-save"><i data-lucide="check" style="width:15px"></i>Add proposal</button>
+  </div>
+</div>
+
+<script>
+// Same real Riseup portfolio dataset as projects.page.html (+ any user-added projects)
+var PROJECTS = [
+ {n:"Trainr",c:["AI","Mobile Apps","Health Tech"],t:["Flutter","OpenAI","Firebase","PostgreSQL"],d:"Next-gen, AI-powered fitness & challenge engagement platform."},
+ {n:"Cloud Couture",c:["AI","eCommerce"],t:["React","Next.js","Google Gemini","OpenAI"],d:"AI-driven B2B fashion marketplace with automated tech-pack generation."},
+ {n:"WriteRush",c:["AI","Web Systems"],t:["WordPress","OpenAI","Google Gemini","PHP"],d:"WordPress plugin automating blog creation and social posting."},
+ {n:"ContentOS",c:["AI"],t:["n8n","OpenAI","Langchain"],d:"Multi-agent AI pipeline for scaling SEO & AEO content."},
+ {n:"HR AI Automation",c:["AI","Web Systems"],t:["n8n","OpenAI","React","Looker Studio"],d:"Automates onboarding, document generation and approvals."},
+ {n:"OPS Web Application",c:["Web Systems"],t:["Python","PostgreSQL","Microsoft Azure","Docker"],d:"Migrated UNICEF ECARO's application from AWS to Azure."},
+ {n:"CNRS Graphoskop",c:["Web Systems"],t:["React","TypeScript","Tailwind CSS","Docker"],d:"Legacy Java desktop plugin converted to a scalable web app."},
+ {n:"Moodle Cloud Learning",c:["eLearning","Web Systems"],t:["Moodle Cloud","Xerte","Zoom"],d:"Scalable LMS featuring accessible learning pathways."},
+ {n:"Red Grocer",c:["eCommerce","Mobile Apps"],t:["Flutter","React Native","Android","iOS"],d:"Grocery eCommerce platform simplifying daily shopping in Bangladesh."},
+ {n:"COMPASS",c:["Health Tech","Web Systems"],t:["Laravel","Vue.js","MySQL"],d:"Sales prescription target management for pharmaceuticals."},
+ {n:"MOffice",c:["AR/VR/MR"],t:["Unity","C#"],d:"Collaborative virtual office in an immersive 3D environment."},
+ {n:"Conservation Quest",c:["Games"],t:["Unity","Blender","Android","iOS"],d:"Interactive puzzle game raising environmental awareness."},
+ {n:"HealthBuddy+",c:["Mobile Apps","UN-NGO","Health Tech"],t:["RapidPro","PHP","MySQL","Android"],d:"WHO-UNICEF chatbot delivering COVID-19 information."},
+ {n:"U-Report",c:["Mobile Apps","UN-NGO"],t:["RapidPro","Java","Firebase"],d:"Youth engagement platform — over 14 million young people."},
+ {n:"myGov",c:["eGov","Mobile Apps"],t:["Android"],d:"A single app for all government services."},
+ {n:"Teachers' Portal Uganda",c:["eGov","eLearning","Web Systems"],t:["Laravel","Vue.js","PHP","Figma"],d:"Skill-development platform for tech integration in teaching."},
+ {n:"Jeeto.Online",c:["Games"],t:["Node.js","React","Flutter","AWS","bKash"],d:"One of the most active and engaging gaming platforms."},
+ {n:"Choto.co",c:["Web Systems"],t:["Laravel","Next.js","Vue.js","AWS"],d:"Free link-shortener platform for URL management."},
+ {n:"eCook",c:["IoT","eCommerce","Mobile Apps"],t:["AWS","Android","iOS","PHP","bKash"],d:"Modern smart cooking stove with companion mobile apps."},
+ {n:"NPS Desk",c:["Website","Web Systems"],t:["React","Laravel","AWS","Android","iOS"],d:"NPS calculator measuring customer loyalty and satisfaction."}
+];
+function userProjects(){try{return JSON.parse(localStorage.getItem('lead360_projects')||'[]');}catch(e){return [];}}
+function getAll(){return userProjects().concat(PROJECTS);}
+function slugify(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+function param(k){return new URLSearchParams(location.search).get(k);}
+
+var slug = param('p');
+var proj = getAll().filter(function(p){return slugify(p.n)===slug;})[0]
+  || (slug ? null : getAll()[0]);
+
+if(!proj){
+  // unknown ?p= slug — show a small "not found" notice instead of rendering the first project
+  document.title = 'Lead360 — Project not found';
+  document.getElementById('crumb-name').textContent = 'Not found';
+  var main = document.querySelector('main');
+  main.innerHTML = '<div class="crumb"><a href="projects.page.html" data-testid="projectdetail-crumb-projects">Projects</a><i data-lucide="chevron-right" style="width:14px"></i><span>Not found</span></div>'
+    + '<div class="card sec" data-testid="projectdetail-notfound" style="text-align:center;padding:60px 24px;color:var(--text-muted)">'
+    + '<i data-lucide="folder-search" style="width:28px;color:var(--text-subtle)"></i>'
+    + '<div style="font-size:16px;font-weight:600;color:var(--text);margin-top:12px">Project not found</div>'
+    + '<div style="margin-top:6px">We couldn\'t find a project matching this link.</div>'
+    + '<a class="btn btn-secondary sm" href="projects.page.html" style="margin-top:16px"><i data-lucide="arrow-left" style="width:15px"></i>Back to projects</a>'
+    + '</div>';
+  lucide.createIcons();
+}
+
+if(proj){
+document.title = 'Lead360 — ' + proj.n;
+document.getElementById('crumb-name').textContent = proj.n;
+document.getElementById('proj-name').textContent = proj.n;
+document.getElementById('proj-summary').textContent = proj.d;
+document.getElementById('proj-client').textContent = proj.client || '—';
+document.getElementById('proj-cat-list').textContent = proj.c.join(' · ');
+document.getElementById('proj-delivered').textContent =
+  'Riseup Labs designed and delivered ' + proj.n + ' — ' + proj.d.charAt(0).toLowerCase() + proj.d.slice(1) +
+  ' Built with ' + proj.t.slice(0,4).join(', ') + '.';
+document.getElementById('proj-cats').innerHTML = proj.c.map(function(c,i){return '<span class="cat'+(i===0?' p':'')+'">'+c+'</span>';}).join('');
+document.getElementById('proj-tech').innerHTML = proj.t.map(function(t){return '<span>'+t+'</span>';}).join('');
+if (proj.link) { document.getElementById('proj-link').href = proj.link; }
+}
+
+// proposals (per-project, persisted in localStorage keyed by slug)
+var PKEY = 'lead360_proposals_' + slugify((proj&&proj.n)||slug||'unknown');
+function getProps(){try{return JSON.parse(localStorage.getItem(PKEY)||'null') || defaultProps();}catch(e){return defaultProps();}}
+function defaultProps(){ return []; }
+function renderProps(){
+  var list=document.getElementById('proposalList'); if(!list)return; var props=getProps();
+  document.getElementById('proposalEmpty').style.display = props.length ? 'none':'block';
+  list.innerHTML = props.map(function(p){
+    return '<div class="prop-row"><i data-lucide="file-text" style="width:16px;color:var(--danger);flex:0 0 16px"></i>'
+      +'<div style="min-width:0;flex:1"><div style="font-size:13px;font-weight:600">'+p.title+'</div><div style="font-size:12px;color:var(--text-muted)">'+p.meta+'</div></div>'
+      +'<a class="iconlink" href="../client/proposal-view.page.html" title="View"><i data-lucide="eye" style="width:15px"></i></a></div>';
+  }).join('');
+  lucide.createIcons();
+}
+
+lucide.createIcons();
+  window.toggleAcct=function(e){e.stopPropagation();var pop=e.currentTarget.parentNode.querySelector('.acctpop');var open=pop.classList.contains('show');document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')});if(!open)pop.classList.add('show');};
+  document.addEventListener('click',function(){document.querySelectorAll('.acctpop.show').forEach(function(p){p.classList.remove('show')})});
+renderProps();
+
+function openAddProposal(){document.getElementById('pd-overlay').classList.add('show');document.getElementById('pd-modal').classList.add('show');}
+function closeAddProposal(){document.getElementById('pd-overlay').classList.remove('show');document.getElementById('pd-modal').classList.remove('show');}
+function setMode(btn){document.querySelectorAll('.pdm-opt').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');
+  var m=btn.dataset.mode;document.querySelectorAll('.pdm-pane').forEach(function(p){p.style.display=p.dataset.pane===m?'block':'none';});}
+function saveProposal(){
+  var pname=(proj&&proj.n)||'Project';
+  var active=document.querySelector('.pdm-opt.on');
+  var mode=active?active.dataset.mode:'upload';
+  var title, meta;
+  if(mode==='lead'){
+    var lead=(document.querySelector('[data-testid="projectdetail-addprop-leadselect"]')||{}).value||(pname+' — Linked lead');
+    title=lead;meta='Linked lead · just now';
+  }else if(mode==='generate'){
+    var tpl=(document.querySelector('[data-testid="projectdetail-addprop-template"]')||{}).value||'Global';
+    title=pname+' — '+tpl+' proposal';meta='Generated · '+tpl+' template · just now';
+  }else{
+    title=(document.querySelector('[data-testid="projectdetail-addprop-title"]')||{}).value||(pname+' — Proposal');
+    var outcome=(document.querySelector('[data-testid="projectdetail-addprop-outcome"]')||{}).value||'Draft';
+    meta='v1 · '+outcome+' · just now';
+  }
+  var props=getProps();props.push({title:title,meta:meta});
+  try{localStorage.setItem(PKEY,JSON.stringify(props));}catch(e){}
+  renderProps();closeAddProposal();
+}
+// ESC closes the Add-proposal modal
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.getElementById('pd-modal').classList.contains('show'))closeAddProposal();
+});
+</script>
+</body>
+</html>

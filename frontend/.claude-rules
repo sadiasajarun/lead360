@@ -1,0 +1,5 @@
+# Frontend scope rules (Lead360) — full rules in ../.claude/rules/stacks/react.rules.md
+# React Router 7 (framework mode). Source dir: app/ (NOT src/). Import alias: ~/ -> app/.
+# TS strict. Tailwind v4. Redux async thunks for READ (createAsyncThunk in service files),
+# direct service calls for mutations. Shadcn/UI in components/ui. Domain types in app/types/*.d.ts.
+# Every interactive element carries data-testid. No dead buttons. No hardcoded mock data.

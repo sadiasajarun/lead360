@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Riseup Labs — Proposal · AP Invoice Automation (SAP) · ATEC Group</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --brand:#EA5400;--brand2:#FF8A3D;--press:#CC4900;--ink:#1A1715;--muted:#6B6660;--subtle:#9A948E;
+ --bg:#FFFFFF;--warm:#FBF7F3;--line:#EAE4DE;--teal:#0E9F8E;--radius:16px;
+ --grad:linear-gradient(120deg,#EA5400,#FF8A3D);
+ --shadow:0 8px 30px rgba(26,23,21,.08);--shadow-sm:0 2px 10px rgba(26,23,21,.06);
+ --ease:cubic-bezier(.2,.7,.2,1);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.num{font-variant-numeric:tabular-nums}
+/* top bar */
+.topbar{position:fixed;top:0;left:0;right:0;height:60px;background:rgba(255,255,255,.86);backdrop-filter:blur(12px);
+ border-bottom:1px solid var(--line);z-index:60;display:flex;align-items:center;gap:16px;padding:0 24px}
+.brandmark{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px}
+.brandmark .m{width:26px;height:26px;border-radius:7px;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:13px}
+.topbar .spacer{flex:1}
+.progress{position:fixed;top:60px;left:0;height:3px;width:0;background:var(--grad);z-index:61;transition:width .1s linear}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px;border-radius:999px;font:inherit;font-weight:600;
+ font-size:14px;cursor:pointer;border:1px solid transparent;transition:all .2s var(--ease)}
+.btn i{width:17px;height:17px}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--press);transform:translateY(-1px)}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink)}.btn-ghost:hover{background:var(--warm)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);
+ background:var(--warm);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+/* layout */
+.wrap{display:grid;grid-template-columns:230px minmax(0,860px);gap:48px;justify-content:center;padding:96px 32px 120px;max-width:1240px;margin:0 auto}
+.secnav{position:sticky;top:96px;align-self:start;height:max-content}
+.secnav ol{list-style:none;display:flex;flex-direction:column;gap:1px}
+.secnav a{display:block;font-size:13px;color:var(--subtle);padding:7px 12px;border-left:2px solid var(--line);transition:all .2s var(--ease)}
+.secnav a:hover{color:var(--ink)}
+.secnav a.active{color:var(--brand);border-left-color:var(--brand);font-weight:600;background:var(--warm)}
+article{min-width:0}
+/* hero */
+.hero{border-radius:24px;overflow:hidden;position:relative;color:#fff;padding:56px 48px;margin-bottom:48px;
+ background:radial-gradient(120% 140% at 0% 0%,#2a2420 0%,#1A1715 55%),var(--ink);box-shadow:var(--shadow)}
+.hero::after{content:"";position:absolute;right:-80px;top:-80px;width:360px;height:360px;border-radius:50%;
+ background:var(--grad);filter:blur(30px);opacity:.5;animation:float 9s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(24px)}}
+.hero .kicker{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#FFB27E;position:relative}
+.hero h1{font-size:44px;line-height:1.1;font-weight:800;margin:14px 0 10px;position:relative;max-width:640px}
+.hero .sub{color:#d9cfc7;font-size:16px;position:relative;max-width:560px}
+.hero .meta{display:flex;gap:28px;margin-top:32px;position:relative;flex-wrap:wrap}
+.hero .meta div{font-size:13px;color:#b8aca3}.hero .meta b{display:block;color:#fff;font-size:15px;font-weight:600;margin-top:2px}
+/* sections */
+section{padding-top:40px;margin-top:8px;position:relative}
+.reveal{opacity:0;transform:translateY(14px);transition:all .55s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.eyebrow{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin-bottom:12px}
+.eyebrow .n{width:26px;height:26px;border-radius:8px;background:var(--warm);border:1px solid var(--line);display:grid;place-items:center;color:var(--brand);font-size:12px}
+h2{font-size:28px;font-weight:700;letter-spacing:-.01em;margin-bottom:14px}
+h3{font-size:17px;font-weight:700;margin:20px 0 8px}
+p{color:#39332e;margin-bottom:12px}
+.lead{font-size:17px;color:#2a2521}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm)}
+.warmcard{background:var(--warm)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;background:var(--warm);
+ border:1px solid var(--line);border-radius:999px;padding:7px 13px;position:relative;cursor:default}
+.chip .why{position:absolute;bottom:130%;left:50%;transform:translateX(-50%) translateY(6px);width:210px;background:var(--ink);
+ color:#fff;font-weight:500;font-size:12px;line-height:1.4;padding:10px 12px;border-radius:10px;opacity:0;pointer-events:none;
+ transition:all .2s var(--ease);z-index:5}
+.chip .why::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--ink)}
+.chip:hover .why{opacity:1;transform:translateX(-50%) translateY(0)}
+.commentbtn{position:absolute;right:0;top:44px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);
+ background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;transition:all .2s var(--ease)}
+.commentbtn:hover{color:var(--brand);border-color:var(--brand)}
+/* requirements table */
+.reqtable{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.reqhead,.reqrow{display:grid;grid-template-columns:1.1fr 1.3fr 1.5fr 28px}
+.reqhead{background:var(--warm);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--subtle)}
+.reqhead>div,.reqrow>.c{padding:14px 16px}
+.reqrow{border-top:1px solid var(--line);cursor:pointer;transition:background .2s var(--ease)}
+.reqrow:hover{background:var(--warm)}
+.reqrow .chev{display:grid;place-items:center;color:var(--subtle);transition:transform .3s var(--ease)}
+.reqrow.open .chev{transform:rotate(90deg)}
+.reqsub{grid-column:1/-1;max-height:0;overflow:hidden;transition:max-height .35s var(--ease);background:var(--warm);border-top:1px dashed var(--line)}
+.reqsub .in{padding:14px 16px;color:var(--muted);font-size:14px}
+.reqrow.open+.reqsub{max-height:160px}
+/* architecture */
+.arch{position:relative;background:var(--warm);border:1px solid var(--line);border-radius:var(--radius);padding:28px;overflow:hidden}
+.arch svg{width:100%;height:auto;display:block}
+.node rect{fill:#fff;stroke:var(--line);stroke-width:1.5;transition:all .3s var(--ease)}
+.node text{font-size:12px;font-weight:600;fill:var(--ink)}
+.node.dim{opacity:.35}
+.node.hot rect{stroke:var(--brand);stroke-width:2;filter:drop-shadow(0 4px 12px rgba(234,84,0,.25))}
+.node{cursor:pointer}
+.edge{stroke:#cfc7bf;stroke-width:2;fill:none;stroke-dasharray:6 6;opacity:.9}
+.edge.hot{stroke:var(--brand)}
+.flowdot{fill:var(--brand)}
+.archtip{position:absolute;background:var(--ink);color:#fff;font-size:12px;padding:8px 11px;border-radius:9px;pointer-events:none;opacity:0;transition:opacity .2s;max-width:220px;z-index:4}
+/* accordion */
+.acc{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.acc .item{border-top:1px solid var(--line)}.acc .item:first-child{border-top:0}
+.acc .h{display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;font-weight:600;transition:background .2s}
+.acc .h:hover{background:var(--warm)}
+.acc .h .idx{width:24px;height:24px;border-radius:7px;background:var(--warm);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;color:var(--brand)}
+.acc .h .chev{margin-left:auto;color:var(--subtle);transition:transform .3s var(--ease)}
+.acc .item.open .h .chev{transform:rotate(180deg)}
+.acc .b{max-height:0;overflow:hidden;transition:max-height .35s var(--ease)}
+.acc .b .in{padding:0 18px 16px 54px;color:var(--muted);font-size:14px}
+.acc .item.open .b{max-height:200px}
+/* deliverables timeline */
+.tl{display:flex;flex-direction:column;gap:10px}
+.tl .w{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.tl .wh{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.tl .wh:hover{background:var(--warm)}
+.tl .wk{font-size:12px;font-weight:700;color:#fff;background:var(--grad);border-radius:7px;padding:4px 9px}
+.tl .wb{max-height:0;overflow:hidden;transition:max-height .35s var(--ease);color:var(--muted);font-size:14px}
+.tl .w.open .wb{max-height:140px}.tl .wb .in{padding:0 16px 14px 16px}
+/* pricing */
+.price{display:grid;grid-template-columns:1.2fr 1fr;gap:20px;align-items:center}
+.mile{display:flex;flex-direction:column;gap:14px}
+.mrow .top{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:6px}
+.bar{height:10px;background:var(--warm);border-radius:6px;overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:var(--grad);border-radius:6px;transition:width 1.1s var(--ease)}
+.total{text-align:right}.total .big{font-size:44px;font-weight:800;letter-spacing:-.02em}
+/* proof cards */
+.proof{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.proof .p{border:1px solid var(--line);border-radius:14px;padding:16px;transition:all .25s var(--ease);cursor:default}
+.proof .p:hover{box-shadow:var(--shadow);transform:translateY(-3px);border-color:#e0d6cd}
+.proof .p .t{font-weight:700;margin:8px 0 4px}
+.proof .p .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.proof .p .tags span{font-size:11px;color:var(--muted);background:var(--warm);border-radius:6px;padding:2px 7px}
+.cta{background:var(--ink);color:#fff;border-radius:20px;padding:40px;text-align:center;margin-top:16px;position:relative;overflow:hidden}
+.cta::after{content:"";position:absolute;left:-60px;bottom:-60px;width:240px;height:240px;border-radius:50%;background:var(--grad);filter:blur(30px);opacity:.4}
+.cta h2{color:#fff;position:relative}.cta p{color:#cfc7bf;position:relative}
+ul.ticks{list-style:none;display:flex;flex-direction:column;gap:8px;margin:8px 0}
+ul.ticks li{display:flex;gap:10px;color:#39332e}ul.ticks li i{color:var(--teal);width:18px;flex:0 0 18px;margin-top:3px}
+.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:0}.kv .k{color:var(--muted)}
+/* comment panel + modal */
+.panel{position:fixed;top:0;right:0;height:100vh;width:360px;background:#fff;border-left:1px solid var(--line);box-shadow:-10px 0 40px rgba(26,23,21,.1);
+ transform:translateX(100%);transition:transform .3s var(--ease);z-index:70;display:flex;flex-direction:column}
+.panel.open{transform:none}
+.panel .ph{display:flex;align-items:center;justify-content:space-between;padding:18px;border-bottom:1px solid var(--line);font-weight:700}
+.panel .pb{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.cm{background:var(--warm);border:1px solid var(--line);border-radius:12px;padding:12px}
+.cm .who{font-size:12px;font-weight:700}.cm .who span{color:var(--subtle);font-weight:500}
+.cm p{font-size:13px;margin:6px 0 8px}
+.cm .demo{font-size:12px;color:var(--brand);font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.panel .pf{padding:14px;border-top:1px solid var(--line);display:flex;gap:8px}
+.panel textarea{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:none;height:44px}
+.overlay{position:fixed;inset:0;background:rgba(26,23,21,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:65}
+.overlay.show{opacity:1;pointer-events:auto}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%);width:min(440px,92vw);background:#fff;border-radius:18px;
+ box-shadow:0 30px 80px rgba(26,23,21,.3);z-index:80;padding:28px;opacity:0;pointer-events:none;transition:all .3s var(--ease)}
+.modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.modal h3{font-size:20px;margin:0 0 4px}.modal .f{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.modal input,.modal textarea{border:1px solid var(--line);border-radius:10px;padding:11px;font:inherit;font-size:14px}
+.field-label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:-4px}
+/* share popover */
+.sharewrap{position:relative}
+.sharemenu{position:absolute;top:48px;right:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+ padding:6px;min-width:180px;opacity:0;pointer-events:none;transform:translateY(-6px);transition:all .2s var(--ease);z-index:62}
+.sharemenu.open{opacity:1;pointer-events:auto;transform:none}
+.sharemenu .row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;transition:background .15s var(--ease)}
+.sharemenu .row:hover{background:var(--warm)}
+.sharemenu .row i{width:16px;height:16px;color:var(--muted)}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:#fff;font-size:13px;font-weight:600;
+ padding:11px 18px;border-radius:999px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:all .25s var(--ease);z-index:90}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* comment replies */
+.cm .replybtn{font-size:12px;color:var(--muted);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-left:12px}
+.cm .replybtn:hover{color:var(--brand)}
+.cm .replybox{display:none;margin-top:10px;gap:8px}
+.cm .replybox.open{display:flex}
+.cm .replybox input{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font:inherit;font-size:13px;background:#fff}
+.cm .reply{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-top:8px}
+.cm .reply .rwho{font-size:11px;font-weight:700;color:var(--brand)}
+.cm .reply p{font-size:13px;margin:4px 0 4px}
+.cm .reply .rnote{font-size:11px;color:var(--subtle);display:inline-flex;align-items:center;gap:5px}
+/* scope / stack tables */
+.htbl-wrap{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:6px}
+.htbl{width:100%;border-collapse:collapse;font-size:14px}
+.htbl thead th{background:var(--warm);text-align:left;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--subtle);padding:13px 16px;border-bottom:1px solid var(--line)}
+.htbl tbody td{padding:13px 16px;border-bottom:1px solid var(--line);color:#39332e;vertical-align:top}
+.htbl tbody tr:last-child td{border-bottom:none}
+.htbl tbody tr:hover{background:var(--warm)}
+.htbl td.area,.htbl td.layer{font-weight:700;color:var(--ink);white-space:nowrap}
+.htbl td.tech{font-weight:600;color:var(--brand)}
+/* footer */
+.docfoot{margin-top:44px;padding-top:24px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--subtle)}
+.docfoot .fb{display:flex;align-items:center;gap:10px}
+/* print ToC */
+.printtoc{display:none}
+/* embed mode */
+body.embed .topbar,body.embed .progress,body.embed .secnav,body.embed .commentbtn,body.embed .toptag{display:none!important}
+body.embed .wrap{grid-template-columns:minmax(0,860px);padding:24px 32px}
+body.embed{background:#fff}
+body.embed .reveal{opacity:1!important;transform:none!important}
+body.embed .hero{margin-bottom:32px}
+@media (max-width:960px){.wrap{grid-template-columns:1fr}.secnav{display:none}.price,.grid2{grid-template-columns:1fr}.proof{grid-template-columns:1fr}}
+@page{size:A4;margin:14mm}
+@media print{.topbar,.progress,.secnav,.commentbtn,.panel,.overlay,.modal,.btn,.sharemenu,.toast{display:none!important}
+ .wrap{display:block;padding:0}.reveal{opacity:1!important;transform:none!important}.hero{color:#1A1715;background:#fff!important;border:1px solid #ddd}
+ .hero::after{display:none}.hero .kicker{color:var(--brand)}.hero .sub,.hero .meta div{color:#555}.hero .meta b{color:#000}
+ .printtoc{display:block!important;page-break-after:always;padding:8px 0 0}
+ .printtoc h2{font-size:24px;margin-bottom:18px}
+ .printtoc ol{list-style:none;counter-reset:toc}
+ .printtoc li{counter-increment:toc;display:flex;align-items:baseline;font-size:14px;padding:7px 0;border-bottom:1px dotted #ccc}
+ .printtoc li::before{content:counter(toc,decimal-leading-zero);color:var(--brand);font-weight:700;margin-right:12px;min-width:26px}
+ .printtoc li .dots{flex:1}}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay" data-testid="proposal-overlay"></div>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="brandmark"><span class="m">R</span>Riseup Labs</div>
+  <span class="tag toptag"><i data-lucide="lock" style="width:13px"></i> Tokenized preview · read-only</span>
+  <div class="spacer"></div>
+  <button class="btn btn-ghost" onclick="window.print()" data-testid="proposal-download-pdf"><i data-lucide="download"></i>Download PDF</button>
+  <div class="sharewrap">
+    <button class="btn btn-ghost" onclick="toggleShare(event)" data-testid="proposal-share"><i data-lucide="share-2"></i>Share</button>
+    <div class="sharemenu" id="sharemenu">
+      <div class="row" onclick="shareVia('email')" data-testid="proposal-share-email"><i data-lucide="mail"></i>Email</div>
+      <div class="row" onclick="shareVia('slack')" data-testid="proposal-share-slack"><i data-lucide="slack"></i>Slack</div>
+      <div class="row" onclick="shareVia('zoom')" data-testid="proposal-share-zoom"><i data-lucide="video"></i>Zoom</div>
+      <div class="row" onclick="copyLink()" data-testid="proposal-share-copy"><i data-lucide="link"></i>Copy link</div>
+    </div>
+  </div>
+  <button class="btn btn-primary" id="demoBtn" onclick="openDemo()" data-testid="proposal-request-demo"><i data-lucide="calendar"></i>Request a demo</button>
+</header>
+<div class="toast" id="toast" data-testid="proposal-toast">Link copied</div>
+<div class="progress" id="progress"></div>
+
+<!-- PRINT-ONLY TABLE OF CONTENTS -->
+<div class="printtoc" data-testid="proposal-print-toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li>Executive Summary<span class="dots"></span></li>
+    <li>Project Understanding<span class="dots"></span></li>
+    <li>Proposed Scope Coverage<span class="dots"></span></li>
+    <li>Proposed Technical Approach<span class="dots"></span></li>
+    <li>Technical Diagrams<span class="dots"></span></li>
+    <li>Proposed Technical Stack<span class="dots"></span></li>
+    <li>Development Methodology<span class="dots"></span></li>
+    <li>Suggested Timeline<span class="dots"></span></li>
+    <li>Deliverables<span class="dots"></span></li>
+    <li>Assumptions &amp; Dependencies<span class="dots"></span></li>
+    <li>Conclusion<span class="dots"></span></li>
+  </ol>
+</div>
+
+<div class="wrap">
+  <!-- SECTION NAV -->
+  <nav class="secnav" aria-label="Sections">
+    <ol id="secnav">
+      <li><a href="#s1" class="active" data-testid="proposal-nav-s1">01 · Executive Summary</a></li>
+      <li><a href="#s2" data-testid="proposal-nav-s2">02 · Project Understanding</a></li>
+      <li><a href="#s3" data-testid="proposal-nav-s3">03 · Scope Coverage</a></li>
+      <li><a href="#s4" data-testid="proposal-nav-s4">04 · Technical Approach</a></li>
+      <li><a href="#s5" data-testid="proposal-nav-s5">05 · Technical Diagrams</a></li>
+      <li><a href="#s6" data-testid="proposal-nav-s6">06 · Tech Stack</a></li>
+      <li><a href="#s7" data-testid="proposal-nav-s7">07 · Methodology</a></li>
+      <li><a href="#s8" data-testid="proposal-nav-s8">08 · Suggested Timeline</a></li>
+      <li><a href="#s9" data-testid="proposal-nav-s9">09 · Deliverables</a></li>
+      <li><a href="#s10" data-testid="proposal-nav-s10">10 · Assumptions</a></li>
+      <li><a href="#s11" data-testid="proposal-nav-s11">11 · Conclusion</a></li>
+      <li><a href="#pricing" data-testid="proposal-nav-pricing">＄ · Pricing</a></li>
+    </ol>
+  </nav>
+
+  <article>
+    <!-- HERO -->
+    <div class="hero reveal">
+      <img src="../assets/riseup-logo.png" alt="Riseup Labs" style="height:40px;width:auto;display:block;position:relative;margin-bottom:20px">
+      <div class="kicker">Technical Proposal · Riseup Labs</div>
+      <h1>AP Invoice Automation with SAP Integration</h1>
+      <div class="sub">An intelligent, self-improving accounts-payable pipeline that reads, validates and posts supplier invoices straight into SAP — cutting manual effort and exceptions.</div>
+      <div class="meta">
+        <div>Prepared for<b>ATEC Group</b></div>
+        <div>Engagement<b>Global · Fixed Milestones</b></div>
+        <div>Timeline<b>~12 weeks</b></div>
+        <div>Date<b>01 Jul 2026</b></div>
+      </div>
+    </div>
+
+    <!-- 01 EXECUTIVE SUMMARY -->
+    <section id="s1" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Executive Summary')" data-testid="proposal-comment-s1"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">01</span>Executive Summary</div>
+      <h2>From inbox to SAP, automatically</h2>
+      <p class="lead">ATEC Group processes thousands of supplier invoices across entities every month. Today that flow is manual — keying data, chasing POs and GRNs, and reconciling exceptions. We propose an AI-driven pipeline that ingests invoices from any channel, extracts and validates line items, matches them against SAP POs/GRNs, and posts clean documents automatically — with a human-in-the-loop only for genuine exceptions.</p>
+      <div class="grid2" style="margin-top:16px">
+        <div class="card warmcard"><h3 style="margin-top:0">Outcome</h3><p style="margin:0">Up to 80% touchless posting, faster cycle time, and a continuously improving accuracy model.</p></div>
+        <div class="card warmcard"><h3 style="margin-top:0">Approach</h3><p style="margin:0">Proven document-AI + a robust SAP integration layer, delivered in fixed, testable milestones.</p></div>
+      </div>
+    </section>
+
+    <!-- 02 PROJECT UNDERSTANDING -->
+    <section id="s2" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Project Understanding')" data-testid="proposal-comment-s2"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">02</span>Project Understanding</div>
+      <h2>What ATEC needs — and how we respond</h2>
+      <p>Click any row to expand the detail.</p>
+      <div class="reqtable" id="reqtable">
+        <div class="reqhead"><div>Requirement Area</div><div>Client Need</div><div>Proposed Response</div><div></div></div>
+        <div class="reqrow" data-testid="proposal-req-1"><div class="c">Invoice intake</div><div class="c">Capture invoices from email, scans and portals</div><div class="c">Unified intake service with OCR + digital-native parsing</div><div class="c chev"><i data-lucide="chevron-right" style="width:16px"></i></div></div>
+        <div class="reqsub"><div class="in">Supports PDF, image scans, and structured e-invoices. Auto-classifies document type and routes to the right extraction model.</div></div>
+        <div class="reqrow" data-testid="proposal-req-2"><div class="c">Data accuracy</div><div class="c">Reliable header + line-item extraction</div><div class="c">Layout-aware extraction with confidence scoring</div><div class="c chev"><i data-lucide="chevron-right" style="width:16px"></i></div></div>
+        <div class="reqsub"><div class="in">Fields below a confidence threshold are flagged for review; the model learns from every correction.</div></div>
+        <div class="reqrow" data-testid="proposal-req-3"><div class="c">SAP matching</div><div class="c">3-way match against PO & GRN</div><div class="c">Validation engine querying SAP in real time</div><div class="c chev"><i data-lucide="chevron-right" style="width:16px"></i></div></div>
+        <div class="reqsub"><div class="in">Header, line, and tax matching with tolerance rules; mismatches become structured exceptions with suggested resolutions.</div></div>
+        <div class="reqrow" data-testid="proposal-req-4"><div class="c">Posting</div><div class="c">Post clean invoices into SAP</div><div class="c">Idempotent posting via BAPI/OData with audit trail</div><div class="c chev"><i data-lucide="chevron-right" style="width:16px"></i></div></div>
+        <div class="reqsub"><div class="in">Safe retries, duplicate detection, and a full audit log per document for finance governance.</div></div>
+      </div>
+    </section>
+
+    <!-- 03 PROPOSED SCOPE COVERAGE -->
+    <section id="s3" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Proposed Scope Coverage')" data-testid="proposal-comment-s3"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">03</span>Proposed Scope Coverage</div>
+      <h2>Everything the engagement covers</h2>
+      <p>Each scope area maps directly to the invoice-automation requirements we will deliver.</p>
+      <div class="htbl-wrap">
+        <table class="htbl" data-testid="proposal-scope-table">
+          <thead><tr><th>Scope Area</th><th>Included Requirement Coverage</th></tr></thead>
+          <tbody>
+            <tr><td class="area">Invoice Intake</td><td>Omni-channel capture from email, portal upload, shared drives and API; auto-classification and deduplication with a unique tracking ID per document.</td></tr>
+            <tr><td class="area">Data Extraction</td><td>Layout-aware AI extraction of header, line-item and tax fields with per-field confidence scoring; PDF, scan and structured e-invoice support.</td></tr>
+            <tr><td class="area">Validation &amp; Matching</td><td>Real-time 3-way match against SAP PO and GRN with price, quantity and tax tolerance rules; vendor-master and duplicate checks.</td></tr>
+            <tr><td class="area">SAP Posting</td><td>Idempotent posting via BAPI/OData (MIRO equivalent) with safe retries, duplicate protection and a full per-document audit trail.</td></tr>
+            <tr><td class="area">Exception Handling</td><td>Structured exceptions with suggested resolutions surfaced in a human-in-the-loop review cockpit; one-click correction and re-post.</td></tr>
+            <tr><td class="area">Reporting &amp; MIS</td><td>Dashboards for throughput, touchless rate, exception volume and cycle time, exportable for finance governance and month-end review.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 04 PROPOSED TECHNICAL APPROACH -->
+    <section id="s4" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Proposed Technical Approach')" data-testid="proposal-comment-s4"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">04</span>Proposed Technical Approach</div>
+      <h2>The pipeline, stage by stage</h2>
+      <p>Click any stage to expand. Integration uses SAP-standard interfaces (BAPI / OData / IDoc) with no core modifications — a sandbox connection in week 2 de-risks the approach before build.</p>
+      <div class="acc" id="acc">
+        <div class="item open"><div class="h" data-testid="proposal-acc-1"><span class="idx">1</span>Document Intake<i class="chev" data-lucide="chevron-down" style="width:18px"></i></div><div class="b"><div class="in">Normalises every inbound invoice, deduplicates, and assigns a tracking ID.</div></div></div>
+        <div class="item"><div class="h" data-testid="proposal-acc-2"><span class="idx">2</span>Pre-Processing &amp; Extraction<i class="chev" data-lucide="chevron-down" style="width:18px"></i></div><div class="b"><div class="in">Image cleanup, layout detection, and field/line extraction with confidence scores.</div></div></div>
+        <div class="item"><div class="h" data-testid="proposal-acc-3"><span class="idx">3</span>Supporting Document Retrieval<i class="chev" data-lucide="chevron-down" style="width:18px"></i></div><div class="b"><div class="in">Pulls the matching PO and GRN from SAP to prepare for validation.</div></div></div>
+        <div class="item"><div class="h" data-testid="proposal-acc-4"><span class="idx">4</span>Validation &amp; Matching<i class="chev" data-lucide="chevron-down" style="width:18px"></i></div><div class="b"><div class="in">3-way match with tolerance rules for price, quantity and tax.</div></div></div>
+        <div class="item"><div class="h" data-testid="proposal-acc-5"><span class="idx">5</span>Exception Handling<i class="chev" data-lucide="chevron-down" style="width:18px"></i></div><div class="b"><div class="in">Structured exceptions with suggested resolutions in the review cockpit.</div></div></div>
+        <div class="item"><div class="h" data-testid="proposal-acc-6"><span class="idx">6</span>SAP Posting<i class="chev" data-lucide="chevron-down" style="width:18px"></i></div><div class="b"><div class="in">Idempotent posting via BAPI/OData with full audit trail and safe retries.</div></div></div>
+        <div class="item"><div class="h" data-testid="proposal-acc-7"><span class="idx">7</span>Reporting &amp; MIS<i class="chev" data-lucide="chevron-down" style="width:18px"></i></div><div class="b"><div class="in">Dashboards for throughput, touchless rate, exceptions and cycle time.</div></div></div>
+        <div class="item"><div class="h" data-testid="proposal-acc-8"><span class="idx">8</span>Learning &amp; Accuracy Improvement<i class="chev" data-lucide="chevron-down" style="width:18px"></i></div><div class="b"><div class="in">Every human correction feeds back to raise extraction accuracy over time.</div></div></div>
+      </div>
+    </section>
+
+    <!-- 05 TECHNICAL DIAGRAMS -->
+    <section id="s5" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Technical Diagrams')" data-testid="proposal-comment-s5"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">05</span>Technical Diagrams</div>
+      <h2>How data flows</h2>
+      <p>Hover a node to trace its connections.</p>
+      <div class="arch" id="arch">
+        <div class="archtip" id="archtip"></div>
+        <svg viewBox="0 0 760 220" id="archsvg" aria-label="Architecture diagram">
+          <!-- edges -->
+          <path class="edge" data-from="intake" data-to="extract" d="M150,60 C220,60 220,60 270,60"/>
+          <path class="edge" data-from="extract" data-to="retrieve" d="M390,60 C450,60 450,110 500,110"/>
+          <path class="edge" data-from="extract" data-to="validate" d="M330,84 C330,130 390,150 440,150"/>
+          <path class="edge" data-from="retrieve" data-to="validate" d="M560,128 C560,150 540,150 560,150" style="display:none"/>
+          <path class="edge" data-from="validate" data-to="sap" d="M560,150 C620,150 620,110 640,110"/>
+          <path class="edge" data-from="validate" data-to="exception" d="M500,168 C500,196 300,196 220,196"/>
+          <!-- nodes -->
+          <g class="node" data-key="intake" transform="translate(30,40)"><rect width="120" height="40" rx="9"/><text x="60" y="24" text-anchor="middle">Invoice Intake</text></g>
+          <g class="node" data-key="extract" transform="translate(270,40)"><rect width="120" height="40" rx="9"/><text x="60" y="24" text-anchor="middle">AI Extraction</text></g>
+          <g class="node" data-key="retrieve" transform="translate(500,90)"><rect width="120" height="40" rx="9"/><text x="60" y="24" text-anchor="middle">Doc Retrieval</text></g>
+          <g class="node" data-key="validate" transform="translate(440,130)"><rect width="120" height="40" rx="9"/><text x="60" y="24" text-anchor="middle">Validation</text></g>
+          <g class="node" data-key="sap" transform="translate(640,90)"><rect width="90" height="40" rx="9"/><text x="45" y="24" text-anchor="middle">SAP</text></g>
+          <g class="node" data-key="exception" transform="translate(150,176)"><rect width="140" height="40" rx="9"/><text x="70" y="24" text-anchor="middle">Exception Cockpit</text></g>
+          <circle class="flowdot" id="dot" r="4" cx="150" cy="60"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 06 PROPOSED TECHNICAL STACK -->
+    <section id="s6" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Proposed Technical Stack')" data-testid="proposal-comment-s6"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">06</span>Proposed Technical Stack</div>
+      <h2>Every layer, and why</h2>
+      <div class="htbl-wrap">
+        <table class="htbl" data-testid="proposal-stack-table">
+          <thead><tr><th>Layer</th><th>Recommended Technology</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td class="layer">Intake</td><td class="tech">Queue &amp; Workers</td><td>Resilient async ingestion from email, portal and API so month-end spikes never block the pipeline.</td></tr>
+            <tr><td class="layer">Extraction AI</td><td class="tech">Document AI</td><td>Layout-aware extraction of header, line-item and tax fields with per-field confidence — accurate on messy real-world invoices.</td></tr>
+            <tr><td class="layer">Backend</td><td class="tech">NestJS</td><td>Typed, modular services for intake, validation and posting with clear separation of concerns.</td></tr>
+            <tr><td class="layer">Data</td><td class="tech">PostgreSQL</td><td>Reliable store for documents, the audit trail and exception state.</td></tr>
+            <tr><td class="layer">Integration / SAP</td><td class="tech">SAP BAPI / OData</td><td>Standard, supported interfaces for PO/GRN retrieval and posting — no core SAP modifications.</td></tr>
+            <tr><td class="layer">Frontend / Cockpit</td><td class="tech">React</td><td>Fast, clean exception cockpit and MIS dashboards for the finance team.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:16px">Hover a chip to see the reasoning behind each choice.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <span class="chip" data-testid="proposal-tech-1"><i data-lucide="brain-circuit" style="width:15px"></i>Document AI<span class="why">Layout-aware extraction with per-field confidence — accurate on messy real-world invoices.</span></span>
+        <span class="chip"><i data-lucide="server" style="width:15px"></i>NestJS<span class="why">Typed, modular backend for the intake, validation and posting services.</span></span>
+        <span class="chip"><i data-lucide="database" style="width:15px"></i>PostgreSQL<span class="why">Reliable store for documents, audit trail and exception state.</span></span>
+        <span class="chip"><i data-lucide="workflow" style="width:15px"></i>Queue/Workers<span class="why">Resilient async processing so spikes never block the pipeline.</span></span>
+        <span class="chip"><i data-lucide="plug" style="width:15px"></i>SAP BAPI/OData<span class="why">Standard, supported interfaces — integration without core changes.</span></span>
+        <span class="chip"><i data-lucide="layout-dashboard" style="width:15px"></i>React<span class="why">Fast, clean exception cockpit and MIS dashboards.</span></span>
+      </div>
+    </section>
+
+    <!-- 07 DEVELOPMENT METHODOLOGY -->
+    <section id="s7" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Development Methodology')" data-testid="proposal-comment-s7"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">07</span>Development Methodology</div>
+      <h2>Fixed milestones, weekly demos</h2>
+      <p>Agile delivery in two-week sprints, grouped into three fixed, payable milestones. You see working software every week, with a shared board for visibility and sign-off at each milestone. Quality is built in: automated unit and integration tests, a labelled invoice test-set to measure extraction accuracy, and a full UAT cycle against the SAP sandbox with sign-off criteria agreed up front.</p>
+    </section>
+
+    <!-- 08 SUGGESTED TIMELINE -->
+    <section id="s8" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Suggested Timeline')" data-testid="proposal-comment-s8"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">08</span>Suggested Timeline</div>
+      <h2>~12 weeks, three milestones</h2>
+      <p>An indicative schedule across three fixed, payable milestones.</p>
+      <div class="htbl-wrap">
+        <table class="htbl" data-testid="proposal-timeline-table">
+          <thead><tr><th>Milestone</th><th>Weeks</th><th>Focus</th></tr></thead>
+          <tbody>
+            <tr><td class="area">M1 · Kickoff &amp; Discovery</td><td class="layer">Wk 1–3</td><td>Requirements sign-off, SAP sandbox connectivity proven, omni-channel intake live in staging.</td></tr>
+            <tr><td class="area">M2 · Build &amp; Integration</td><td class="layer">Wk 4–8</td><td>AI extraction, 3-way match engine, and idempotent SAP posting with full audit trail.</td></tr>
+            <tr><td class="area">M3 · Cockpit, UAT &amp; Go-live</td><td class="layer">Wk 9–12</td><td>Exception cockpit, MIS dashboards, user acceptance testing and monitored go-live support.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 09 DELIVERABLES -->
+    <section id="s9" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Deliverables')" data-testid="proposal-comment-s9"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">09</span>Deliverables</div>
+      <h2>Week by week</h2>
+      <div class="tl" id="tl">
+        <div class="w open"><div class="wh" data-testid="proposal-tl-1"><span class="wk">Wk 1–3</span>Discovery, SAP sandbox &amp; intake service<i class="chev" data-lucide="chevron-down" style="width:16px;margin-left:auto;color:#9A948E"></i></div><div class="wb"><div class="in">Requirements sign-off, SAP connectivity proven, omni-channel intake live in staging.</div></div></div>
+        <div class="w"><div class="wh" data-testid="proposal-tl-2"><span class="wk">Wk 4–8</span>Extraction, validation &amp; posting<i class="chev" data-lucide="chevron-down" style="width:16px;margin-left:auto;color:#9A948E"></i></div><div class="wb"><div class="in">AI extraction, 3-way match engine, and idempotent SAP posting with audit trail.</div></div></div>
+        <div class="w"><div class="wh" data-testid="proposal-tl-3"><span class="wk">Wk 9–12</span>Exception cockpit, MIS &amp; UAT<i class="chev" data-lucide="chevron-down" style="width:16px;margin-left:auto;color:#9A948E"></i></div><div class="wb"><div class="in">Review cockpit, dashboards, user acceptance testing, and go-live support.</div></div></div>
+      </div>
+    </section>
+
+    <!-- 10 ASSUMPTIONS & DEPENDENCIES -->
+    <section id="s10" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Assumptions & Dependencies')" data-testid="proposal-comment-s10"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">10</span>Assumptions &amp; Dependencies</div>
+      <h2>What we need from ATEC</h2>
+      <ul class="ticks">
+        <li><i data-lucide="dot"></i>Timely access to an SAP sandbox and the relevant BAPIs/OData services</li>
+        <li><i data-lucide="dot"></i>A sample set of representative historical invoices for model tuning</li>
+        <li><i data-lucide="dot"></i>A finance SME available for validation-rule and UAT sign-off</li>
+        <li><i data-lucide="dot"></i>Deployment target confirmed (ATEC cloud or on-prem) with CI/CD and secrets access</li>
+      </ul>
+    </section>
+
+    <!-- 11 CONCLUSION -->
+    <section id="s11" class="reveal">
+      <button class="commentbtn" onclick="openPanel('Conclusion')" data-testid="proposal-comment-s11"><i data-lucide="message-square-plus" style="width:14px"></i>comment</button>
+      <div class="eyebrow"><span class="n">11</span>Conclusion</div>
+      <h2>Ready to make AP touchless</h2>
+      <p>Riseup Labs brings proven document-AI, deep SAP integration experience and a disciplined delivery model. We're confident we can take ATEC's accounts-payable from manual to mostly-touchless in ~12 weeks — and keep getting more accurate over time.</p>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing" class="reveal">
+      <div class="eyebrow"><span class="n">＄</span>Pricing Summary</div>
+      <h2>Investment</h2>
+      <p style="color:var(--muted)">Indicative milestone split shown below. The detailed budget — Global and Local breakdowns by role, rate and department — is delivered as a <b>separate document</b>.</p>
+      <div class="card">
+        <div class="price">
+          <div class="mile">
+            <div class="mrow"><div class="top"><span>Milestone 1 · Kickoff & Discovery</span><span class="num">$25,800</span></div><div class="bar"><span data-w="30%"></span></div></div>
+            <div class="mrow"><div class="top"><span>Milestone 2 · Build & Integration</span><span class="num">$25,800</span></div><div class="bar"><span data-w="30%"></span></div></div>
+            <div class="mrow"><div class="top"><span>Milestone 3 · Cockpit, UAT & Go-live</span><span class="num">$34,400</span></div><div class="bar"><span data-w="40%"></span></div></div>
+          </div>
+          <div class="total"><div class="label" style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Total (fixed)</div><div class="big num" id="total" data-target="86000">$0</div><div style="color:var(--muted);font-size:13px">Full budget (Global / Local) is a separate document →</div><a class="btn btn-ghost" href="budget-view.page.html" style="margin-top:10px" data-testid="proposal-open-budget"><i data-lucide="table"></i>View budget document</a></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROOF -->
+    <section class="reveal">
+      <div class="eyebrow"><span class="n"><i data-lucide="award" style="width:14px"></i></span>Comparable Riseup Work</div>
+      <h2>We've done this before</h2>
+      <div class="proof">
+        <div class="p"><i data-lucide="file-cog" style="color:var(--brand)"></i><div class="t">HR AI Automation</div><div style="color:var(--muted);font-size:13px">AI document generation &amp; approvals</div><div class="tags"><span>ai</span><span>automation</span><span>workflow</span></div></div>
+        <div class="p"><i data-lucide="bot" style="color:var(--brand)"></i><div class="t">ContentOS</div><div style="color:var(--muted);font-size:13px">Multi-agent AI content pipeline</div><div class="tags"><span>ai</span><span>agent</span><span>pipeline</span></div></div>
+        <div class="p"><i data-lucide="server" style="color:var(--brand)"></i><div class="t">OPS Web Application</div><div style="color:var(--muted);font-size:13px">UNICEF ECARO enterprise migration</div><div class="tags"><span>enterprise</span><span>cloud</span><span>integration</span></div></div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta reveal">
+      <h2>Let's make ATEC's AP touchless</h2>
+      <p>Book a walkthrough and we'll show the pipeline running against sample invoices.</p>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="openDemo()" data-testid="proposal-cta-demo"><i data-lucide="calendar"></i>Request a demo</button>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="docfoot">
+      <div class="fb"><img src="../assets/riseup-logo.png" alt="Riseup Labs" style="height:28px;width:auto;display:block"><span>© 2026 Riseup Labs · Prepared for ATEC Group</span></div>
+      <div>Tokenized preview · read-only · Issued 01 Jul 2026</div>
+    </footer>
+  </article>
+</div>
+
+<!-- COMMENT PANEL -->
+<aside class="panel" id="panel" aria-label="Comments">
+  <div class="ph"><span id="panelTitle">Comments</span><i data-lucide="x" style="cursor:pointer;width:20px" onclick="closePanel()" data-testid="proposal-panel-close"></i></div>
+  <div class="pb" id="panelBody">
+    <div class="cm"><div class="who">Nadia (ATEC) <span>· 2d ago</span></div><p>Can the exception cockpit route to specific finance approvers by entity?</p><span class="demo" onclick="openDemo()"><i data-lucide="video" style="width:13px"></i>Request a demo about this</span><span class="replybtn" onclick="toggleReply(this)" data-testid="proposal-comment-reply"><i data-lucide="reply" style="width:13px"></i>Reply</span><div class="replybox"><input placeholder="Write a reply…" data-testid="proposal-comment-reply-input"><button class="btn btn-primary" onclick="postReply(this)" data-testid="proposal-comment-reply-send"><i data-lucide="send" style="width:15px"></i></button></div></div>
+  </div>
+  <div class="pf"><textarea placeholder="Add a comment…" data-testid="proposal-comment-input"></textarea><button class="btn btn-primary" data-testid="proposal-comment-send"><i data-lucide="send" style="width:15px"></i></button></div>
+</aside>
+
+<!-- DEMO MODAL -->
+<div class="modal" id="demo" role="dialog" aria-modal="true">
+  <h3>Request a demo</h3>
+  <p style="color:var(--muted);font-size:14px;margin:0">We'll walk you through the pipeline on your own sample invoices.</p>
+  <div class="f">
+    <span class="field-label">Your name</span><input placeholder="Full name" data-testid="proposal-demo-name">
+    <span class="field-label">Email</span><input placeholder="you@atec.com" data-testid="proposal-demo-email">
+    <span class="field-label">Preferred date range</span><input placeholder="e.g. next week, Tue–Thu" data-testid="proposal-demo-range">
+    <span class="field-label">Anything specific?</span><textarea placeholder="Optional note" style="height:64px" data-testid="proposal-demo-note"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+      <button class="btn btn-ghost" onclick="closeDemo()" data-testid="proposal-demo-cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="closeDemo()" data-testid="proposal-demo-submit"><i data-lucide="send" style="width:15px"></i>Send request</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// URL params: embed mode + join-demo state
+const _params=new URLSearchParams(location.search);
+if(_params.get('embed')==='1'){document.body.classList.add('embed');
+  var _post=function(){try{parent.postMessage({t:'ld-h',h:Math.max(document.body.scrollHeight,document.documentElement.scrollHeight)},'*');}catch(e){}};
+  window.addEventListener('load',function(){_post();setTimeout(_post,300);setTimeout(_post,900);setTimeout(_post,1800);});
+  window.addEventListener('resize',_post);
+  if(window.ResizeObserver){try{new ResizeObserver(_post).observe(document.body);}catch(e){}}
+  document.addEventListener('click',function(){setTimeout(_post,350);});
+}
+if(_params.get('demo')==='join'){
+  document.querySelectorAll('[data-testid="proposal-request-demo"]').forEach(b=>{
+    b.setAttribute('data-testid','proposal-join-demo');
+    b.setAttribute('onclick','');
+    b.onclick=()=>showToast('Opening the demo room…');
+    b.innerHTML='<i data-lucide="video"></i>Join demo';
+  });
+}
+lucide.createIcons();
+// scroll progress
+const prog=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;const p=h.scrollTop/(h.scrollHeight-h.clientHeight);prog.style.width=(p*100)+'%';});
+// reveal + nav active
+const links=[...document.querySelectorAll('.secnav a')];
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');
+  if(e.target.id){const l=links.find(a=>a.getAttribute('href')==='#'+e.target.id);if(l&&e.intersectionRatio>0.15){links.forEach(a=>a.classList.remove('active'));l.classList.add('active');}}}});},{threshold:[0.15,0.6]});
+document.querySelectorAll('.reveal, section[id]').forEach(el=>io.observe(el));
+// requirements expand
+document.querySelectorAll('.reqrow').forEach(r=>r.addEventListener('click',()=>r.classList.toggle('open')));
+// accordion
+document.querySelectorAll('.acc .h').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));
+// timeline
+document.querySelectorAll('.tl .wh').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));
+// pricing bars + count-up when in view
+const pr=document.getElementById('pricing');
+const totalEl=document.getElementById('total');
+let counted=false;
+const io2=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting&&!counted){counted=true;
+  document.querySelectorAll('.bar span').forEach(s=>s.style.width=s.dataset.w);
+  const t=+totalEl.dataset.target;let n=0;const step=t/40;const iv=setInterval(()=>{n+=step;if(n>=t){n=t;clearInterval(iv);}totalEl.textContent='$'+Math.round(n).toLocaleString();},22);
+}}),{threshold:.4});
+io2.observe(pr);
+// architecture: flow dot along a path + hover trace
+const svg=document.getElementById('archsvg');
+const dot=document.getElementById('dot');
+const path=svg.querySelector('.edge[data-from="intake"]');
+let t=0;
+function animateDot(){t=(t+0.004)%1;const p=path.getPointAtLength(path.getTotalLength()*t);dot.setAttribute('cx',p.x);dot.setAttribute('cy',p.y);requestAnimationFrame(animateDot);}
+try{animateDot();}catch(e){}
+const tip=document.getElementById('archtip');
+const info={intake:'Captures invoices from email, portal and scans.',extract:'AI extracts header, line-items and tax with confidence.',retrieve:'Pulls matching PO & GRN from SAP.',validate:'3-way match with tolerance rules.',sap:'Posts clean invoices via BAPI/OData.',exception:'Human-in-the-loop review for genuine exceptions.'};
+document.querySelectorAll('.node').forEach(n=>{
+  n.addEventListener('mouseenter',()=>{const k=n.dataset.key;
+    document.querySelectorAll('.node').forEach(x=>x.classList.add('dim'));n.classList.remove('dim');n.classList.add('hot');
+    svg.querySelectorAll('.edge').forEach(ed=>{if(ed.dataset.from===k||ed.dataset.to===k){ed.classList.add('hot');
+      const o=ed.dataset.from===k?ed.dataset.to:ed.dataset.from;const on=svg.querySelector('.node[data-key="'+o+'"]');if(on){on.classList.remove('dim');}}});
+    tip.textContent=info[k]||'';tip.style.opacity=1;});
+  n.addEventListener('mousemove',(e)=>{const r=document.getElementById('arch').getBoundingClientRect();tip.style.left=(e.clientX-r.left+12)+'px';tip.style.top=(e.clientY-r.top+12)+'px';});
+  n.addEventListener('mouseleave',()=>{document.querySelectorAll('.node').forEach(x=>{x.classList.remove('dim','hot');});svg.querySelectorAll('.edge').forEach(ed=>ed.classList.remove('hot'));tip.style.opacity=0;});
+});
+// comment panel
+const panel=document.getElementById('panel'),overlay=document.getElementById('overlay');
+function openPanel(t){document.getElementById('panelTitle').textContent=t||'Comments';panel.classList.add('open');overlay.classList.add('show');}
+function closePanel(){panel.classList.remove('open');overlay.classList.remove('show');}
+// demo modal
+const demo=document.getElementById('demo');
+function openDemo(){demo.classList.add('show');overlay.classList.add('show');}
+function closeDemo(){demo.classList.remove('show');overlay.classList.remove('show');}
+overlay.addEventListener('click',()=>{closePanel();closeDemo();});
+document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){closeDemo();closePanel();sharemenu.classList.remove('open');}});
+// share popover
+const sharemenu=document.getElementById('sharemenu');
+function toggleShare(e){e.stopPropagation();sharemenu.classList.toggle('open');}
+function shareVia(channel){sharemenu.classList.remove('open');
+  const label={email:'Email',slack:'Slack',zoom:'Zoom'}[channel]||channel;
+  showToast('Shared via '+label);}
+const toast=document.getElementById('toast');
+function showToast(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toast.classList.remove('show'),2200);}
+function copyLink(){sharemenu.classList.remove('open');
+  const done=()=>showToast('Link copied');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(location.href).then(done).catch(done);}else{done();}
+}
+document.addEventListener('click',(e)=>{if(!e.target.closest('.sharewrap'))sharemenu.classList.remove('open');});
+// comment replies
+function toggleReply(el){el.parentElement.querySelector('.replybox').classList.toggle('open');}
+function postReply(btn){
+  const box=btn.closest('.replybox');const input=box.querySelector('input');const txt=(input.value||'').trim();if(!txt)return;
+  const reply=document.createElement('div');reply.className='reply';
+  reply.innerHTML='<div class="rwho">You (Riseup)</div><p></p><span class="rnote"><i data-lucide="mail" style="width:12px"></i>Client will see this · email notification sent</span>';
+  reply.querySelector('p').textContent=txt;
+  box.parentElement.insertBefore(reply,box);
+  input.value='';box.classList.remove('open');
+  lucide.createIcons();
+}
+</script>
+</body>
+</html>

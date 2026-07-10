@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead360 v3 — Prototype Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:'Inter',system-ui,sans-serif;background:#FAFAF9;color:#0F0F0F;max-width:1080px;margin:0 auto;padding:48px 32px 80px;font-variant-numeric:tabular-nums}
+ .brand{display:inline-flex;align-items:center;gap:9px;margin-bottom:14px}
+ .mark{width:26px;height:26px;border-radius:6px;background:#EA5400;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+ h1{font-size:24px;font-weight:600}
+ .sub{color:#6B6660;margin:8px 0;font-size:14px;max-width:680px}
+ .tag{display:inline-block;margin-top:8px;padding:5px 11px;border:1px solid #E8E6E3;border-radius:4px;background:#fff;color:#6B6660;font-weight:500;font-size:12px}
+ h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#9A948E;margin:34px 0 12px;font-weight:600;border-bottom:1px solid #E8E6E3;padding-bottom:8px}
+ .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:10px}
+ a.card{display:block;padding:15px 16px;border:1px solid #E8E6E3;border-radius:8px;background:#fff;text-decoration:none;color:inherit;transition:all .12s}
+ a.card:hover{border-color:#D4D1CC;background:#F4F4F2}
+ a.card .n{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+ a.card .d{color:#6B6660;font-size:12.5px;margin-top:4px;line-height:1.45}
+ .step{width:19px;height:19px;border-radius:50%;background:#EA5400;color:#fff;font-size:11px;font-weight:600;display:grid;place-items:center;flex:0 0 19px}
+ .accent{color:#EA5400;font-weight:600}
+</style>
+</head>
+<body>
+ <div class="brand"><span class="mark">L</span><h1>Lead360 · v3</h1></div>
+ <div class="sub">Prototype map — "Riseup Studio" enterprise rebuild. Dark sidebar, Inter, hairline borders, restrained orange <b>#EA5400</b> on <b>#FAFAF9</b>. Vocabulary: <b>Lead</b> / <b>Project</b> (never "Deal").</div>
+ <span class="tag">18 pages · click any to open</span>
+ <div class="sub" style="margin-top:12px"><b>Demo controls (prototype-only):</b> the sidebar avatar opens an account menu to <b>switch between Sales &amp; Admin views</b>; Lead Detail has a <b>Status</b> switcher (Generated → … → Locked/Lost); Readiness has a <b>Preview</b> toggle (below-80 ↔ ready); the Leads &amp; Approvals lists have a <b>State</b> switcher (data / loading / empty).</div>
+
+ <h2>Start here <span class="accent">(two views: Sales/PM + Admin)</span></h2>
+ <div class="grid">
+   <a class="card" href="app/login.page.html"><div class="n">Login</div><div class="d">Internal sign-in → Leads</div></a>
+   <a class="card" href="app/leads.page.html"><div class="n">Leads <span class="accent">(Sales/PM home)</span></div><div class="d">Improved list + filters</div></a>
+ </div>
+
+ <h2>New Lead flow <span class="accent">(guided wizard)</span></h2>
+ <div class="grid">
+   <a class="card" href="app/new-lead-info.page.html"><div class="n"><span class="step">1</span>Lead Info</div><div class="d">Company, contact, website</div></a>
+   <a class="card" href="app/new-lead-requirement.page.html"><div class="n"><span class="step">2</span>Requirement</div><div class="d">Upload / paste brief</div></a>
+   <a class="card" href="app/new-lead-readiness.page.html"><div class="n"><span class="step">3</span>Readiness</div><div class="d">Segment bar + client queries (&lt;80 state)</div></a>
+   <a class="card" href="app/new-lead-template.page.html"><div class="n"><span class="step">4</span>Template</div><div class="d">Global / Local / Agency / Design</div></a>
+   <a class="card" href="app/new-lead-generate.page.html"><div class="n"><span class="step">5</span>Generate</div><div class="d">Progress → Lead Detail</div></a>
+ </div>
+
+ <h2>Lead & portfolio</h2>
+ <div class="grid">
+   <a class="card" href="app/lead-detail.page.html"><div class="n">Lead Detail <span class="accent">★</span></div><div class="d">Proposal + Budget (separate regen each), Sales Brief (generate), Pitch Deck (generate) · send for approval</div></a>
+   <a class="card" href="app/projects.page.html"><div class="n">Projects + Database</div><div class="d">Portfolio (auto-adds locked leads) + real doc database (preview/download)</div></a>
+   <a class="card" href="app/project-detail.page.html"><div class="n">Project Detail</div><div class="d">Large summary + View proposal</div></a>
+   <a class="card" href="app/settings.page.html"><div class="n">Settings <span class="accent">(Sales/PM)</span></div><div class="d">Profile · Preferences · Security</div></a>
+   <a class="card" href="app/404.page.html"><div class="n">404</div><div class="d">Not found</div></a>
+ </div>
+
+ <h2>Admin view <span class="accent">(all analytics + verify each project)</span></h2>
+ <div class="grid">
+   <a class="card" href="management/overview.page.html"><div class="n">Overview</div><div class="d">All analytics (no cycle-time trend)</div></a>
+   <a class="card" href="management/approvals.page.html"><div class="n">Approvals <span class="accent">(verify)</span></div><div class="d">Verify each project · approve/reject</div></a>
+   <a class="card" href="management/leads.page.html"><div class="n">Leads (read-only)</div><div class="d">Org-wide, filter-heavy</div></a>
+   <a class="card" href="management/settings.page.html"><div class="n">Settings <span class="accent">(Admin)</span></div><div class="d">Team · Templates · Rates · Approvals · Branding · KB · Delivery (email OFF) · Audit</div></a>
+ </div>
+
+ <h2>Client deliverables <span class="accent">(tokenized, interactive, commentable)</span></h2>
+ <div class="grid">
+   <a class="card" href="client/proposal-view.page.html"><div class="n">Proposal (Global/Local)</div><div class="d">14 sections, animated architecture, comments + demo</div></a>
+   <a class="card" href="client/budget-view.page.html"><div class="n">Budget (Global/Local)</div><div class="d">FIFA structure · Export .xlsx</div></a>
+   <a class="card" href="client/deliverable-view.page.html"><div class="n">Combined (Agency/Design)</div><div class="d">11 sections + inline Financial Proposal</div></a>
+ </div>
+</body>
+</html>
