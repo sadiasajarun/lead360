@@ -48,3 +48,10 @@ storageState-*.json
 .DS_Store
 Thumbs.db
 .idea/
+
+# local build temp/cache (C: drive full workaround)
+.tmp/
+.npm-cache/
+
+# playwright-cli browser session scratch (screenshots + page snapshots)
+.playwright-cli/

@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  StreamableFile,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -71,6 +72,18 @@ export class LeadController {
     return this.leads.createFor(dto, userId);
   }
 
+  @Post(':id/logo')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 2 * 1024 * 1024 } })) // 2 MB cap (brand mark)
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload the client brand logo (Client & Brand step); stored as a data URI on the lead' })
+  @ApiResponse({ status: 201, description: 'Stored' })
+  @ApiResponse({ status: 400, description: 'No file / too large' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  uploadClientLogo(@Param('id', ParseUUIDPipe) id: string, @UploadedFile() file: UploadedBrief) {
+    return this.leads.setClientLogo(id, file);
+  }
+
   @Delete(':id')
   @Roles(UserRole.SALES_PM, UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete a lead (soft delete)' })
@@ -108,7 +121,7 @@ export class LeadController {
 
   @Post(':id/requirement/attachments')
   @Roles(UserRole.SALES_PM, UserRole.ADMIN)
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } })) // 10 MB cap
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 25 * 1024 * 1024 } })) // 25 MB cap (matches UI/PRD)
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Attach a brief document (PDF/DOCX/TXT); text is extracted into the brief' })
   @ApiResponse({ status: 201, description: 'Stored + parsed' })
@@ -136,6 +149,15 @@ export class LeadController {
     return this.requirements.readiness(id);
   }
 
+  @Post(':id/readiness/regenerate')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Regenerate the clarification rubric from the current brief (keeps confirmed answers)' })
+  @ApiResponse({ status: 201, description: 'Regenerated' })
+  @ApiResponse({ status: 400, description: 'No brief text yet' })
+  regenerateReadiness(@Param('id', ParseUUIDPipe) id: string) {
+    return this.requirements.regenerateQueries(id);
+  }
+
   @Patch(':id/readiness/queries/:queryId')
   @Roles(UserRole.SALES_PM, UserRole.ADMIN)
   @ApiOperation({ summary: 'Confirm/answer or reopen a client query; recomputes readiness' })
@@ -147,6 +169,51 @@ export class LeadController {
     @Body() dto: ResolveQueryDto,
   ) {
     return this.requirements.resolveQuery(id, queryId, dto);
+  }
+
+  @Post(':id/readiness/queries/:queryId/attachment')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 25 * 1024 * 1024 } })) // 25 MB cap
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Answer an "upload" client query with a file; text is extracted into the brief and the query is confirmed' })
+  @ApiResponse({ status: 201, description: 'Stored + parsed; readiness recomputed' })
+  @ApiResponse({ status: 400, description: 'No file / too large' })
+  @ApiResponse({ status: 404, description: 'Requirement/query not found' })
+  answerQueryWithFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('queryId') queryId: string,
+    @UploadedFile() file: UploadedBrief,
+  ) {
+    return this.requirements.answerQueryWithFile(id, queryId, file);
+  }
+
+  @Get(':id/readiness/questionnaire.docx')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Download the readiness clarification questions as a fillable Word (.docx) form' })
+  @ApiResponse({ status: 200, description: 'DOCX' })
+  @ApiResponse({ status: 400, description: 'No readiness questions generated yet' })
+  @ApiResponse({ status: 404, description: 'Requirement not found' })
+  async questionnaireDocx(@Param('id', ParseUUIDPipe) id: string) {
+    const { buffer, filename } = await this.requirements.questionnaireDocx(id);
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      disposition: `attachment; filename="${encodeURIComponent(filename)}"`,
+    });
+  }
+
+  @Post(':id/readiness/questionnaire')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 25 * 1024 * 1024 } })) // 25 MB cap
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload a filled questionnaire .docx; parses answers back into the readiness queries (auto-confirmed) and recomputes readiness' })
+  @ApiResponse({ status: 201, description: 'Parsed + applied; readiness recomputed' })
+  @ApiResponse({ status: 400, description: 'No file / unreadable / no questions to import into' })
+  @ApiResponse({ status: 404, description: 'Requirement not found' })
+  importQuestionnaire(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: UploadedBrief,
+  ) {
+    return this.requirements.importQuestionnaire(id, file);
   }
 
   // ADMIN is allowed through the guard on purpose: the service answers with an explanatory 400

@@ -29,7 +29,12 @@ export class LeadRepository extends BaseRepository<Lead> {
     const qb = this.qb
       .createQueryBuilder('lead')
       .leftJoinAndSelect('lead.submittedBy', 'submittedBy') // Approvals needs the rep's name
-      .orderBy('lead.updatedAt', 'DESC');
+      // Newest activity first. createdAt/id break ties: rows sharing an updatedAt (a bulk write, or a
+      // restored backup) would otherwise come back in heap order, which reshuffles between page loads
+      // and makes pagination drop/repeat rows.
+      .orderBy('lead.updatedAt', 'DESC')
+      .addOrderBy('lead.createdAt', 'DESC')
+      .addOrderBy('lead.id', 'DESC');
 
     if (scope?.adminView) {
       // "Entered the pipeline" = submitted_at is set (survives a rejection back to `generated`) OR

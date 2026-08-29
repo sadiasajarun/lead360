@@ -55,6 +55,13 @@ export class LeadService extends BaseService<Lead> {
     });
   }
 
+  /** Store the client's brand mark (Client & Brand step) as a CSP-safe data URI on the lead. */
+  async setClientLogo(id: string, file: { buffer: Buffer; mimetype: string }): Promise<Lead | null> {
+    await this.findByIdOrFail(id); // 404 if the lead is gone
+    const clientLogoUrl = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    return this.leads.update(id, { clientLogoUrl });
+  }
+
   // Guard the status machine — only valid transitions are allowed.
   private async transition(id: string, from: LeadStatus[], to: LeadStatus, extra: Partial<Lead> = {}) {
     const lead = await this.findByIdOrFail(id);

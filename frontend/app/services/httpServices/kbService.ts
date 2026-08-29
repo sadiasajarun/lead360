@@ -1,5 +1,5 @@
 import { httpService } from '../httpService';
-import type { KbDocument, KbTrashItem } from '~/types/kb';
+import type { KbDocument, KbTrashItem, KbUploadResult } from '~/types/kb';
 
 // Read-only catalog of the Riseup Proposal & Budget Database (source docs for RAG grounding).
 export async function getKbDocuments(): Promise<KbDocument[]> {
@@ -27,14 +27,14 @@ export async function openKbFile(id: string, mode: 'view' | 'download', filename
 
 // Add a document into the Database — stored (downloadable) + embedded for RAG. `name` (optional)
 // becomes the display title. Override the JSON Content-Type so the browser sets the multipart boundary.
-export async function uploadKbDocument(file: File, category: string, section: string, name?: string) {
+export async function uploadKbDocument(file: File, category: string, section: string, name?: string): Promise<KbUploadResult> {
   const fd = new FormData();
   fd.append('file', file);
   fd.append('category', category);
   fd.append('section', section);
   if (name?.trim()) fd.append('name', name.trim());
   const res = await httpService.post('/kb/documents/upload', fd, { headers: { 'Content-Type': undefined } });
-  return res.data.data;
+  return res.data.data as KbUploadResult;
 }
 
 // Update a document's display title and/or tags (tags replace the full set).

@@ -39,7 +39,15 @@ export class PortfolioScraperService implements OnModuleInit {
       await this.repo.ensureVectorColumn(EMBED_DIM);
     } catch (e) {
       this.logger.warn(`portfolio pgvector setup skipped: ${String(e)}`);
+      return;
     }
+    // Self-heal: `synchronize` drops the raw embedding column on every boot, silently breaking
+    // comparables + resolveStack references. Re-embed anything missing (no re-scrape). Non-blocking.
+    void this.embedMissing()
+      .then((r) => {
+        if (r.embedded) this.logger.log(`portfolio self-heal: re-embedded ${r.embedded} project(s).`);
+      })
+      .catch((e) => this.logger.warn(`portfolio self-heal skipped: ${String(e)}`));
   }
 
   /** Re-embed rows missing an embedding (e.g. after a synchronize drop). No re-scrape needed. */

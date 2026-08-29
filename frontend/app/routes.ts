@@ -24,6 +24,8 @@ export default [
     route('admin/projects', 'pages/projects.tsx', { id: 'admin-projects' }),
     route('admin/settings', 'pages/management/settings.tsx'),
   ]),
+  // Public demo — locked Design-2 block renderer with a sample document (dev/QA only).
+  route('proposal-demo', 'pages/proposal-demo.tsx'),
   // Client / present deliverable views — standalone (no app shell), read-only.
   route('present/:id/budget', 'pages/client/budget-view.tsx'),
   route('present/:id/proposal', 'pages/client/proposal-view.tsx'),

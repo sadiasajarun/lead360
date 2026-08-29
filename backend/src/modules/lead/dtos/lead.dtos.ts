@@ -1,16 +1,19 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsDateString,
   IsEmail,
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
   MinLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { LeadStatus, TemplateType, LossReason, BudgetCurrency } from '../../../common/enums';
+import { LeadStatus, TemplateType, LossReason, BudgetCurrency, ProjectType, Audience } from '../../../common/enums';
 
 export class CreateLeadDto {
   @ApiProperty() @IsString() title: string;
@@ -24,6 +27,27 @@ export class CreateLeadDto {
 
   @ApiPropertyOptional({ description: 'Deal value in integer minor units (cents)' })
   @IsOptional() @IsInt() @Min(0) valueCents?: number;
+
+  @ApiPropertyOptional({ enum: ProjectType, description: 'How the engine frames the proposal (Template & Setup step)' })
+  @IsOptional() @IsEnum(ProjectType) projectType?: ProjectType;
+  @ApiPropertyOptional({ enum: Audience, description: 'Who the proposal is written for (Template & Setup step)' })
+  @IsOptional() @IsEnum(Audience) audience?: Audience;
+  @ApiPropertyOptional({ description: 'Freeform project context — appended to the effective brief' })
+  @IsOptional() @IsString() @MaxLength(4000) projectContext?: string;
+  @ApiPropertyOptional({ enum: ['phase', 'milestone', 'scope', 'module'], description: 'Override the auto-picked delivery structure; omit for auto' })
+  @IsOptional() @IsIn(['phase', 'milestone', 'scope', 'module']) structureModeOverride?: string;
+
+  // --- Procurement (Template & Setup step) — both optional, both default false ---
+  @ApiPropertyOptional({ description: 'Hardware/devices are part of this engagement (unlocks the budget equipment schedule)' })
+  @IsOptional() @IsBoolean() hardwareProject?: boolean;
+  @ApiPropertyOptional({ description: 'A third-party service/supplier is involved (kept internal — never named to the client)' })
+  @IsOptional() @IsBoolean() thirdPartyService?: boolean;
+  @ApiPropertyOptional({ description: 'Internal note on the hardware / third-party arrangement — shapes the proposal, never quoted verbatim' })
+  @IsOptional() @IsString() @MaxLength(4000) procurementNotes?: string;
+  @ApiPropertyOptional({ description: 'Delivery/installation window in weeks — ADDED to the software schedule as an on-site phase' })
+  @IsOptional() @IsInt() @Min(0) hardwareInstallWeeks?: number;
+  @ApiPropertyOptional({ description: 'Warranty cover for supplied hardware — restated in the proposal as our commitment' })
+  @IsOptional() @IsString() @MaxLength(2000) hardwareWarranty?: string;
 }
 
 export class UpdateLeadDto extends PartialType(CreateLeadDto) {}

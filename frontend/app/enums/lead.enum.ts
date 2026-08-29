@@ -43,3 +43,33 @@ export enum TemplateType {
   AGENCY = 'agency',
   DESIGN_PORTFOLIO = 'design_portfolio',
 }
+
+/** How the engine frames the proposal (Template & Setup step). Mirrors backend ProjectType. */
+export enum ProjectType {
+  NEW_BUILD = 'new_build',
+  ENHANCE = 'enhance',
+  ISSUE_FIX = 'issue_fix',
+  DEPLOY = 'deploy',
+  ASSESSMENT = 'assessment',
+}
+
+export const PROJECT_TYPE_LABEL: Record<ProjectType, string> = {
+  [ProjectType.NEW_BUILD]: 'New build — greenfield product from scratch',
+  [ProjectType.ENHANCE]: 'Enhance — add to an existing system',
+  [ProjectType.ISSUE_FIX]: 'Issue fix — stabilise / fix an existing system',
+  [ProjectType.DEPLOY]: 'Deploy — ship / roll out an existing build',
+  [ProjectType.ASSESSMENT]: 'Assessment — advise & recommend an approach (not a full build)',
+};
+
+/** Who the proposal is written for (Template & Setup step). Mirrors backend Audience. */
+export enum Audience {
+  TECHNICAL = 'technical',
+  BUSINESS = 'business',
+  MIXED = 'mixed',
+}
+
+export const AUDIENCE_LABEL: Record<Audience, string> = {
+  [Audience.TECHNICAL]: 'Technical — engineers/architects (deeper technical detail)',
+  [Audience.BUSINESS]: 'Business — decision-makers (outcome & value focus)',
+  [Audience.MIXED]: 'Mixed — both audiences',
+};

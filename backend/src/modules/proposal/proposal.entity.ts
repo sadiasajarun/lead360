@@ -34,6 +34,27 @@ export class Proposal extends BaseEntity {
   @Column({ name: 'current_version_id', nullable: true })
   currentVersionId?: string;
 
+  /** Rolling "what changed" log (P6) — newest first, capped to the last ~20 regenerations/edits. Each entry:
+   *  { at, kind: 'proposal'|'budget'|'section', title, details[], budgetBefore/AfterCents?, weeksBefore/After?,
+   *  currency? }. Drives the scrollable change panel under the regenerate prompt. */
+  @Column({ name: 'change_log', type: 'jsonb', default: () => "'[]'" })
+  changeLog: Record<string, unknown>[];
+
+  /** Cached rendered PDF + the content hash it was rendered from. `select: false` so normal proposal
+   *  reads never pull the ~600 KB blob — it's loaded explicitly by the PDF endpoint. Lazily filled on
+   *  the first Download click and reused until the content hash changes (edit/regenerate → re-render). */
+  @Column({ name: 'pdf_cache', type: 'bytea', nullable: true, select: false })
+  pdfCache?: Buffer | null;
+
+  @Column({ name: 'pdf_hash', type: 'varchar', nullable: true, select: false })
+  pdfHash?: string | null;
+
+  /** Internal-only cost breakdown (team member day/weekly rates, per-phase math). `select: false` so it
+   *  is NEVER returned by the normal proposal read (client `/present` view) — only the authenticated
+   *  "explain" endpoint loads it. Head-cost rates are confidential and must not reach the client. */
+  @Column({ name: 'internal_calc', type: 'jsonb', nullable: true, select: false })
+  internalCalc?: Record<string, unknown> | null;
+
   @OneToMany(() => ProposalVersion, (v) => v.proposal)
   versions: ProposalVersion[];
 }

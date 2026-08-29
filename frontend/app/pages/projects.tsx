@@ -18,7 +18,7 @@ import {
 import { verifyPassword } from '~/services/httpServices/authService';
 import { apiErrorMessage } from '~/services/httpMethods/interceptors';
 import { canonicalCategory, mergedCategoryOptions } from '~/utils/categoryMerge';
-import type { KbDocument } from '~/types/kb';
+import type { KbDocument, KbInsights, KbUploadItem } from '~/types/kb';
 import type { PortfolioProject, Project } from '~/types/project';
 
 const DB_CATEGORIES = ['Agency', 'Design Portfolio', 'Global', 'Local'];
@@ -785,7 +785,12 @@ function DatabasePanel({ onToast, onStats }: {
                         <button onClick={() => setRenamingId('')} className="inline-flex h-8 items-center rounded-md border border-[#D4D1CC] px-2.5 text-[12px] font-medium text-[#6B6660] hover:bg-[#F4F4F2]"><X size={14} /></button>
                       </div>
                     ) : (
-                      <span className="min-w-0 flex-1 truncate text-[13px] font-medium" title={d.title}>{d.title}</span>
+                      <span className="flex min-w-0 flex-1 items-center gap-2">
+                        <span className="truncate text-[13px] font-medium" title={d.title}>{d.title}</span>
+                        {d.learned && (
+                          <span data-testid={`db-file-learned-${d.id}`} title="AI has distilled this document's content, stack, pricing, timeline & decisions" className="shrink-0 rounded-full border border-[#BFE3D4] bg-[#F4FBF8] px-1.5 py-0.5 text-[10px] font-medium text-[#0E7C5A]">AI-learned</span>
+                        )}
+                      </span>
                     )}
                     {/* Client (tags) — Notion-style: the whole cell opens the tag popup */}
                     {!renaming && (
@@ -1092,75 +1097,135 @@ function DeleteAllModal({ count, category, section, busy, onCancel, onConfirm }:
   );
 }
 
-/** Add-document modal: drag & drop (or browse) + display-name field. Files upload into the active
- *  category + sub-nav and are immediately text-extracted + embedded so the AI learns them. */
+// Compact chips summarizing what the AI distilled from a document (for the per-file "learned" line).
+function learnedChips(ins?: KbInsights): string[] {
+  if (!ins) return [];
+  const c: string[] = [];
+  if (ins.stack?.length) c.push('stack');
+  if (ins.technical?.length) c.push('technical');
+  if (ins.resources?.length) c.push('resources');
+  if (ins.pricing && (ins.pricing.total != null || ins.pricing.lineItems?.length)) c.push('pricing');
+  if (ins.timeline && (ins.timeline.totalDuration || ins.timeline.milestones?.length)) c.push('timeline');
+  if (ins.diagramTypes?.length) c.push('diagrams');
+  if (ins.decisions?.length) c.push('decisions');
+  return c;
+}
+
+/** Add-document modal: drag & drop (or browse) MANY files + per-file names. Each uploads into the
+ *  active category + sub-nav and is text-extracted, embedded, and (for Proposal/Budget) mined into
+ *  the budget band — so the AI learns them. Uploads run sequentially with live per-file progress. */
 function AddDocumentModal({ category, section, onClose, onDone }: {
   category: string;
   section: string;
   onClose: () => void;
   onDone: () => Promise<void>;
 }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [name, setName] = useState('');
+  const [items, setItems] = useState<KbUploadItem[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
 
-  const pick = (f: File | null) => {
-    setFile(f);
-    if (f && !name.trim()) setName(f.name.replace(/\.[^.]+$/, ''));
+  const add = (files: File[]) => {
+    if (!files.length) return;
+    const next: KbUploadItem[] = files.map((f) => ({ file: f, name: f.name.replace(/\.[^.]+$/, ''), status: 'queued' }));
+    setItems((p) => [...p, ...next]);
   };
+  const removeAt = (i: number) => setItems((p) => p.filter((_, idx) => idx !== i));
+  const rename = (i: number, name: string) => setItems((p) => p.map((it, idx) => (idx === i ? { ...it, name } : it)));
 
   const submit = async () => {
-    if (!file) return;
-    setBusy(true); setErr('');
-    try {
-      await uploadKbDocument(file, category, section, name);
-      await onDone();
-    } catch (e) {
-      setErr(apiErrorMessage(e));
-      setBusy(false);
+    const batch = items;
+    if (!batch.length || busy) return;
+    setBusy(true);
+    let anyErr = false;
+    for (let i = 0; i < batch.length; i++) {
+      if (batch[i].status === 'done') continue;
+      setItems((p) => p.map((it, idx) => (idx === i ? { ...it, status: 'uploading', error: undefined } : it)));
+      try {
+        const res = await uploadKbDocument(batch[i].file, category, section, batch[i].name);
+        const learned = learnedChips(res.insights);
+        setItems((p) => p.map((it, idx) => (idx === i ? { ...it, status: 'done', learned } : it)));
+      } catch (e) {
+        anyErr = true;
+        setItems((p) => p.map((it, idx) => (idx === i ? { ...it, status: 'error', error: apiErrorMessage(e) } : it)));
+      }
     }
+    setBusy(false);
+    if (!anyErr) await onDone(); // all succeeded → close + toast + refresh; else keep open to retry/close
   };
+
+  const pending = items.filter((it) => it.status === 'queued' || it.status === 'error').length;
+  const anyDone = items.some((it) => it.status === 'done');
 
   return (
     <div data-testid="db-add-modal" className="fixed inset-0 z-[130] grid place-items-center bg-black/40 p-4" onClick={() => !busy && onClose()}>
-      <div className="w-full max-w-[480px] rounded-xl border border-[#E8E6E3] bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="flex max-h-[86vh] w-full max-w-[540px] flex-col rounded-xl border border-[#E8E6E3] bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-1 text-[15px] font-semibold">{ADD_LABEL[section]}</div>
-        <p className="mb-4 text-xs text-[#9A948E]">Files under <strong>{category} → {section}</strong>. Stored, downloadable, and learned by the AI for future proposals.</p>
+        <p className="mb-4 text-xs text-[#9A948E]">Files under <strong>{category} → {section}</strong>. Stored, downloadable, and learned by the AI (content, stack, pricing, timeline, decisions…) for future proposals.</p>
 
         <div
           data-testid="db-add-dropzone"
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => { e.preventDefault(); setDragOver(false); pick(e.dataTransfer.files?.[0] ?? null); }}
-          className={`grid place-items-center rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors ${
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); add(Array.from(e.dataTransfer.files ?? [])); }}
+          className={`grid place-items-center rounded-lg border-2 border-dashed px-4 py-7 text-center transition-colors ${
             dragOver ? 'border-[#EA5400] bg-[#EA5400]/[0.04]' : 'border-[#D4D1CC] bg-[#FCFBFA]'
           }`}
         >
           <Upload size={22} className={`mb-2 ${dragOver ? 'text-[#EA5400]' : 'text-[#9A948E]'}`} />
-          {file ? (
-            <div className="text-[13px] font-medium">{file.name} <span className="text-[#9A948E]">({(file.size / 1024 / 1024).toFixed(1)} MB)</span></div>
-          ) : (
-            <div className="text-[13px] text-[#6B6660]">Drag &amp; drop a file here, or</div>
-          )}
-          <label className="mt-2 inline-flex h-8 items-center rounded-md border border-[#D4D1CC] bg-white px-3 text-[13px] font-medium hover:bg-[#F4F4F2]">
+          <div className="text-[13px] text-[#6B6660]">Drag &amp; drop files here, or</div>
+          <label className="mt-2 inline-flex h-8 items-center rounded-md border border-[#D4D1CC] bg-white px-3 text-[13px] font-medium hover:bg-[#F4F4F2] cursor-pointer">
             Browse…
-            <input data-testid="db-add-file" type="file" accept=".pdf,.doc,.docx,.txt,.md,.xlsx,.pptx" className="hidden" onChange={(e: ChangeEvent<HTMLInputElement>) => pick(e.target.files?.[0] ?? null)} />
+            <input data-testid="db-add-file" type="file" multiple accept=".pdf,.doc,.docx,.txt,.md,.xlsx,.pptx" className="hidden" onChange={(e: ChangeEvent<HTMLInputElement>) => { add(Array.from(e.target.files ?? [])); e.target.value = ''; }} />
           </label>
-          <div className="mt-2 text-[11px] text-[#9A948E]">PDF · DOCX · XLSX · PPTX · TXT — max 25 MB</div>
+          <div className="mt-2 text-[11px] text-[#9A948E]">PDF · DOCX · XLSX · PPTX · TXT — max 25 MB each · multiple files supported</div>
         </div>
 
-        <label className="mt-4 block text-[13px]">
-          <span className="mb-1 block font-medium text-[#475467]">Name of the file</span>
-          <input data-testid="db-add-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. ACME - Technical Proposal" className="h-9 w-full rounded-md border border-[#D4D1CC] px-3 text-sm" />
-        </label>
+        {items.length > 0 && (
+          <div className="mt-3 flex-1 overflow-y-auto" data-testid="db-add-list">
+            <div className="flex flex-col gap-2">
+              {items.map((it, i) => (
+                <div key={it.file.name + i} data-testid={`db-add-item-${i}`} className="rounded-lg border border-[#E8E6E3] bg-white p-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <FileTypeBadge fileType={(it.file.name.split('.').pop() || '').toLowerCase()} />
+                    <input
+                      data-testid={`db-add-name-${i}`}
+                      value={it.name}
+                      disabled={busy || it.status === 'done'}
+                      onChange={(e) => rename(i, e.target.value)}
+                      className="h-8 min-w-0 flex-1 rounded-md border border-[#D4D1CC] px-2.5 text-[13px] disabled:bg-[#F9F8F7] disabled:text-[#6B6660]"
+                    />
+                    {it.status === 'queued' && <span className="text-[11px] text-[#9A948E]">Queued</span>}
+                    {it.status === 'uploading' && <span className="flex items-center gap-1 text-[11px] text-[#9A948E]"><Loader2 size={13} className="animate-spin" /> Learning…</span>}
+                    {it.status === 'done' && <Check size={16} className="shrink-0 text-[#0E7C5A]" />}
+                    {it.status === 'error' && <AlertTriangle size={15} className="shrink-0 text-[#B42318]" />}
+                    {(it.status === 'queued' || it.status === 'error') && !busy && (
+                      <button data-testid={`db-add-item-remove-${i}`} onClick={() => removeAt(i)} className="shrink-0 text-[#9A948E] hover:text-[#0F0F0F]"><X size={15} /></button>
+                    )}
+                  </div>
+                  {it.status === 'done' && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1 pl-[42px]">
+                      <span className="text-[11px] text-[#0E7C5A]">Learned</span>
+                      {it.learned && it.learned.length > 0
+                        ? it.learned.map((c) => <span key={c} className="rounded-full border border-[#BFE3D4] bg-[#F4FBF8] px-1.5 py-0.5 text-[10px] font-medium text-[#0E7C5A]">{c}</span>)
+                        : <span className="text-[11px] text-[#9A948E]">· embedded for retrieval</span>}
+                    </div>
+                  )}
+                  {it.status === 'error' && it.error && <p className="mt-1 pl-[42px] text-[11px] text-[#B42318]">{it.error}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        {err && <p className="mt-2 text-xs text-[#B42318]">{err}</p>}
-        <div className="mt-4 flex justify-end gap-2">
-          <button disabled={busy} onClick={onClose} className="h-9 rounded-md border border-[#D4D1CC] px-4 text-sm font-medium hover:bg-[#F4F4F2]">Cancel</button>
-          <button data-testid="db-add-submit" disabled={!file || busy} onClick={() => void submit()} className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[#EA5400] px-4 text-sm font-medium text-white hover:bg-[#CC4900] disabled:opacity-50">
-            {busy ? <><Loader2 size={14} className="animate-spin" /> Uploading…</> : <><Upload size={14} /> Add file</>}
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <button disabled={busy} onClick={onClose} className="h-9 rounded-md border border-[#D4D1CC] px-4 text-sm font-medium hover:bg-[#F4F4F2] disabled:opacity-50">{anyDone ? 'Close' : 'Cancel'}</button>
+          <button
+            data-testid="db-add-submit"
+            disabled={pending === 0 || busy}
+            onClick={() => void submit()}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[#EA5400] px-4 text-sm font-medium text-white hover:bg-[#CC4900] disabled:opacity-50"
+          >
+            {busy ? <><Loader2 size={14} className="animate-spin" /> Adding…</> : <><Upload size={14} /> {pending > 0 ? `Add ${pending} file${pending === 1 ? '' : 's'}` : 'Add files'}</>}
           </button>
         </div>
       </div>

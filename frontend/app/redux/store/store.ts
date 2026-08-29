@@ -6,6 +6,7 @@ import budgetReducer from '../features/budgetSlice';
 import projectsReducer from '../features/projectsSlice';
 import analyticsReducer from '../features/analyticsSlice';
 import approvalsReducer from '../features/approvalsSlice';
+import tokenStatsReducer from '../features/tokenStatsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     projects: projectsReducer,
     analytics: analyticsReducer,
     approvals: approvalsReducer,
+    tokenStats: tokenStatsReducer,
   },
 });
 

@@ -11,8 +11,14 @@ export class Requirement extends BaseEntity {
   @JoinColumn({ name: 'lead_id' })
   lead: Lead;
 
+  /** Extracted text from the uploaded brief/RFP document(s) — supporting DETAIL. */
   @Column({ name: 'source_text', type: 'text', nullable: true })
   sourceText?: string;
+
+  /** The rep's typed requirements — TOP PRIORITY; shapes the proposal and overrides the document on conflict.
+   *  Kept separate from `source_text` so an uploaded document can never overwrite it (and vice versa). */
+  @Column({ name: 'additional_requirements', type: 'text', nullable: true })
+  additionalRequirements?: string;
 
   /** Uploaded files: [{ name, key, mime }] (key = object-storage path). */
   @Column({ type: 'jsonb', default: [] })

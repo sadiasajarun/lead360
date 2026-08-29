@@ -22,6 +22,9 @@ export const SECTION_DEFAULTS: Record<string, Record<string, unknown>> = {
     footerText: 'Riseup Labs · riseuplabs.com · Confidential',
     /** Object-storage key of an uploaded logo; null = use the bundled Riseup mark. */
     logoKey: null,
+    /** Default Riseup signatory on the proposal sign-off ("For Riseup Labs") — used when the brief names none. */
+    signatoryName: '',
+    signatoryTitle: 'Head of Operations',
   },
   approvals: {
     requireAdminApproval: true,

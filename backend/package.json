@@ -1,7 +1,7 @@
 {
   "name": "lead360-backend",
   "version": "0.1.0",
-  "description": "Lead360 — AI proposal & budget studio API (NestJS + PostgreSQL/pgvector + BullMQ)",
+  "description": "Lead360 \u2014 AI proposal & budget studio API (NestJS + PostgreSQL/pgvector + BullMQ)",
   "private": true,
   "scripts": {
     "build": "nest build",
@@ -18,8 +18,15 @@
     "ingest:riseup": "ts-node src/database/ingest-riseup.ts",
     "ingest:rates": "ts-node src/database/ingest-rates.ts",
     "ingest:head-cost": "ts-node src/database/ingest-head-cost.ts",
+    "ingest:estimates": "ts-node src/database/ingest-estimates.ts",
+    "ingest:cases": "ts-node src/database/ingest-cases.ts",
+    "ingest:seed-cases": "ts-node src/database/ingest-seed-cases.ts",
     "test:api-sweep": "node test/api-sweep.mjs",
-    "backfill:rejected": "ts-node src/database/backfill-rejected.ts"
+    "backfill:rejected": "ts-node src/database/backfill-rejected.ts",
+    "migrate:budget-hours": "ts-node src/database/add-budget-line-hours.ts",
+    "migrate:module-profiles": "ts-node src/database/add-module-profiles.ts",
+    "migrate:budget-equipment": "ts-node src/database/add-budget-equipment.ts",
+    "migrate:lead-procurement": "ts-node src/database/add-lead-procurement-flags.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
@@ -43,11 +50,14 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
+    "devicon": "^2.17.0",
+    "docx": "^9.7.1",
     "dotenv": "^16.4.5",
     "exceljs": "^4.4.0",
     "helmet": "^7.1.0",
     "ioredis": "^5.4.1",
     "js-yaml": "^4.1.0",
+    "lucide-static": "^1.28.0",
     "mammoth": "^1.12.0",
     "nestjs-pino": "^4.1.0",
     "openai": "^6.45.0",
@@ -60,6 +70,7 @@
     "puppeteer": "^23.1.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "simple-icons": "^16.28.0",
     "typeorm": "^0.3.20"
   },
   "devDependencies": {

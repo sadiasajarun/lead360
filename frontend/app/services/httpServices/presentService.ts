@@ -1,6 +1,7 @@
 import { httpService } from '../httpService';
 import type { BudgetResponse } from '~/types/budget';
 import type { Lead } from '~/types/lead';
+import type { ChangeEntry } from '~/types/leadDetail';
 
 // Read-only fetches for the client/present deliverable views.
 export async function getBudget(id: string): Promise<BudgetResponse> {
@@ -21,6 +22,8 @@ export interface ProposalPayload {
   sections: Record<string, unknown>;
   salesBrief?: SalesBrief | null;
   pitchDeck?: { slides?: Slide[] } | null;
+  /** Rolling "what changed" log (P6), newest first. */
+  changeLog?: ChangeEntry[];
 }
 export interface SalesBrief {
   proposing?: string;

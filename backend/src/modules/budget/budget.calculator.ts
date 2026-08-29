@@ -16,6 +16,12 @@ export interface CalcLine {
   optional: boolean;
 }
 
+/** A purchased item: cost = qty x unitPriceCents (no man-days involved). */
+export interface CalcEquipment {
+  qty: number;
+  unitPriceCents: number;
+}
+
 export interface CalcAdjustments {
   contingencyPct: number;
   discountPct: number;
@@ -25,6 +31,8 @@ export interface CalcAdjustments {
 export interface CalcResult {
   lineCostsCents: number[];
   byDepartmentCents: Record<string, number>;
+  /** Purchased-items subtotal, already included in subtotalCents. */
+  equipmentCents: number;
   subtotalCents: number;
   contingencyCents: number;
   discountCents: number;
@@ -38,6 +46,7 @@ export function computeBudget(
   lines: CalcLine[],
   adj: CalcAdjustments,
   includeOptional = false,
+  equipment: CalcEquipment[] = [],
 ): CalcResult {
   const lineCostsCents = lines.map((l) =>
     Math.round((Number(l.units) || 0) * (Number(l.days) || 0) * (Number(l.dayRateCents) || 0)),
@@ -51,6 +60,13 @@ export function computeBudget(
     subtotal += lineCostsCents[i];
   });
 
+  // Purchased items sit in the same subtotal as resources, so every downstream total already covers them.
+  const equipmentCents = equipment.reduce(
+    (sum, e) => sum + Math.round((Number(e.qty) || 0) * (Number(e.unitPriceCents) || 0)),
+    0,
+  );
+  subtotal += equipmentCents;
+
   const contingency = Math.round((subtotal * clampPct(adj.contingencyPct)) / 100);
   const discount = Math.round((subtotal * clampPct(adj.discountPct, 100)) / 100);
   const afterDiscount = subtotal + contingency - discount;
@@ -60,6 +76,7 @@ export function computeBudget(
   return {
     lineCostsCents,
     byDepartmentCents,
+    equipmentCents,
     subtotalCents: subtotal,
     contingencyCents: contingency,
     discountCents: discount,

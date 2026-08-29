@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { getProposal, getLead, getBudget } from '~/services/httpServices/presentService';
 import { ProposalDocument, buildPricing } from '~/components/ProposalDocument';
+import { ProposalRenderer } from '~/components/proposal/ProposalRenderer';
+import type { ProposalDocument as PDoc } from '~/types/proposal';
 import { formatMoneyWhole } from '~/enums/currency.enum';
 import { apiErrorMessage } from '~/services/httpMethods/interceptors';
 import type { Lead } from '~/types/lead';
@@ -27,10 +29,14 @@ export default function ClientProposalView() {
   // Hero "Investment" fallback → whole units (client headline figure).
   const money = lead ? formatMoneyWhole(lead.valueCents, budgetCurrency) : undefined;
   const hasSections = Object.keys(data.sections || {}).length > 0;
+  // New engine stores a ProposalDocument (blocks[]); render it with the locked Design-2 renderer.
+  const hasBlocks = Array.isArray((data.sections as unknown as { blocks?: unknown } | undefined)?.blocks);
 
   return (
-    <main data-testid="client-proposal-view" className="mx-auto max-w-[1180px] p-6 sm:p-10">
-      {hasSections ? (
+    <main data-testid="client-proposal-view" className={hasBlocks ? '' : 'mx-auto max-w-[1180px] p-6 sm:p-10'}>
+      {hasBlocks ? (
+        <ProposalRenderer doc={data.sections as unknown as PDoc} />
+      ) : hasSections ? (
         <ProposalDocument
           title={lead?.title ?? 'Proposal'}
           company={lead?.company ?? '—'}

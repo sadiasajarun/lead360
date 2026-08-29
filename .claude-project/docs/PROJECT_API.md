@@ -30,6 +30,8 @@ REST, prefix `/api`. Responses wrapped by `TransformInterceptor` → `{ success,
 | PATCH | /leads/:id/readiness/queries/:queryId | sales_pm, admin | confirm/answer or reopen a client query; recomputes readiness |
 | POST | /leads/:id/generate | sales_pm, admin | generate/regenerate proposal+budget (RAG-grounded; optional `{prompt}` steers a revision). **400 when the brief is empty** (no uploaded file and no pasted text) — no AI spend on an empty brief |
 | POST | /leads/:id/generate/budget | sales_pm, admin | regenerate budget resource plan only (optional `{prompt}`) |
+| GET | /leads/:id/generate/usage | sales_pm, admin | all-in AI token usage for THIS lead: `{ tokens, tokensIn, tokensOut, costUsd, runs, byKind[] }` (proposal + budget + brief + pitch + every regen). Powers the usage line under the regenerate box |
+| GET | /generations/stats | sales_pm, admin | AI token-usage & cost dashboard (all leads): `{ lifetime, avgPerProposal, today, yesterday }` each with `{ tokens, costUsd }`. Powers the Leads-page stat cards |
 | POST | /leads/:id/submit | sales_pm | send for approval: `generated` **or** `rejected` → `pending_approval` (sets `submitted_at`). **Admin caller → 400** (an admin has nobody to submit to). Invalid status → 400 |
 | POST | /leads/:id/mark-sent | sales_pm, admin | `approved → sent` (either role). **Admin, own `generated` lead → sent directly** (still emits `lead.approved`; `submitted_at` stays NULL). Admin marking another rep's `generated` draft, or any other invalid status → 400 |
 | POST | /leads/:id/mark-locked | sales_pm, admin | `sent → locked` (auto-create Project); invalid status → 400 |

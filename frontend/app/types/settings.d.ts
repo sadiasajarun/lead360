@@ -11,6 +11,9 @@ export interface BrandingSettings {
   footerText: string;
   /** Storage key of the uploaded custom logo, or null when the bundled Riseup mark is in use. */
   logoKey: string | null;
+  /** Default Riseup signatory on the proposal sign-off ("For Riseup Labs") — used when the brief names none. */
+  signatoryName: string;
+  signatoryTitle: string;
 }
 
 export interface ApprovalsSettings {

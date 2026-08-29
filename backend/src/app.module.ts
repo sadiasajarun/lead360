@@ -22,12 +22,16 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
 import { AiModule } from './infrastructure/ai/ai.module';
 import { StorageModule } from './infrastructure/s3/storage.module';
 import { PdfModule } from './infrastructure/pdf/pdf.module';
+import { DiagramModule } from './infrastructure/diagram/diagram.module';
 import { KbModule } from './modules/kb/kb.module';
 import { GenerationModule } from './modules/generation/generation.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { DeliverablesModule } from './modules/deliverables/deliverables.module';
 import { RateCardModule } from './modules/rate-card/rate-card.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
+import { EstimateModule } from './modules/estimate/estimate.module';
+import { ClientFeedbackModule } from './modules/client-feedback/client-feedback.module';
+import { ProjectCaseModule } from './modules/project-case/project-case.module';
 
 @Module({
   imports: [
@@ -48,6 +52,17 @@ import { PortfolioModule } from './modules/portfolio/portfolio.module';
         // Prod: migrations only. Local dev without authored migrations can auto-create the
         // schema from entities by setting DATABASE_SYNCHRONIZE=true (never set this in prod).
         synchronize: cfg.get('DATABASE_SYNCHRONIZE') === 'true',
+        // Fail a bad connection fast instead of hanging the request: without a connect timeout a
+        // single unreachable address stalls the whole query until the OS gives up (~2 min).
+        connectTimeoutMS: 15000,
+        extra: {
+          connectionTimeoutMillis: 15000,
+          // Neon drops idle connections; recycle ours first and keep the sockets warm so a pooled
+          // connection is not found dead mid-request.
+          idleTimeoutMillis: 30000,
+          keepAlive: true,
+          max: 10,
+        },
       }),
     }),
     UserModule,
@@ -65,12 +80,16 @@ import { PortfolioModule } from './modules/portfolio/portfolio.module';
     AiModule,
     StorageModule,
     PdfModule,
+    DiagramModule,
     KbModule,
     GenerationModule,
     AnalyticsModule,
     DeliverablesModule,
     RateCardModule,
     PortfolioModule,
+    EstimateModule,
+    ClientFeedbackModule,
+    ProjectCaseModule,
   ],
   controllers: [AppController],
   providers: [

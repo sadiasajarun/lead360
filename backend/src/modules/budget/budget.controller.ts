@@ -2,23 +2,31 @@ import {
   Body,
   Controller,
   Get,
-  Header,
   Param,
   ParseUUIDPipe,
+  Post,
   Query,
   Put,
   StreamableFile,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { UserRole } from '../../common/enums';
 import { BudgetService } from './budget.service';
-import { UpdateBudgetDto } from './dtos/budget.dtos';
+import { CommitVendorQuoteDto, UpdateBudgetDto } from './dtos/budget.dtos';
+import { VendorQuoteService } from './vendor-quote.service';
+import type { ExtractableFile } from '../../common/utils/extract-text.util';
 
 @ApiTags('budgets')
 @Controller('leads/:id/budget')
 export class BudgetController {
-  constructor(private readonly budgets: BudgetService) {}
+  constructor(
+    private readonly budgets: BudgetService,
+    private readonly quotes: VendorQuoteService,
+  ) {}
 
   @Get()
   @Roles(UserRole.SALES_PM, UserRole.ADMIN)
@@ -40,10 +48,37 @@ export class BudgetController {
 
   @Get('xlsx')
   @Roles(UserRole.SALES_PM, UserRole.ADMIN)
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-  @Header('Content-Disposition', 'attachment; filename="budget.xlsx"')
   @ApiOperation({ summary: 'Export the budget as .xlsx' })
   async xlsx(@Param('id', ParseUUIDPipe) id: string): Promise<StreamableFile> {
-    return new StreamableFile(await this.budgets.exportXlsx(id));
+    // Named per lead ("<Project name>_budget.xlsx"), so the disposition is set per request rather than
+    // by a static @Header — a rep downloading several budgets gets distinguishable files.
+    const [buffer, filename] = await Promise.all([this.budgets.exportXlsx(id), this.budgets.exportFilename(id)]);
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      disposition: `attachment; filename="${encodeURIComponent(filename)}"`,
+    });
+  }
+
+  @Post('equipment/import/preview')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 25 * 1024 * 1024 } }))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Read a supplier quotation (or typed description) into equipment rows — writes NOTHING' })
+  @ApiResponse({ status: 201, description: 'Preview: rows, currency, install window, warranty, totals' })
+  @ApiResponse({ status: 400, description: 'Nothing to read, or AI not configured' })
+  previewQuote(
+    @Param('id', ParseUUIDPipe) _id: string,
+    @UploadedFile() file?: ExtractableFile,
+    @Body('text') text?: string,
+  ) {
+    return this.quotes.preview({ file, text });
+  }
+
+  @Post('equipment/import/commit')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Apply the reviewed equipment rows + install window + warranty to the budget' })
+  @ApiResponse({ status: 201, description: 'Budget updated' })
+  commitQuote(@Param('id', ParseUUIDPipe) id: string, @Body() dto: CommitVendorQuoteDto) {
+    return this.quotes.commit(id, dto);
   }
 }

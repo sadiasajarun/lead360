@@ -2,22 +2,28 @@ import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
 import { useNavigate } from 'react-router';
 import {
-  LogOut, Check, ArrowRight, ArrowLeft, UploadCloud, FileText, X, FlaskConical,
-  Sparkles, Globe, MapPin, Megaphone, Palette, CircleCheck, Loader2, Copy, HelpCircle,
+  LogOut, Check, ArrowRight, ArrowLeft, UploadCloud, FileText, X,
+  Sparkles, Globe, MapPin, Megaphone, Palette, CircleCheck, Loader2, Image as ImageIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import {
-  createLeadFull, upsertRequirement, uploadBriefAttachment, updateLead, fetchReadiness, resolveQuery, generate,
+  createLeadFull, upsertRequirement, uploadBriefAttachment, uploadClientLogo, updateLead,
+  fetchReadiness, generate,
 } from '~/services/httpServices/leadDetailService';
-import type { ClientQuery, Readiness } from '~/services/httpServices/leadDetailService';
-import { TemplateType } from '~/enums/lead.enum';
+import type { Readiness } from '~/services/httpServices/leadDetailService';
+import { ReadinessPanel } from '~/components/ReadinessPanel';
+import { TemplateType, ProjectType, Audience, PROJECT_TYPE_LABEL, AUDIENCE_LABEL } from '~/enums/lead.enum';
 import { CURRENCIES, defaultCurrencyForTemplate } from '~/enums/currency.enum';
+import { previewVendorQuote, commitVendorQuote } from '~/services/httpServices/budgetService';
+import type { VendorQuotePreview } from '~/types/budget';
 import { apiErrorMessage } from '~/services/httpMethods/interceptors';
+
 import { useRoleBase } from '~/hooks/useRoleBase';
 
-const STEPS = ['Info', 'Requirement', 'Readiness', 'Template', 'Generate'];
-const ACCEPT = '.pdf,.doc,.docx,.txt,.md';
+const STEPS = ['Client & Brand', 'Requirement', 'Template & Setup', 'Readiness', 'Review & Generate'];
+const ACCEPT = '.pdf,.doc,.docx,.xlsx,.pptx,.txt,.md';
 const MAX_BYTES = 25 * 1024 * 1024;
+const LOGO_MAX = 2 * 1024 * 1024;
 
 type Picked = { file: File; status: 'uploading' | 'parsed' | 'error' };
 const fmtSize = (b: number) => (b < 1024 * 1024 ? `${Math.round(b / 1024)} KB` : `${(b / 1048576).toFixed(1)} MB`);
@@ -29,7 +35,11 @@ const TEMPLATES: { key: TemplateType; name: string; icon: LucideIcon; desc: stri
   { key: TemplateType.DESIGN_PORTFOLIO, name: 'Design Portfolio', icon: Palette, desc: 'Visual-led showcase for branding & design work.', docs: 'Combined proposal + budget (one document)', combined: true },
 ];
 
-const GEN_STAGES = ['Retrieving similar Riseup projects', 'Drafting sections', 'Building budget', 'Rendering'];
+const PROJECT_TYPES = Object.values(ProjectType);
+const AUDIENCES = Object.values(Audience);
+
+const GEN_STAGES = ['Retrieving similar Riseup projects', 'Deciding stack, structure & budget', 'Composing sections', 'Rendering diagrams'];
+const SCORE_STAGES = ['Reading the brief & attachments', 'Comparing against past Riseup proposals', 'Scoring completeness', 'Pulling the unknowns that change the proposal'];
 
 export default function NewLead() {
   const navigate = useNavigate();
@@ -40,39 +50,70 @@ export default function NewLead() {
   const [err, setErr] = useState('');
 
   const [info, setInfo] = useState({ company: '', contactName: '', contactEmail: '', website: '', title: '' });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>('');
   const [files, setFiles] = useState<Picked[]>([]);
   const [brief, setBrief] = useState('');
   const [readiness, setReadiness] = useState<Readiness | null>(null);
   const [template, setTemplate] = useState<TemplateType>(TemplateType.GLOBAL);
-  // Budget currency (step 4). Default follows the template (Local → BDT, else USD) until the user
-  // manually chooses — after that we never stomp their choice on template change.
+  const [projectType, setProjectType] = useState<ProjectType>(ProjectType.NEW_BUILD);
+  const [audience, setAudience] = useState<Audience>(Audience.MIXED);
+  const [projectContext, setProjectContext] = useState('');
+  // Procurement (optional): hardware and/or a third-party service. Ticking either reveals the quotation
+  // upload + an instruction box; the quotation is INTERNAL and never joins the client-facing brief.
+  const [hardwareProject, setHardwareProject] = useState(false);
+  const [thirdPartyService, setThirdPartyService] = useState(false);
+  const [procurementNotes, setProcurementNotes] = useState('');
+  const [quote, setQuote] = useState<VendorQuotePreview | null>(null);
+  const [quoteBusy, setQuoteBusy] = useState(false);
+  const [quoteMsg, setQuoteMsg] = useState('');
+  const quoteInput = useRef<HTMLInputElement>(null);
+  // Budget currency (Template & Setup step). Default follows the template (Local → BDT, else USD) until
+  // the user manually chooses — after that we never stomp their choice on template change.
   const [currency, setCurrency] = useState<string>(defaultCurrencyForTemplate(TemplateType.GLOBAL));
   const [currencyTouched, setCurrencyTouched] = useState(false);
   const [genStage, setGenStage] = useState(0);
   const [genDone, setGenDone] = useState(false);
+  const [scoreStage, setScoreStage] = useState(0);
   const fileInput = useRef<HTMLInputElement>(null);
+  const logoInput = useRef<HTMLInputElement>(null);
 
-  // Keep the currency default in step with the chosen template — but only while the user hasn't
-  // overridden it themselves.
+  // Keep the currency default in step with the chosen template — but only while the user hasn't overridden it.
   useEffect(() => {
     if (!currencyTouched) setCurrency(defaultCurrencyForTemplate(template));
   }, [template, currencyTouched]);
 
-  // ---- Step 1: create the lead (default template; updated at step 4) ----
+  // ---- Step 1: Client & Brand — create the lead (default template; set in step 3), then upload logo ----
+  const pickLogo = (f: File | undefined) => {
+    if (!f) return;
+    if (!f.type.startsWith('image/')) { setErr('Logo must be an image (PNG, JPG or SVG).'); return; }
+    if (f.size > LOGO_MAX) { setErr('Logo exceeds 2 MB.'); return; }
+    setErr('');
+    setLogoFile(f);
+    setLogoPreview(URL.createObjectURL(f));
+  };
+
   const submitInfo = async () => {
     if (!info.company.trim()) { setErr('Client company is required.'); return; }
     setBusy(true); setErr('');
     try {
-      const lead = await createLeadFull({
+      const fields = {
         title: info.title.trim() || info.company.trim(),
         company: info.company.trim(),
         contactName: info.contactName || undefined,
         contactEmail: info.contactEmail || undefined,
         website: info.website || undefined,
-        template,
-        budgetCurrency: currency,
-      });
-      setLeadId(lead.id);
+      };
+      let lid = leadId;
+      if (lid) {
+        // Re-entry (came Back to step 1): persist any edits instead of dropping them.
+        await updateLead(lid, fields);
+      } else {
+        const lead = await createLeadFull({ ...fields, template, budgetCurrency: currency });
+        lid = lead.id;
+        setLeadId(lid);
+      }
+      if (logoFile) await uploadClientLogo(lid, logoFile).catch(() => undefined);
       setStep(2);
     } catch (e) { setErr(apiErrorMessage(e)); } finally { setBusy(false); }
   };
@@ -96,8 +137,7 @@ export default function NewLead() {
   const onPick = (e: ChangeEvent<HTMLInputElement>) => { addFiles(Array.from(e.target.files ?? [])); e.target.value = ''; };
   const onDrop = (e: DragEvent) => { e.preventDefault(); addFiles(Array.from(e.dataTransfer.files ?? [])); };
 
-  // A lead cannot proceed without a brief: readiness, the proposal and the budget are all derived
-  // from it, so an empty requirement would generate a document about nothing.
+  // A lead cannot proceed without a brief: readiness, the proposal and the budget are all derived from it.
   const hasRequirement = brief.trim().length > 0 || files.length > 0;
 
   const submitRequirement = async () => {
@@ -112,33 +152,76 @@ export default function NewLead() {
     } catch (e) { setErr(apiErrorMessage(e)); } finally { setBusy(false); }
   };
 
-  // ---- Step 3: readiness ----
-  useEffect(() => {
-    if (step === 3 && leadId) {
-      setReadiness(null);
-      fetchReadiness(leadId).then(setReadiness).catch((e) => setErr(apiErrorMessage(e)));
-    }
-  }, [step, leadId]);
+  // ---- Step 3: Template & Setup — persist template, currency, project context ----
+  // Read the quotation on pick (writes nothing). It is only applied to the budget on Continue, so a rep
+  // who attaches then unticks the box leaves no orphaned hardware on the lead.
+  const onQuote = async (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; e.target.value = '';
+    if (!f) return;
+    setQuoteBusy(true); setQuoteMsg('');
+    try {
+      const p = await previewVendorQuote(leadId, { file: f });
+      setQuote(p);
+      setQuoteMsg(p.rows.length ? `Read ${p.rows.length} item(s) from ${f.name}.` : `Nothing priced found in ${f.name}.`);
+    } catch (err) { setQuoteMsg(apiErrorMessage(err)); } finally { setQuoteBusy(false); }
+  };
 
-  // ---- Step 4: template ----
   const submitTemplate = async () => {
     setBusy(true); setErr('');
     try {
-      await updateLead(leadId, { template, budgetCurrency: currency });
-      setStep(5);
+      await updateLead(leadId, {
+        template,
+        budgetCurrency: currency,
+        projectType,
+        audience,
+        projectContext: projectContext.trim() || undefined,
+        hardwareProject,
+        thirdPartyService,
+        procurementNotes: procurementNotes.trim() || undefined,
+      });
+      // Apply the reviewed hardware only when the box is still ticked.
+      if (hardwareProject || thirdPartyService) {
+        if (quote?.rows.length) {
+          await commitVendorQuote(leadId, {
+            rows: quote.rows, installWeeks: quote.installWeeks, warranty: quote.warranty, vatCents: quote.vatCents,
+          }).catch(() => undefined);
+        } else if (procurementNotes.trim()) {
+          // No file — read the typed description the same way, then apply it.
+          const p = await previewVendorQuote(leadId, { text: procurementNotes.trim() }).catch(() => null);
+          if (p?.rows.length) {
+            await commitVendorQuote(leadId, { rows: p.rows, installWeeks: p.installWeeks, warranty: p.warranty, vatCents: p.vatCents }).catch(() => undefined);
+          }
+        }
+      }
+      setStep(4);
     } catch (e) { setErr(apiErrorMessage(e)); } finally { setBusy(false); }
   };
+
+  // ---- Step 4: readiness (rubric adapts to the brief + project context saved in step 3) ----
+  useEffect(() => {
+    if (step !== 4 || !leadId) return;
+    let alive = true;
+    setReadiness(null); setScoreStage(0); setErr('');
+    // Advance the scoring stages visually while the real request runs (stops short of the last stage
+    // until the result lands, so the loader never "completes" before the data does).
+    const timer = setInterval(() => setScoreStage((s) => (s < SCORE_STAGES.length - 1 ? s + 1 : s)), 800);
+    fetchReadiness(leadId)
+      .then((r) => { if (alive) { setScoreStage(SCORE_STAGES.length); setReadiness(r); } })
+      .catch((e) => { if (alive) setErr(apiErrorMessage(e)); });
+    return () => { alive = false; clearInterval(timer); };
+  }, [step, leadId]);
 
   // ---- Step 5: generate (visual staged progress + real API call) ----
   useEffect(() => {
     if (step !== 5) return;
     let alive = true;
+    let done: ReturnType<typeof setTimeout> | undefined;
     setGenStage(0); setGenDone(false); setErr('');
-    const timer = setInterval(() => setGenStage((s) => (s < GEN_STAGES.length - 1 ? s + 1 : s)), 700);
+    const timer = setInterval(() => setGenStage((s) => (s < GEN_STAGES.length - 1 ? s + 1 : s)), 900);
     generate(leadId)
       .catch(() => undefined) // 503 without AI key — lead still exists; proceed to review
-      .finally(() => { if (alive) { setTimeout(() => { setGenStage(GEN_STAGES.length); setGenDone(true); }, 900); } });
-    return () => { alive = false; clearInterval(timer); };
+      .finally(() => { if (alive) { done = setTimeout(() => { setGenStage(GEN_STAGES.length); setGenDone(true); }, 900); } });
+    return () => { alive = false; clearInterval(timer); if (done) clearTimeout(done); };
   }, [step, leadId]);
 
   // ---------- shared UI ----------
@@ -189,13 +272,36 @@ export default function NewLead() {
       <div className="w-full max-w-[760px]">
         {err && <div data-testid="wizard-error" className="mb-4 rounded-md border border-[#F0D5D2] bg-[#FDF3F2] px-3 py-2 text-[13px] text-[#B42318]">{err}</div>}
 
-        {/* STEP 1 — INFO */}
+        {/* STEP 1 — CLIENT & BRAND */}
         {step === 1 && (
           <div>
-            <h1 className="mb-1.5 text-[22px] font-semibold">Lead information</h1>
-            <p className="mb-8 text-sm text-[#6B6660]">Tell us who this proposal is for. We use this to personalise the draft.</p>
+            <h1 className="mb-1.5 text-[22px] font-semibold">Client &amp; brand</h1>
+            <p className="mb-8 text-sm text-[#6B6660]">Tell us who this proposal is for. The logo appears on the proposal cover.</p>
             <div className="mb-5"><label className={labelCls}>Client company</label>
               <input data-testid="nl-company" className={inputCls} placeholder="e.g. ATEC Group" value={info.company} onChange={(e) => setInfo({ ...info, company: e.target.value })} /></div>
+
+            {/* Brand logo */}
+            <div className="mb-5">
+              <label className={labelCls}>Client logo <span className="font-normal text-[#9A948E]">— optional</span></label>
+              <div className="flex items-center gap-4">
+                <div className="grid h-[72px] w-[72px] shrink-0 place-items-center overflow-hidden rounded-lg border border-[#E8E6E3] bg-[#F9F8F7]">
+                  {logoPreview ? <img src={logoPreview} alt="Client logo" className="max-h-full max-w-full object-contain" /> : <ImageIcon size={22} className="text-[#B9B4AE]" />}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <button type="button" data-testid="nl-logo-pick" onClick={() => logoInput.current?.click()} className="inline-flex h-9 w-fit items-center gap-1.5 rounded-md border border-[#D4D1CC] bg-white px-3 text-[13px] font-medium hover:bg-[#F4F4F2]">
+                    <UploadCloud size={15} /> {logoFile ? 'Change logo' : 'Upload logo'}
+                  </button>
+                  {logoFile && (
+                    <span className="flex items-center gap-2 text-xs text-[#9A948E]">{logoFile.name} · {fmtSize(logoFile.size)}
+                      <button type="button" data-testid="nl-logo-remove" onClick={() => { setLogoFile(null); setLogoPreview(''); }} className="text-[#9A948E] hover:text-[#0F0F0F]"><X size={13} /></button>
+                    </span>
+                  )}
+                  <span className="text-xs text-[#9A948E]">PNG, JPG or SVG — up to 2 MB.</span>
+                </div>
+                <input ref={logoInput} type="file" accept="image/*" onChange={(e) => { pickLogo(e.target.files?.[0]); e.target.value = ''; }} className="hidden" data-testid="nl-logo-input" />
+              </div>
+            </div>
+
             <div className="mb-5 grid gap-5 sm:grid-cols-2">
               <div><label className={labelCls}>Contact name</label><input data-testid="nl-contact" className={inputCls} placeholder="e.g. Rehan Ahmed" value={info.contactName} onChange={(e) => setInfo({ ...info, contactName: e.target.value })} /></div>
               <div><label className={labelCls}>Contact email</label><input data-testid="nl-email" className={inputCls} placeholder="name@company.com" value={info.contactEmail} onChange={(e) => setInfo({ ...info, contactEmail: e.target.value })} /></div>
@@ -220,7 +326,7 @@ export default function NewLead() {
               <span className="mb-3 grid h-11 w-11 place-items-center rounded-lg bg-[#F4F4F2] text-[#6B6660]"><UploadCloud size={22} /></span>
               <div className="text-[15px] font-semibold">Drag &amp; drop files here</div>
               <div className="mt-0.5 text-[13px] text-[#6B6660]">or <span className="font-medium text-[#EA5400]">browse from your computer</span></div>
-              <div className="mt-2 text-xs text-[#9A948E]">PDF · DOCX · TXT · MD — up to 25 MB each</div>
+              <div className="mt-2 text-xs text-[#9A948E]">PDF · DOCX · XLSX · PPTX · TXT · MD — up to 25 MB each</div>
               <input ref={fileInput} type="file" accept={ACCEPT} multiple onChange={onPick} className="hidden" data-testid="nl-file-input" />
             </div>
             {files.length > 0 && (
@@ -241,8 +347,8 @@ export default function NewLead() {
               </div>
             )}
             <div className="my-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wide text-[#9A948E]"><span className="h-px flex-1 bg-[#E8E6E3]" /> or paste text <span className="h-px flex-1 bg-[#E8E6E3]" /></div>
-            <label className={labelCls}>Paste requirement text</label>
-            <textarea data-testid="nl-brief" value={brief} onChange={(e) => setBrief(e.target.value)} placeholder="Paste the client requirement, RFP text, or discovery notes here…" className="min-h-[150px] w-full rounded-md border border-[#D4D1CC] p-3 text-sm outline-none focus:border-[#EA5400]" />
+            <label className={labelCls}>Additional requirements <span className="font-normal normal-case text-[#9A948E]">— top priority; shapes the proposal (the uploaded document adds the detail)</span></label>
+            <textarea data-testid="nl-brief" value={brief} onChange={(e) => setBrief(e.target.value)} placeholder="Type the key requirements / priorities here. These take priority and shape the proposal; an uploaded document fills in the details…" className="min-h-[150px] w-full rounded-md border border-[#D4D1CC] p-3 text-sm outline-none focus:border-[#EA5400]" />
             {!hasRequirement && (
               <p data-testid="wizard-requirement-hint" className="mt-4 text-[13px] text-[#9A948E]">
                 Upload a document or paste the requirement text to continue.
@@ -252,21 +358,11 @@ export default function NewLead() {
           </div>
         )}
 
-        {/* STEP 3 — READINESS */}
+        {/* STEP 3 — TEMPLATE & SETUP */}
         {step === 3 && (
           <div>
-            <h1 className="mb-1.5 text-[22px] font-semibold">Requirement readiness</h1>
-            <p className="mb-8 text-sm text-[#6B6660]">We scored how complete the brief is. Resolve the open queries to strengthen the proposal, or continue.</p>
-            {!readiness ? <div className="text-sm text-[#6B6660]">Scoring…</div> : <ReadinessCard leadId={leadId} readiness={readiness} onChange={setReadiness} />}
-            <Actions onBack={() => setStep(2)} onNext={() => setStep(4)} />
-          </div>
-        )}
-
-        {/* STEP 4 — TEMPLATE */}
-        {step === 4 && (
-          <div>
-            <h1 className="mb-1.5 text-[22px] font-semibold">Choose a template</h1>
-            <p className="mb-8 text-sm text-[#6B6660]">This sets the proposal structure and which documents we produce. You can change it later.</p>
+            <h1 className="mb-1.5 text-[22px] font-semibold">Template &amp; setup</h1>
+            <p className="mb-8 text-sm text-[#6B6660]">Choose the template and tell us how to frame the proposal. This shapes the sections and tone — the design stays consistent.</p>
             <div className="grid gap-4 sm:grid-cols-2">
               {TEMPLATES.map((t) => {
                 const on = template === t.key;
@@ -285,26 +381,134 @@ export default function NewLead() {
               })}
             </div>
 
+            {/* Project context — framing + audience drive section framing/tone. */}
+            <div className="mt-7 grid gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="nl-project-type" className={labelCls}>Project framing</label>
+                <select id="nl-project-type" data-testid="nl-project-type" value={projectType} onChange={(e) => setProjectType(e.target.value as ProjectType)} className={inputCls}>
+                  {PROJECT_TYPES.map((p) => <option key={p} value={p}>{PROJECT_TYPE_LABEL[p]}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="nl-audience" className={labelCls}>Audience</label>
+                <select id="nl-audience" data-testid="nl-audience" value={audience} onChange={(e) => setAudience(e.target.value as Audience)} className={inputCls}>
+                  {AUDIENCES.map((a) => <option key={a} value={a}>{AUDIENCE_LABEL[a]}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="mt-5">
+              <label htmlFor="nl-context" className={labelCls}>Project context <span className="font-normal text-[#9A948E]">— optional</span></label>
+              <textarea id="nl-context" data-testid="nl-context" value={projectContext} onChange={(e) => setProjectContext(e.target.value)}
+                placeholder="Anything that shapes the proposal but isn't in the brief — existing stack, constraints, deadline, competitive context…"
+                className="min-h-[90px] w-full rounded-md border border-[#D4D1CC] p-3 text-sm outline-none focus:border-[#EA5400]" />
+            </div>
+
+            {/* Procurement — optional. Either box reveals the quotation upload + instruction note. */}
+            <div className="mt-5 rounded-xl border border-[#E8E6E3] bg-[#FBFAF9] p-4">
+              <div className="flex flex-wrap gap-x-8 gap-y-2.5">
+                <label className="flex cursor-pointer items-center gap-2.5 text-sm">
+                  <input type="checkbox" data-testid="nl-hardware-project" checked={hardwareProject}
+                    onChange={(e) => setHardwareProject(e.target.checked)} className="h-4 w-4 accent-[#EA5400]" />
+                  Hardware is part of this project
+                </label>
+                <label className="flex cursor-pointer items-center gap-2.5 text-sm">
+                  <input type="checkbox" data-testid="nl-third-party" checked={thirdPartyService}
+                    onChange={(e) => setThirdPartyService(e.target.checked)} className="h-4 w-4 accent-[#EA5400]" />
+                  A third-party service is involved
+                </label>
+              </div>
+
+              {(hardwareProject || thirdPartyService) && (
+                <div className="mt-4 border-t border-[#E8E6E3] pt-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button type="button" data-testid="nl-quote-upload" disabled={quoteBusy}
+                      onClick={() => quoteInput.current?.click()}
+                      className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-[#D4D1CC] bg-white px-3 text-[13px] font-medium hover:bg-[#F4F4F2] disabled:opacity-60">
+                      {quoteBusy ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />} Attach supplier quotation
+                    </button>
+                    <input ref={quoteInput} type="file" accept={ACCEPT} className="hidden" onChange={onQuote} />
+                    {quoteMsg && <span className="text-xs text-[#6B6660]">{quoteMsg}</span>}
+                  </div>
+
+                  {quote && quote.rows.length > 0 && (
+                    <div className="mt-3 overflow-hidden rounded-lg border border-[#E8E6E3] bg-white">
+                      <table className="w-full text-[13px]">
+                        <tbody>
+                          <tr className="bg-[#F9F8F7] text-[11px] uppercase tracking-wide text-[#9A948E]">
+                            <th className="px-3 py-1.5 text-left">Item</th><th className="px-3 text-right">Qty</th><th className="px-3 text-right">Unit price</th><th className="px-2" />
+                          </tr>
+                          {quote.rows.map((r, i) => (
+                            <tr key={i} className="border-t border-[#EFEDEA]">
+                              <td className="px-3 py-1.5">{r.item}{r.brand ? <span className="text-[#9A948E]"> · {r.brand}</span> : null}</td>
+                              <td className="px-3 text-right tabular-nums">{r.qty}</td>
+                              <td className="px-3 text-right tabular-nums">{Math.round(Number(r.unitPriceCents) / 100).toLocaleString()}</td>
+                              <td className="px-2 text-right">
+                                <button type="button" title="Remove" onClick={() => setQuote({ ...quote, rows: quote.rows.filter((_, j) => j !== i) })} className="text-[#B42318] hover:underline"><X size={13} /></button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#E8E6E3] bg-[#FBFAF9] px-3 py-2 text-xs text-[#6B6660]">
+                        <span><b>{quote.rows.length}</b> item(s){quote.currency ? ` · ${quote.currency}` : ''}</span>
+                        {quote.installWeeks ? <span>Install window <b>{quote.installWeeks} wk</b> — added to the schedule</span> : null}
+                        {quote.warranty ? <span>Warranty captured</span> : null}
+                      </div>
+                      {quote.warnings.map((w, i) => <p key={i} className="px-3 py-1 text-xs text-[#B7791F]">{w}</p>)}
+                    </div>
+                  )}
+
+                  <div className="mt-3">
+                    <label htmlFor="nl-procurement" className={labelCls}>Instructions <span className="font-normal text-[#9A948E]">— optional</span></label>
+                    <textarea id="nl-procurement" data-testid="nl-procurement" value={procurementNotes} onChange={(e) => setProcurementNotes(e.target.value)}
+                      placeholder="No quotation to hand? Describe it — e.g. 4 face/RFID terminals, 2.5 lakh all-in, one week to install on both sites."
+                      className="min-h-[70px] w-full rounded-md border border-[#D4D1CC] p-3 text-sm outline-none focus:border-[#EA5400]" />
+                    <p className="mt-1.5 text-xs text-[#9A948E]">Internal only. The supplier is never named in the proposal — hardware is presented as supplied and installed by Riseup Labs.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Budget currency — default follows the template; the user may override it. */}
-            <div className="mt-6 max-w-[420px]">
+            <div className="mt-5 max-w-[420px]">
               <label htmlFor="wizard-currency" className={labelCls}>Budget currency</label>
-              <select
-                id="wizard-currency"
-                data-testid="wizard-currency"
-                value={currency}
-                onChange={(e) => { setCurrency(e.target.value); setCurrencyTouched(true); }}
-                className={inputCls}
-              >
+              <select id="wizard-currency" data-testid="wizard-currency" value={currency}
+                onChange={(e) => { setCurrency(e.target.value); setCurrencyTouched(true); }} className={inputCls}>
                 {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
               </select>
               <p className="mt-1.5 text-xs text-[#9A948E]">Rates come from the head-cost card. USD and BDT are used as-authored; other currencies convert from USD at the live rate.</p>
             </div>
 
-            <Actions onBack={() => setStep(3)} onNext={submitTemplate} />
+            <Actions onBack={() => setStep(2)} onNext={submitTemplate} />
           </div>
         )}
 
-        {/* STEP 5 — GENERATE */}
+        {/* STEP 4 — READINESS */}
+        {step === 4 && (
+          <div>
+            <h1 className="mb-1.5 text-[22px] font-semibold">Requirement readiness</h1>
+            <p className="mb-8 text-sm text-[#6B6660]">We scored how complete the brief is and pulled the specific unknowns that would change the proposal. Answer what you can, then generate.</p>
+            {!readiness ? (
+              <div className="rounded-xl border border-[#E8E6E3] bg-white p-6" data-testid="readiness-scoring">
+                <div className="mb-5 h-1.5 w-full overflow-hidden rounded bg-[#F0EEEB]"><div className="h-full rounded bg-[#EA5400] transition-all" style={{ width: `${(scoreStage / SCORE_STAGES.length) * 100}%` }} /></div>
+                <div className="flex flex-col gap-4">
+                  {SCORE_STAGES.map((s, i) => (
+                    <div key={s} className="flex items-center gap-3 text-[15px]">
+                      {i < scoreStage ? <span className="grid h-6 w-6 place-items-center rounded-full bg-[#0E7C5A] text-white"><Check size={14} /></span>
+                        : i === scoreStage ? <Loader2 size={22} className="animate-spin text-[#EA5400]" />
+                        : <span className="h-6 w-6 rounded-full border border-[#E8E6E3]" />}
+                      <span className={i <= scoreStage ? 'font-medium text-[#0F0F0F]' : 'text-[#9A948E]'}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : <ReadinessPanel leadId={leadId} readiness={readiness} onChange={setReadiness} />}
+            {/* Don't let the user Generate before scoring returns. */}
+            <Actions onBack={() => setStep(3)} onNext={() => setStep(5)} nextLabel="Generate" nextDisabled={!readiness} />
+          </div>
+        )}
+
+        {/* STEP 5 — REVIEW & GENERATE */}
         {step === 5 && (
           <div className="mx-auto max-w-[720px]">
             {!genDone ? (
@@ -342,97 +546,3 @@ export default function NewLead() {
   );
 }
 
-// Readiness score + gauge + AI-generated client queries (data-driven from GET /leads/:id/readiness).
-function ReadinessCard({ leadId, readiness, onChange }: { leadId: string; readiness: Readiness; onChange: (r: Readiness) => void }) {
-  const { score, queries } = readiness;
-  const ready = score >= 80;
-  const confirmed = queries.filter((q) => q.status === 'confirmed').length;
-  return (
-    <div>
-      <div className="rounded-xl border border-[#E8E6E3] bg-white p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-end gap-1"><span className="text-[40px] font-bold leading-none">{score}</span><span className="mb-1 text-sm text-[#9A948E]">/ 100</span></div>
-            <span className={`mt-2 inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[13px] font-medium ${ready ? 'border-[#BFE3D4] bg-[#ECF7F2] text-[#0E7C5A]' : 'border-[#F3E2C8] bg-[#FDF6EA] text-[#B7791F]'}`}><FlaskConical size={14} /> {ready ? 'Ready to generate' : 'Below threshold'}</span>
-          </div>
-          <div className="text-right"><div className="text-[11px] font-semibold uppercase tracking-wide text-[#9A948E]">Readiness</div><div className="text-xs text-[#9A948E]">Recommended: 80+</div></div>
-        </div>
-        <div className="mt-5">
-          <div className="relative h-2 w-full rounded-full bg-gradient-to-r from-[#F2C4B8] via-[#F3E2C8] to-[#BFE3D4]">
-            <div className="absolute top-[-3px] h-[14px] w-[2px] rounded bg-[#0F0F0F]" style={{ left: `${Math.min(100, Math.max(0, score))}%` }} />
-          </div>
-          <div className="mt-1.5 flex justify-between text-[11px] font-medium"><span className="text-[#B42318]">AT RISK</span><span className="text-[#9A948E]">60</span><span className="text-[#B7791F]">FAIR</span><span className="text-[#0E7C5A]">READY</span></div>
-        </div>
-      </div>
-      <div className="mt-5">
-        <div className="mb-2.5 flex items-center justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9A948E]">Open client queries</span>
-          <span className="text-xs text-[#9A948E]">{queries.length ? `${confirmed} of ${queries.length} resolved` : '0 open'}</span>
-        </div>
-        {queries.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[#D4D1CC] p-6 text-center text-sm text-[#6B6660]">No open queries — the brief looks complete enough to generate.</div>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {queries.map((q) => <QueryRow key={q.id} leadId={leadId} query={q} onChange={onChange} />)}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// A single clarifying question with Copy-to-send + Mark-confirmed (with an optional client answer).
-function QueryRow({ leadId, query, onChange }: { leadId: string; query: ClientQuery; onChange: (r: Readiness) => void }) {
-  const [answer, setAnswer] = useState(query.answer ?? '');
-  const [copied, setCopied] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const confirmed = query.status === 'confirmed';
-
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(query.question); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* clipboard unavailable */ }
-  };
-  const resolve = async (status: 'open' | 'confirmed') => {
-    setBusy(true);
-    try { onChange(await resolveQuery(leadId, query.id, { status, answer: answer.trim() || undefined })); } finally { setBusy(false); }
-  };
-
-  return (
-    <div data-testid={`query-${query.id}`} className={`rounded-lg border p-4 ${confirmed ? 'border-[#BFE3D4] bg-[#F4FBF8]' : 'border-[#E8E6E3] bg-white'}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2.5">
-          {confirmed
-            ? <CircleCheck size={18} className="mt-0.5 shrink-0 text-[#0E7C5A]" />
-            : <HelpCircle size={18} className="mt-0.5 shrink-0 text-[#B7791F]" />}
-          <div>
-            <div className="text-[14px] font-semibold text-[#0F0F0F]">{query.question}</div>
-            {query.why && <div className="mt-0.5 text-[13px] text-[#6B6660]">{query.why}</div>}
-          </div>
-        </div>
-        <span className={`shrink-0 text-[12px] font-medium ${confirmed ? 'text-[#0E7C5A]' : 'text-[#9A948E]'}`}>{confirmed ? 'Confirmed' : 'Open'}</span>
-      </div>
-      <div className="mt-3">
-        <input
-          data-testid={`query-answer-${query.id}`}
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          placeholder="Client answer (optional)…"
-          className="h-9 w-full rounded-md border border-[#D4D1CC] px-3 text-[13px] outline-none focus:border-[#EA5400]"
-        />
-      </div>
-      <div className="mt-2.5 flex flex-wrap items-center gap-2">
-        <button type="button" data-testid={`query-copy-${query.id}`} onClick={copy} className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[#D4D1CC] bg-white px-2.5 text-[13px] font-medium hover:bg-[#F4F4F2]">
-          <Copy size={13} /> {copied ? 'Copied' : 'Copy to send'}
-        </button>
-        {confirmed ? (
-          <button type="button" data-testid={`query-reopen-${query.id}`} disabled={busy} onClick={() => resolve('open')} className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-[#6B6660] hover:bg-[#F4F4F2] disabled:opacity-50">
-            Reopen
-          </button>
-        ) : (
-          <button type="button" data-testid={`query-confirm-${query.id}`} disabled={busy} onClick={() => resolve('confirmed')} className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[#0E7C5A] px-2.5 text-[13px] font-medium text-white hover:bg-[#0B6448] disabled:opacity-50">
-            <Check size={13} /> Mark confirmed
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}

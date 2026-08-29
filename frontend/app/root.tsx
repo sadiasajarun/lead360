@@ -18,14 +18,18 @@ export const meta: MetaFunction = () => [{ title: 'Lead360 · Riseup Labs' }];
 
 export default function Root() {
   return (
-    <html lang="en">
+    // suppressHydrationWarning on <html>/<body>: browser extensions (e.g. Demoway, Grammarly) inject
+    // attributes like data-demoway-document-id onto these tags before React hydrates, which otherwise
+    // logs a benign "Extra attributes from the server" mismatch. Suppression is one level deep only —
+    // it ignores extension-added attributes on these two elements without hiding any real app mismatch.
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <Provider store={store}>
           <AuthProvider>
             <Outlet />

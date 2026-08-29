@@ -32,8 +32,18 @@ export class BudgetLine extends BaseEntity {
   @Column({ type: 'int', default: 1 })
   units: number;
 
-  @Column({ type: 'int', default: 0 })
+  // EFFECTIVE man-days (Workstream A) = hoursPerDay × workingDays / 8. Fractional, so `double precision`.
+  // Cost = units * days * dayRateCents (computed in code) — days already carries the part-time discount.
+  @Column({ type: 'double precision', default: 0 })
   days: number;
+
+  // Part-time inputs that DERIVE `days`. hoursPerDay = daily commitment (1..8; 8 = full-time),
+  // workingDays = calendar days the role is staffed (also the timeline proxy). Editable in the sheet.
+  @Column({ name: 'hours_per_day', type: 'double precision', default: 8 })
+  hoursPerDay: number;
+
+  @Column({ name: 'working_days', type: 'int', default: 0 })
+  workingDays: number;
 
   // Day rate in integer minor units (cents). Unit cost = units * days * dayRateCents (computed in code).
   @Column({ name: 'day_rate_cents', type: 'bigint', default: 0 })

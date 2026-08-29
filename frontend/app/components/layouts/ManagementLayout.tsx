@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router';
-import { LayoutGrid, CheckSquare, List, Folder, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutGrid, CheckSquare, List, Folder, Settings as SettingsIcon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '~/contexts/AuthContext';
 import GlobalSearch from '~/components/shared/GlobalSearch';
 import { useAvatarUrl } from '~/lib/avatar';
+import { useSidebarCollapsed } from '~/hooks/useSidebarCollapsed';
 
 // Every destination lives under the admin shell — an admin is never sent into the Sales layout.
 const NAV = [
@@ -17,15 +18,27 @@ const NAV = [
 export function ManagementLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const [menu, setMenu] = useState(false);
+  const [collapsed, toggleCollapsed] = useSidebarCollapsed();
   const initials = (user?.name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('');
   const avatar = useAvatarUrl(user?.avatarUrl);
 
   return (
     <div className="flex min-h-screen bg-[#FAFAF9] text-[#0F0F0F]">
-      <aside className="sticky top-0 flex h-screen w-[260px] flex-col bg-[#111111] p-3">
-        <div className="flex items-center gap-2 px-3 py-4">
-          <span className="grid h-6 w-6 place-items-center rounded-md bg-[#EA5400] text-xs font-bold text-white">L</span>
-          <span className="text-base font-semibold text-white">Lead360</span>
+      <aside className={`sticky top-0 flex h-screen flex-col bg-[#111111] p-3 transition-[width] duration-200 ${collapsed ? 'w-[68px]' : 'w-[260px]'}`}>
+        <div className={`flex items-center gap-2 py-4 ${collapsed ? 'flex-col px-0' : 'justify-between px-3'}`}>
+          <div className="flex items-center gap-2 overflow-hidden">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-[#EA5400] text-xs font-bold text-white">L</span>
+            {!collapsed && <span className="whitespace-nowrap text-base font-semibold text-white">Lead360</span>}
+          </div>
+          <button
+            data-testid="nav-collapse"
+            onClick={toggleCollapsed}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[#C4C0BB] hover:bg-[#1F1F1F] hover:text-white"
+          >
+            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
         </div>
         <nav className="flex flex-col gap-0.5">
           {NAV.map((n) => {
@@ -36,32 +49,35 @@ export function ManagementLayout({ children }: { children: ReactNode }) {
                 to={n.to}
                 end={n.to === '/admin/leads'} // don't stay active on /admin/leads/:id children
                 data-testid={`nav-${n.label.toLowerCase()}`}
+                title={collapsed ? n.label : undefined}
                 className={({ isActive }) =>
-                  `flex h-9 items-center gap-2.5 rounded-md px-3 text-sm font-medium ${
+                  `flex h-9 items-center rounded-md text-sm font-medium ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-3'} ${
                     isActive ? 'bg-[#1F1F1F] text-white' : 'text-[#C4C0BB] hover:bg-[#1F1F1F] hover:text-white'
                   }`
                 }
               >
-                <Icon size={16} />
-                {n.label}
+                <Icon size={16} className="shrink-0" />
+                {!collapsed && n.label}
               </NavLink>
             );
           })}
         </nav>
         <div className="relative mt-auto">
-          <button data-testid="acct-trigger" onClick={() => setMenu((m) => !m)} className="flex w-full items-center gap-2.5 border-t border-[#262626] px-3 py-2.5 text-left">
+          <button data-testid="acct-trigger" onClick={() => setMenu((m) => !m)} className={`flex w-full items-center border-t border-[#262626] py-2.5 text-left ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-3'}`} title={collapsed ? user?.name : undefined}>
             {avatar ? (
               <img data-testid="acct-avatar" src={avatar} alt="" className="h-[30px] w-[30px] shrink-0 rounded-full object-cover" />
             ) : (
-              <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[#2a2a2a] text-xs font-semibold text-white">{initials}</span>
+              <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-[#2a2a2a] text-xs font-semibold text-white">{initials}</span>
             )}
-            <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-medium text-white">{user?.name}</span>
-              <span className="block text-[11px] text-[#C4C0BB]">Admin</span>
-            </span>
+            {!collapsed && (
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-medium text-white">{user?.name}</span>
+                <span className="block text-[11px] text-[#C4C0BB]">Admin</span>
+              </span>
+            )}
           </button>
           {menu && (
-            <div data-testid="acct-pop" className="absolute bottom-[60px] left-3 right-3 rounded-[10px] border border-[#E8E6E3] bg-white p-1.5 shadow-xl">
+            <div data-testid="acct-pop" className={`absolute bottom-[60px] rounded-[10px] border border-[#E8E6E3] bg-white p-1.5 shadow-xl ${collapsed ? 'left-2 w-[220px]' : 'left-3 right-3'}`}>
               <div className="border-b border-[#E8E6E3] px-2.5 pb-2.5 pt-2">
                 <div className="text-[13.5px] font-semibold">{user?.name}</div>
                 <div className="text-xs text-[#6B6660]">{user?.email}</div>

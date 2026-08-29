@@ -11,6 +11,6 @@ export class BudgetRepository extends BaseRepository<Budget> {
   }
 
   findByLead(leadId: string) {
-    return this.qb.findOne({ where: { leadId }, relations: ['milestones', 'lines'] });
+    return this.qb.findOne({ where: { leadId }, relations: ['milestones', 'lines', 'equipment'] });
   }
 }

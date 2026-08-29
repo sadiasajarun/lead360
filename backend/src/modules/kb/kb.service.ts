@@ -6,6 +6,8 @@ import { StorageService } from '../../infrastructure/s3/storage.service';
 import { AiService, EMBED_DIM } from '../../infrastructure/ai/ai.service';
 import { extractText, ExtractableFile } from '../../common/utils/extract-text.util';
 import { IngestDto } from './dtos/kb.dtos';
+import { KbInsights } from './dtos/kb-insights.interface';
+import { EstimateService } from '../estimate/estimate.service';
 
 const MIME: Record<string, string> = {
   pdf: 'application/pdf',
@@ -48,6 +50,7 @@ export class KbService implements OnModuleInit {
     private readonly kb: KbRepository,
     private readonly storage: StorageService,
     private readonly ai: AiService,
+    private readonly estimate: EstimateService,
   ) {}
 
   // Ensure the pgvector extension + embedding column/index exist (idempotent). Non-fatal if the
@@ -117,22 +120,94 @@ export class KbService implements OnModuleInit {
     await this.storage.upload(key, file.buffer, file.mimetype);
 
     const text = await extractText(file);
+    const sec = normalizeSection(section);
+
+    // LLM pass: distill structured knowledge (content, technical, stack, resources, pricing,
+    // budgeting, timeline, diagram types, decisions). Best-effort — never blocks the upload.
+    const insights = await this.extractInsights(text);
+
     const doc = await this.kb.saveDoc({
       title: name,
       category,
       template: category,
       sourcePath: key,
       meta: {
-        section: normalizeSection(section),
+        section: sec,
         fileType: ext,
         storageKey: key,
         source: 'Uploaded',
         docDate: new Date().toISOString(), // manual addition -> added-on date
         owner: ownerName || 'Riseup Labs',
+        ...(insights ? { insights } : {}),
       },
     });
-    const { chunksAdded, embedded } = await this.indexText(doc.id, text);
-    return { id: doc.id, downloadable: true, parsed: text.length > 0, chunksAdded, embedded };
+
+    // Embed the distilled insight block as an early, high-signal chunk, then the raw text.
+    const enriched = insights ? `${this.synthesizeInsightText(name, insights)}\n\n${text}` : text;
+    const { chunksAdded, embedded } = await this.indexText(doc.id, enriched);
+
+    // Priced sections (Proposal/Budget) also enrich the budget-first historical band immediately.
+    if (sec === 'Proposal' || sec === 'Budget') {
+      await this.estimate.mineFromText(category, name, text, sec).catch((e) => this.logger.warn(`Band mining skipped: ${String(e)}`));
+    }
+
+    return { id: doc.id, downloadable: true, parsed: text.length > 0, chunksAdded, embedded, insights: insights ?? undefined };
+  }
+
+  // Distill an uploaded document into structured insights via the JSON-mode primitive. Returns null
+  // when AI is off, the text is empty, or extraction fails — the upload still succeeds.
+  private async extractInsights(text: string): Promise<KbInsights | null> {
+    const body = (text ?? '').trim();
+    if (!this.ai.enabled || body.length < 40) return null;
+    try {
+      const { data } = await this.ai.json<KbInsights>({
+        label: 'kb-insights',
+        system:
+          "You are Riseup Labs' knowledge analyst. Extract ONLY what the document actually states. " +
+          'NEVER invent pricing, numbers, roles, or dates that are not present. Leave a field empty/absent when unknown.',
+        maxTokens: 1800,
+        prompt:
+          'Distill this past Riseup Labs document (a proposal, budget, or client requirement) into JSON with these optional keys:\n' +
+          '- summary: 1-2 sentences on what it is\n' +
+          '- technical: string[] — approach/architecture/technical aspects\n' +
+          '- stack: string[] — technologies/platforms/frameworks named\n' +
+          '- resources: [{ role, count?, allocation? }] — team/roles\n' +
+          '- pricing: { currency?, total?, lineItems?: [{label, amount}], notes? } — ONLY figures literally present\n' +
+          '- budgeting: string[] — assumptions, margins, contingency, payment terms\n' +
+          '- timeline: { totalDuration?, milestones?: [{name, duration?}] }\n' +
+          '- diagramTypes: string[] — diagram kinds present (ERD, sequence, architecture, gantt, wireframe…)\n' +
+          '- decisions: string[] — key decisions + rationale\n' +
+          'Omit any key you cannot fill from the text. Do not fabricate.\n\n' +
+          `Document:\n${body.slice(0, 12000)}`,
+      });
+      return data && typeof data === 'object' ? data : null;
+    } catch (e) {
+      this.logger.warn(`Insight extraction skipped: ${String(e)}`);
+      return null;
+    }
+  }
+
+  // Render insights into a labeled, retrieval-friendly text block prepended to the embedded content.
+  private synthesizeInsightText(title: string, i: KbInsights): string {
+    const lines: string[] = [`# Learned insights — ${title}`];
+    if (i.summary) lines.push(`Summary: ${i.summary}`);
+    if (i.stack?.length) lines.push(`Stack: ${i.stack.join(', ')}`);
+    if (i.technical?.length) lines.push(`Technical: ${i.technical.join('; ')}`);
+    if (i.resources?.length) lines.push(`Resources: ${i.resources.map((r) => `${r.role}${r.count ? ` ×${r.count}` : ''}`).join(', ')}`);
+    if (i.pricing) {
+      const p = i.pricing;
+      const total = p.total != null ? `${p.currency ?? ''} ${p.total}`.trim() : undefined;
+      lines.push(`Pricing: ${[total, p.notes].filter(Boolean).join(' — ') || '(see budget)'}`);
+    }
+    if (i.budgeting?.length) lines.push(`Budgeting: ${i.budgeting.join('; ')}`);
+    if (i.timeline) {
+      const t = i.timeline;
+      const ms = t.milestones?.map((m) => `${m.name}${m.duration ? ` (${m.duration})` : ''}`).join(' → ');
+      lines.push(`Timeline: ${[t.totalDuration, ms].filter(Boolean).join(' — ')}`);
+    }
+    if (i.diagramTypes?.length) lines.push(`Diagrams: ${i.diagramTypes.join(', ')}`);
+    if (i.decisions?.length) lines.push(`Decisions: ${i.decisions.join('; ')}`);
+    return lines.join('\n');
   }
 
   // Update catalog metadata: display title and/or Notion-style tags (the stored file is untouched).
@@ -341,6 +416,8 @@ export class KbService implements OnModuleInit {
       // added-on date (manual upload); falls back to the row's creation time.
       docDate: (d.meta?.docDate as string) ?? d.createdAt,
       createdAt: d.createdAt, // when the row entered THIS system (used for "last synced")
+      // Whether an LLM-distilled insight record was captured (drives the "AI-learned" badge).
+      learned: !!d.meta?.insights,
     }));
   }
 

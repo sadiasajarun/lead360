@@ -6,9 +6,10 @@ import { KbChunk } from './kb-chunk.entity';
 import { KbRepository } from './kb.repository';
 import { KbService } from './kb.service';
 import { KbController } from './kb.controller';
+import { EstimateModule } from '../estimate/estimate.module';
 
 @Module({
-  imports: [UserModule, TypeOrmModule.forFeature([KbDocument, KbChunk])],
+  imports: [UserModule, TypeOrmModule.forFeature([KbDocument, KbChunk]), EstimateModule],
   controllers: [KbController],
   providers: [KbRepository, KbService],
   exports: [KbService],

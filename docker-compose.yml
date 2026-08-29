@@ -32,6 +32,29 @@ services:
       timeout: 5s
       retries: 5
 
+  # Kroki renders the AI-written Mermaid/D2 diagram specs into self-contained SVG,
+  # entirely on our own infrastructure (no client data leaves the box). The backend
+  # reaches it at http://kroki:8000 — set KROKI_URL=http://kroki:8000 in backend/.env
+  # when running the backend inside compose (default is http://localhost:8000 for
+  # `npm run start:dev` on the host, with the port published below).
+  kroki:
+    image: yuzutech/kroki
+    container_name: lead360-kroki
+    restart: unless-stopped
+    depends_on:
+      - kroki-d2
+    environment:
+      KROKI_D2_HOST: kroki-d2   # enable the D2 companion engine
+    ports:
+      - "${KROKI_PORT:-8000}:8000"
+
+  kroki-d2:
+    image: yuzutech/kroki-d2
+    container_name: lead360-kroki-d2
+    restart: unless-stopped
+    expose:
+      - "8004"
+
 # NOTE: a Redis service used to be defined here for BullMQ. Nothing in the codebase connects to
 # Redis today — no queue, no cache. It was removed rather than left running to avoid implying a
 # dependency that does not exist. Re-add it when background jobs are actually implemented.

@@ -1,4 +1,4 @@
-import type { LeadStatus, TemplateType } from '~/enums/lead.enum';
+import type { LeadStatus, TemplateType, ProjectType, Audience } from '~/enums/lead.enum';
 
 export interface Lead {
   id: string;
@@ -12,6 +12,25 @@ export interface Lead {
   valueCents: string;
   /** ISO-4217 code the budget is authored in (BDT for Local, USD otherwise, or an explicit choice). */
   budgetCurrency?: string;
+  /** Client brand mark (data URI) from the Client & Brand step. */
+  clientLogoUrl?: string | null;
+  /** How the engine frames the proposal (Template & Setup step). */
+  projectType?: ProjectType;
+  /** Who the proposal is written for (Template & Setup step). */
+  audience?: Audience;
+  /** Freeform project context appended to the effective brief. */
+  projectContext?: string | null;
+  /** Procurement (Template & Setup): hardware and/or a third-party service is involved. */
+  hardwareProject?: boolean;
+  thirdPartyService?: boolean;
+  /** Internal note on the arrangement — the supplier is never named to the client. */
+  procurementNotes?: string | null;
+  /** Delivery/installation window in weeks — ADDED to the software schedule as an on-site phase. */
+  hardwareInstallWeeks?: number | null;
+  /** Warranty cover, restated in the proposal as our commitment. */
+  hardwareWarranty?: string | null;
+  /** Sales override of the auto-picked delivery structure; null/undefined = auto. */
+  structureModeOverride?: 'phase' | 'milestone' | 'scope' | 'module' | null;
   createdAt: string;
   updatedAt: string;
   /** When the lead entered the approval queue. Null on legacy rows submitted before the column existed. */

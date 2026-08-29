@@ -47,3 +47,9 @@ PostgreSQL 16 + **pgvector**. TypeORM, UUID PKs, snake_case columns, **soft dele
 - Lookup columns (`email`, `slug`, `contentHash`, `role+seniority`) get `@Index`.
 - `Budget.version` = optimistic lock (concurrent editors). Never `synchronize: true` — migrations only.
 - pgvector: `CREATE EXTENSION IF NOT EXISTS vector;` in the first migration; HNSW index on `kb_chunk.embedding`.
+
+## 2026-08 additions
+- **`historical_projects`** (`src/modules/estimate`) — mined per-project totals for the budget-first band: `category`, `title`, `total_usd_cents` (bigint), `currency`, `weeks`, `scope_size`, `source`; indexed `['category','scope_size']`. Filled by `npm run ingest:estimates` (batch) and `EstimateService.mineFromText` (per-upload). `EstimateService.band()` = IQR (p25–p75) over ≥3 comparables.
+- **`kb_documents.meta.insights`** (jsonb) — LLM-distilled `KbInsights` (summary/technical/stack/resources/pricing/budgeting/timeline/diagramTypes/decisions); `meta.section` gates band mining to Proposal/Budget. No migration (schemaless meta).
+- **`proposals.pdf_cache`** (bytea, `select:false`) + **`pdf_hash`** — content-hash PDF cache (rendered on first download, reused until sections/renderer change).
+- **`leads`** new columns: `client_logo_url` (data URI), `project_type` (enum), `audience` (enum), `project_context` (text), `structure_mode_override` (varchar). Added via `synchronize` in dev; author a migration before prod.

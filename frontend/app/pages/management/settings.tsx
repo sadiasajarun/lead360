@@ -1715,6 +1715,8 @@ function BrandingPanel() {
         textColor: form.textColor,
         fileNaming: form.fileNaming,
         footerText: form.footerText,
+        signatoryName: form.signatoryName,
+        signatoryTitle: form.signatoryTitle,
       });
       await reload();
       setMsg('Branding saved.');
@@ -1813,6 +1815,16 @@ function BrandingPanel() {
           <div className="mt-4 max-w-[560px]">
             <label htmlFor="set-footer" className={LABEL}>Proposal footer text</label>
             <textarea id="set-footer" data-testid="set-footer" value={form.footerText} onChange={(e) => set('footerText', e.target.value)} className={`${INPUT} min-h-16`} />
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="set-signatory-name" className={LABEL}>Sign-off signatory (Riseup Labs)</label>
+              <input id="set-signatory-name" data-testid="set-signatory-name" value={form.signatoryName} onChange={(e) => set('signatoryName', e.target.value)} placeholder="e.g. Enamul Hoque Ratul" className={INPUT} />
+            </div>
+            <div>
+              <label htmlFor="set-signatory-title" className={LABEL}>Signatory designation</label>
+              <input id="set-signatory-title" data-testid="set-signatory-title" value={form.signatoryTitle} onChange={(e) => set('signatoryTitle', e.target.value)} placeholder="e.g. Head of Operations" className={INPUT} />
+            </div>
           </div>
 
           {msg && <p data-testid="branding-msg" className={`mt-4 ${OK}`}>{msg}</p>}

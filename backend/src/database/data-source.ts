@@ -1,7 +1,14 @@
 import 'reflect-metadata';
+import { setDefaultResultOrder } from 'dns';
+import { setDefaultAutoSelectFamily } from 'net';
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 config();
+
+// Same dual-stack guard as main.ts: on a network with unroutable IPv6, Node's happy-eyeballs connect
+// stalls on the host's AAAA records, which would hang `migration:run` / seed scripts for minutes.
+setDefaultResultOrder('ipv4first');
+setDefaultAutoSelectFamily(false);
 
 // TypeORM CLI data-source for migrations (npm run migration:*).
 export default new DataSource({

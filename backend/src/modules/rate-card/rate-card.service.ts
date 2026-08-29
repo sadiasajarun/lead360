@@ -7,6 +7,7 @@ import { RoleDaySample } from './role-day-sample.entity';
 import { CreateRateCardDto } from './dtos/rate-card.dtos';
 import { BudgetCurrency, CURRENCY_SYMBOL, SHEET_CURRENCIES, Seniority } from '../../common/enums';
 import { SettingsService } from '../settings/settings.service';
+import { downgradesFor, resolveRoleName, type CardRole } from '../../common/utils/role-resolver.util';
 
 /**
  * Daily rate in the requested currency.
@@ -51,9 +52,67 @@ export class RateCardService {
   async rateFor(role: string, seniority: Seniority, currency: BudgetCurrency = BudgetCurrency.USD): Promise<number | null> {
     const exact = await this.repo.findByRole(role, seniority);
     if (exact) return this.dailyCents(exact, currency);
+    // `rolesForPrompt` lists roles as "Department · Role", so the AI often echoes the whole string.
+    // Match on the bare role (after the last "·") too, then fall back to a loose contains match.
+    const bare = role.includes('·') ? role.slice(role.lastIndexOf('·') + 1).trim() : role.trim();
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
     const all = await this.repo.findAll();
-    const byRole = all.find((r) => r.role.toLowerCase() === role.toLowerCase());
-    return byRole ? this.dailyCents(byRole, currency) : null;
+    const target = norm(bare);
+    const match =
+      all.find((r) => norm(r.role) === target) ||
+      all.find((r) => norm(r.role) === norm(role)) ||
+      all.find((r) => norm(r.role).includes(target) || target.includes(norm(r.role)));
+    return match ? this.dailyCents(match, currency) : null;
+  }
+
+  /**
+   * Like rateFor, but also returns the rate card's CANONICAL role name + its department, so a generated
+   * budget uses Riseup's real taxonomy (e.g. "Engineering · Sr. Back-end Web Developer") consistently
+   * instead of whatever free-text department the AI happened to write. Null when the role isn't on the card.
+   */
+  async resolveRole(
+    role: string,
+    seniority: Seniority,
+    currency: BudgetCurrency = BudgetCurrency.USD,
+  ): Promise<{ dayRateCents: number; department: string; role: string } | null> {
+    const exact = await this.repo.findByRole(role, seniority);
+    if (exact) return { dayRateCents: await this.dailyCents(exact, currency), department: exact.department, role: exact.role };
+    const bare = role.includes('·') ? role.slice(role.lastIndexOf('·') + 1).trim() : role.trim();
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+    const all = await this.repo.findAll();
+    const target = norm(bare);
+    const match =
+      all.find((r) => norm(r.role) === target) ||
+      all.find((r) => norm(r.role) === norm(role)) ||
+      all.find((r) => norm(r.role).includes(target) || target.includes(norm(r.role)));
+    if (match) return { dayRateCents: await this.dailyCents(match, currency), department: match.department, role: match.role };
+    // Vocabulary match. Stored cases and the model say "QA Engineer" / "Tech Lead" / "DevOps"; the card says
+    // "Sr.Quality Assurance (QA) Engineer" / "Technical Lead" / "Dev Ops Engineer". Literal comparison misses
+    // every one of them and the line then prices at zero, which is how a budget breakdown reported 100% PM.
+    const mapped = resolveRoleName(role, all as CardRole[], seniority);
+    if (!mapped) return null;
+    const row = all.find((r) => r.role === mapped.role && r.seniority === mapped.seniority);
+    return row ? { dayRateCents: await this.dailyCents(row, currency), department: row.department, role: row.role } : null;
+  }
+
+  /**
+   * Cheaper tiers available for a role, cheapest first, priced in `currency` - the downgrade ladder the
+   * budget solver walks when a hard budget has to be met. Empty when the card carries the role at a single
+   * tier (Product/Project Manager, Technical Lead and Dev Ops Engineer today), which is the signal that
+   * this lever cannot be applied to that line.
+   */
+  async downgradeLadder(
+    role: string,
+    from: Seniority,
+    currency: BudgetCurrency = BudgetCurrency.USD,
+  ): Promise<{ role: string; seniority: Seniority; dayRateCents: number; department: string }[]> {
+    const all = await this.repo.findAll();
+    const out: { role: string; seniority: Seniority; dayRateCents: number; department: string }[] = [];
+    for (const step of downgradesFor(role, all as CardRole[], from)) {
+      const row = all.find((r) => r.role === step.role && r.seniority === step.seniority);
+      if (row) out.push({ role: row.role, seniority: row.seniority, dayRateCents: await this.dailyCents(row, currency), department: row.department });
+    }
+    return out;
   }
 
   // Compact valid-roles + rates listing for the AI budget prompt (so it picks real roles).

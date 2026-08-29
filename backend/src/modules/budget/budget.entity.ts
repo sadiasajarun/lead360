@@ -3,6 +3,7 @@ import { BaseEntity } from '../../core/base/base.entity';
 import { Lead } from '../lead/lead.entity';
 import { Milestone } from './milestone.entity';
 import { BudgetLine } from './budget-line.entity';
+import { BudgetEquipment } from './budget-equipment.entity';
 
 @Entity('budgets')
 export class Budget extends BaseEntity {
@@ -20,13 +21,15 @@ export class Budget extends BaseEntity {
   @Column({ name: 'fx_rate', type: 'numeric', precision: 12, scale: 4, default: 1 })
   fxRate: string;
 
-  @Column({ name: 'contingency_pct', type: 'numeric', precision: 5, scale: 2, default: 0 })
+  // scale 6 (not 2) so the exact-budget solver can store a fine-grained discount/premium % that lands the
+  // total on the target to the cent (a 2-dp % rounds the total off by cents on odd targets).
+  @Column({ name: 'contingency_pct', type: 'numeric', precision: 11, scale: 6, default: 0 })
   contingencyPct: string;
 
-  @Column({ name: 'discount_pct', type: 'numeric', precision: 5, scale: 2, default: 0 })
+  @Column({ name: 'discount_pct', type: 'numeric', precision: 11, scale: 6, default: 0 })
   discountPct: string;
 
-  @Column({ name: 'vat_pct', type: 'numeric', precision: 5, scale: 2, default: 0 })
+  @Column({ name: 'vat_pct', type: 'numeric', precision: 11, scale: 6, default: 0 })
   vatPct: string;
 
   // Computed grand total in integer minor units (cents).
@@ -39,6 +42,10 @@ export class Budget extends BaseEntity {
 
   @OneToMany(() => Milestone, (m) => m.budget)
   milestones: Milestone[];
+
+  // Purchased items (hardware/licences/installation) — costed by qty × unit price, not by man-days.
+  @OneToMany(() => BudgetEquipment, (e) => e.budget)
+  equipment: BudgetEquipment[];
 
   @OneToMany(() => BudgetLine, (l) => l.budget)
   lines: BudgetLine[];

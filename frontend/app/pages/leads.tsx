@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { AlertTriangle, Eye, Loader2, Search, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Calculator, Coins, Eye, History, Loader2, Search, Sun, Trash2, X } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '~/redux/store/hooks';
 import { fetchLeads, deleteLead } from '~/services/httpServices/leadService';
+import { fetchTokenStats } from '~/services/httpServices/generationService';
 import { apiErrorMessage } from '~/services/httpMethods/interceptors';
 import { useRoleBase } from '~/hooks/useRoleBase';
 import { LeadStatus, STATUS_ORDER, TemplateType } from '~/enums/lead.enum';
@@ -35,11 +37,23 @@ const shortDate = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
 const fullDate = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '');
 
+// Compact token count (2.9M / 12.4k / 840) for the stat cards; full value shown on hover.
+const fmtTokens = (n?: number) => {
+  if (n == null) return '—';
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}k`;
+  return String(n);
+};
+// USD cost — 2 dp for ≥ $1, 4 dp for the small buckets so cents-scale values stay legible.
+const fmtUsd = (n?: number) => (n == null ? '—' : `$${n >= 1 ? n.toFixed(2) : n.toFixed(4)}`);
+
 export default function Leads() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { isAdmin, leadPath, newLeadPath } = useRoleBase();
   const { items, total, status, error } = useAppSelector((s) => s.leads);
+  const tokenStats = useAppSelector((s) => s.tokenStats);
+  useEffect(() => void dispatch(fetchTokenStats()), [dispatch]);
 
   // Filters live in the URL: reloads and shared links keep the same view. Bad params are ignored.
   const [params, setParams] = useSearchParams();
@@ -109,6 +123,16 @@ export default function Leads() {
   const selectCls =
     'h-9 rounded-md border border-[#D4D1CC] bg-white px-2.5 text-[13px] font-medium text-[#475467] outline-none focus:border-[#EA5400]';
 
+  // AI token-usage dashboard cards. Values are undefined until the stats load → formatters render "—".
+  const ts = tokenStats.data;
+  const loadingStats = tokenStats.status === 'loading' && !ts;
+  const statCards: { key: string; label: string; icon: LucideIcon; tokens?: number; cost?: number; sub: string }[] = [
+    { key: 'lifetime', label: 'Lifetime tokens', icon: Coins, tokens: ts?.lifetime.tokens, cost: ts?.lifetime.costUsd, sub: 'all generations' },
+    { key: 'avg', label: 'Avg / proposal', icon: Calculator, tokens: ts?.avgPerProposal.tokens, cost: ts?.avgPerProposal.costUsd, sub: ts ? `across ${ts.avgPerProposal.proposals} proposal${ts.avgPerProposal.proposals === 1 ? '' : 's'}` : ' ' },
+    { key: 'today', label: 'Today', icon: Sun, tokens: ts?.today.tokens, cost: ts?.today.costUsd, sub: 'since midnight' },
+    { key: 'yesterday', label: 'Yesterday', icon: History, tokens: ts?.yesterday.tokens, cost: ts?.yesterday.costUsd, sub: 'full day' },
+  ];
+
   return (
     <div data-testid="leads-page">
       <div className="mb-1.5 flex items-center justify-between">
@@ -120,6 +144,34 @@ export default function Leads() {
           Your own leads plus every lead submitted for approval. Leads you create are auto-approved and filed into Projects → Database.
         </p>
       )}
+
+      {/* AI token-usage dashboard — lifetime, average per proposal, today, yesterday (USD cost in each corner) */}
+      <div data-testid="leads-token-stats" className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {statCards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.key} data-testid={`leads-stat-${c.key}`} className="relative overflow-hidden rounded-lg border border-[#E8E6E3] bg-white p-4">
+              <span
+                data-testid={`leads-stat-${c.key}-cost`}
+                title="Estimated USD cost at current model rates"
+                className="absolute right-3 top-3 text-[11px] font-medium tabular-nums text-[#EA5400]"
+              >
+                {loadingStats ? '…' : fmtUsd(c.cost)}
+              </span>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#9A948E]">
+                <Icon size={13} className="text-[#9A948E]" /> {c.label}
+              </div>
+              <div
+                title={c.tokens != null ? `${c.tokens.toLocaleString()} tokens` : ''}
+                className="mt-2 text-[22px] font-semibold leading-none tabular-nums text-[#0F0F0F]"
+              >
+                {loadingStats ? '—' : fmtTokens(c.tokens)}
+              </div>
+              <div className="mt-1 text-[11px] text-[#9A948E]">{c.sub}</div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* Search + three filters + clear */}
       <div className="mb-3 flex flex-wrap items-center gap-2.5">

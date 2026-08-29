@@ -2,15 +2,19 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useParams, Link } from 'react-router';
 import {
-  ChevronRight, Download, ExternalLink, Check, Database, FileText, Sheet,
-  Info, CheckCircle2, Clock, Sparkles, RefreshCw, Loader2, Send, X, XCircle,
+  ChevronRight, ChevronDown, Download, ExternalLink, Check, Database, FileText, FileType, Sheet,
+  Info, CheckCircle2, Clock, Sparkles, RefreshCw, Loader2, Send, X, XCircle, Pencil,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '~/redux/store/hooks';
 import {
   fetchLead, submitLead, markSent, markLocked, markLost, generate, regenerateBudget, generateBrief, generatePitch,
-  regenerateSection, downloadProposalPdf, saveProposalSection, deleteProposalSection, updateLead,
-  fetchComments, postComment,
+  regenerateSection, downloadProposalPdf, downloadProposalDocx, saveProposalSection, deleteProposalSection, updateLead,
+  fetchComments, postComment, updateBlock, regenerateBlock, deleteBlock, explainBlock, getLeadTokenUsage,
+  fetchReadiness,
 } from '~/services/httpServices/leadDetailService';
+import type { Readiness } from '~/services/httpServices/leadDetailService';
+import { ReadinessPanel } from '~/components/ReadinessPanel';
+import type { LeadTokenUsage } from '~/types/generation';
 import { getProposal } from '~/services/httpServices/presentService';
 import type { ProposalPayload } from '~/services/httpServices/presentService';
 import { SalesBriefView, PitchDeckView } from '~/components/SalesBriefPitch';
@@ -18,6 +22,13 @@ import { fetchBudget, updateBudget } from '~/services/httpServices/budgetService
 import { BudgetEditor } from '~/components/BudgetEditor';
 import { BudgetConvertedView } from '~/components/BudgetConvertedView';
 import { ProposalDocument, buildPricing } from '~/components/ProposalDocument';
+import { ProposalRenderer } from '~/components/proposal/ProposalRenderer';
+import { BlockEditor } from '~/components/proposal/BlockEditor';
+import { RegenerateComposer } from '~/components/proposal/RegenerateComposer';
+import { ChangeLogPanel } from '~/components/proposal/ChangeLogPanel';
+import { ModuleBreakdownPanel } from '~/components/proposal/ModuleBreakdownPanel';
+import { ClientFeedbackPanel } from '~/components/proposal/ClientFeedbackPanel';
+import type { ProposalDocument as PDoc } from '~/types/proposal';
 import { LeadStatus, LossReason, LOSS_REASON_LABEL } from '~/enums/lead.enum';
 import { CURRENCIES, formatMoneyWhole } from '~/enums/currency.enum';
 import { apiErrorMessage } from '~/services/httpMethods/interceptors';
@@ -29,8 +40,8 @@ import CommentThread from '~/components/shared/CommentThread';
 import StatusPill from '~/components/atoms/StatusPill';
 import type { LeadComment } from '~/types/comment';
 
-const TABS = ['proposal', 'budget', 'brief', 'pitch'] as const;
-const TAB_LABEL: Record<(typeof TABS)[number], string> = { proposal: 'Proposal', budget: 'Budget', brief: 'Sales Brief', pitch: 'Pitch Deck' };
+const TABS = ['proposal', 'budget', 'requirement', 'brief', 'pitch'] as const;
+const TAB_LABEL: Record<(typeof TABS)[number], string> = { proposal: 'Proposal', budget: 'Budget', requirement: 'Requirement', brief: 'Sales Brief', pitch: 'Pitch Deck' };
 
 // Output routing (Generation-Engine spec §5): Global & Local deliver a proposal + a SEPARATE budget,
 // so they get a Budget tab. Agency & Design Portfolio deliver ONE combined document — the budget is
@@ -51,10 +62,19 @@ export default function LeadDetail() {
   const budgetData = useAppSelector((s) => s.budget.data);
   const [tab, setTab] = useState<(typeof TABS)[number]>('proposal');
   const [busy, setBusy] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [dlOpen, setDlOpen] = useState(false);
   const [msg, setMsg] = useState('');
   const [proposal, setProposal] = useState<ProposalPayload | null>(null);
   const [propPrompt, setPropPrompt] = useState('');
-  const reloadProposal = () => getProposal(id).then(setProposal).catch(() => setProposal(null));
+  const [editLayout, setEditLayout] = useState(false);
+  // All-in AI token usage for this lead — refreshed alongside every proposal reload (every generation path
+  // calls reloadProposal afterward), so the usage line under the regenerate box always reflects the latest run.
+  const [usage, setUsage] = useState<LeadTokenUsage | null>(null);
+  const reloadProposal = () => {
+    getLeadTokenUsage(id).then(setUsage).catch(() => {});
+    return getProposal(id).then(setProposal).catch(() => setProposal(null));
+  };
 
   // Comment thread (shared by Sales/PM + Admin).
   const [comments, setComments] = useState<LeadComment[]>([]);
@@ -82,7 +102,17 @@ export default function LeadDetail() {
   // converted currency is active, so converted rates can never be persisted.
   const [viewCurrency, setViewCurrency] = useState('');
 
+  const [readiness, setReadiness] = useState<Readiness | null>(null);
+  const [readinessErr, setReadinessErr] = useState('');
+
   useEffect(() => { if (id) dispatch(fetchLead(id)); }, [dispatch, id]);
+  // Requirement tab: the clarification rubric for THIS lead, so answers can still be captured (or the
+  // client's filled questionnaire uploaded) after the proposal was generated.
+  useEffect(() => {
+    if (!id) return;
+    setReadinessErr('');
+    fetchReadiness(id).then(setReadiness).catch((e) => setReadinessErr(apiErrorMessage(e)));
+  }, [id]);
   useEffect(() => { if (id) { reloadProposal(); dispatch(fetchBudget(id)); reloadComments(); } }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const act = async (fn: () => Promise<unknown>, ok: string) => {
@@ -121,6 +151,18 @@ export default function LeadDetail() {
     setDecisionNote('');
   };
 
+  // Download the proposal as PDF (pixel-perfect) or Word (.docx, editable). Uses its OWN loading state
+  // (not the shared `busy`) so the Regenerate button never flips to "Regenerating…" during a download.
+  const doDownload = async (format: 'pdf' | 'docx') => {
+    setDlOpen(false); setDownloading(true); setMsg('');
+    const base = lead!.title.replace(/[^\w.\-]+/g, '_');
+    try {
+      if (format === 'pdf') { await downloadProposalPdf(id, `${base}-Proposal.pdf`); setMsg('Proposal PDF downloaded'); }
+      else { await downloadProposalDocx(id, `${base}-Proposal.docx`); setMsg('Proposal Word document downloaded'); }
+    } catch (e) { setMsg(apiErrorMessage(e)); }
+    finally { setDownloading(false); }
+  };
+
   const genBrief = () => act(async () => { await generateBrief(id); await reloadProposal(); }, 'Sales brief generated');
   const genPitch = () => act(async () => { await generatePitch(id); await reloadProposal(); }, 'Pitch deck generated');
   const regenProposal = () => act(async () => {
@@ -129,6 +171,20 @@ export default function LeadDetail() {
     dispatch(fetchBudget(id));
     setPropPrompt('');
   }, 'Proposal regenerated');
+  // Requirement tab: rebuild the proposal + budget from the (now answered) clarification questions.
+  const regenFromAnswers = () => act(async () => {
+    await generate(id);
+    await reloadProposal();
+    dispatch(fetchBudget(id));
+    if (id) await fetchReadiness(id).then(setReadiness).catch(() => undefined);
+  }, 'Proposal + budget regenerated from the confirmed answers');
+  // First-time generation (empty state). Must reloadProposal() so the drafted proposal actually appears
+  // — without it the empty state persists and the button looks dead.
+  const genProposal = () => act(async () => {
+    await generate(id);
+    await reloadProposal();
+    dispatch(fetchBudget(id));
+  }, 'Proposal + budget generated');
 
   if (status === 'loading') return <div className="text-sm text-[#6B6660]">Loading…</div>;
   if (!lead) return <div data-testid="lead-notfound" className="text-sm text-[#6B6660]">Lead not found.</div>;
@@ -144,6 +200,8 @@ export default function LeadDetail() {
   const money = formatMoneyWhole(lead.valueCents, budgetCurrency);
   const archived = lead.status === LeadStatus.APPROVED || lead.status === LeadStatus.SENT || lead.status === LeadStatus.LOCKED;
   const sections = proposal?.sections ? Object.entries(proposal.sections) : [];
+  // New engine stores a ProposalDocument (blocks[]); legacy proposals store keyed sections{}.
+  const hasBlocks = Array.isArray((proposal?.sections as unknown as { blocks?: unknown } | undefined)?.blocks);
 
   // ── Role × status × ownership: the action rail below mirrors the backend state machine exactly.
   // Ownership comes from the FK column `submittedById` (always serialised, even when the `submittedBy`
@@ -269,15 +327,86 @@ export default function LeadDetail() {
                   <div><div className="text-[15px] font-semibold">Proposal</div><p className="text-[13px] text-[#6B6660]">The interactive client-facing document — exactly what the client receives.</p></div>
                   <div className="flex gap-2">
                     {sections.length > 0 && (
-                      <button data-testid="lead-detail-download-pdf" disabled={busy}
-                        onClick={() => act(() => downloadProposalPdf(id, `${lead.title.replace(/[^\w.\-]+/g, '_')}-Proposal.pdf`), 'Proposal PDF downloaded')}
-                        className={primary}><Download size={15} /> Download PDF</button>
+                      <div className="relative">
+                        <button data-testid="lead-detail-download" disabled={downloading} onClick={() => setDlOpen((o) => !o)} className={primary}>
+                          {downloading ? <><Loader2 size={15} className="animate-spin" /> Preparing…</> : <><Download size={15} /> Download <ChevronDown size={14} /></>}
+                        </button>
+                        {dlOpen && (
+                          <>
+                            <div className="fixed inset-0 z-[40]" onClick={() => setDlOpen(false)} />
+                            <div className="absolute right-0 z-[41] mt-1.5 w-[220px] overflow-hidden rounded-lg border border-[#E8E6E3] bg-white p-1 shadow-xl" data-testid="download-menu">
+                              <button data-testid="download-pdf" onClick={() => doDownload('pdf')} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-[#F4F4F2]">
+                                <FileText size={16} className="text-[#EA5400]" />
+                                <span className="flex-1"><span className="block text-[13px] font-medium">PDF</span><span className="block text-[11px] text-[#9A948E]">Branded, pixel-perfect</span></span>
+                              </button>
+                              <button data-testid="download-docx" onClick={() => doDownload('docx')} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-[#F4F4F2]">
+                                <FileType size={16} className="text-[#2B579A]" />
+                                <span className="flex-1"><span className="block text-[13px] font-medium">Word (.docx)</span><span className="block text-[11px] text-[#9A948E]">Editable document</span></span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     )}
                     <a data-testid="lead-detail-open-full" href={`/present/${id}/proposal`} target="_blank" rel="noreferrer" className={secondary}><ExternalLink size={15} /> Open full</a>
                   </div>
                 </div>
 
-                {sections.length > 0 ? (
+                {hasBlocks ? (
+                  <div data-testid="proposal-blocks">
+                    {!archived && (
+                      <>
+                        <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-lg border border-[#E8E6E3] bg-[#F9F8F7] px-3 py-2.5">
+                          <button data-testid="lead-detail-edit-layout" onClick={() => setEditLayout((v) => !v)} className={secondary}>
+                            <Pencil size={15} /> {editLayout ? 'Done editing' : 'Edit layout'}
+                          </button>
+                          <div className="flex items-center gap-1.5 text-[13px] text-[#6B6660]">
+                            <span>Structure</span>
+                            <select
+                              data-testid="lead-detail-structure-mode"
+                              value={lead.structureModeOverride ?? ''}
+                              disabled={busy}
+                              // Changing structure now APPLIES immediately: save the override, then regenerate so
+                              // the proposal actually re-plans (previously it only saved and nothing changed).
+                              onChange={(e) => act(async () => {
+                                await updateLead(id, { structureModeOverride: e.target.value || null });
+                                await generate(id);
+                                await reloadProposal();
+                                dispatch(fetchBudget(id));
+                              }, e.target.value ? `Structure set to “${e.target.value}” — proposal regenerated` : 'Structure set to Auto — proposal regenerated')}
+                              className="h-8 rounded-md border border-[#D4D1CC] bg-white px-2 text-[13px] outline-none focus:border-[#EA5400] disabled:opacity-50"
+                            >
+                              <option value="">Auto (AI decides)</option>
+                              <option value="phase">Phase</option>
+                              <option value="milestone">Milestone</option>
+                              <option value="scope">Scope</option>
+                              <option value="module">Module</option>
+                            </select>
+                            {busy ? <Loader2 size={14} className="animate-spin text-[#EA5400]" /> : null}
+                          </div>
+                        </div>
+                        <RegenerateComposer
+                          leadId={id}
+                          busy={busy}
+                          usage={usage}
+                          onRegenerate={(p) => act(async () => { await generate(id, p || undefined); await reloadProposal(); dispatch(fetchBudget(id)); }, 'Proposal regenerated')}
+                        />
+                        <ChangeLogPanel entries={proposal?.changeLog} leadId={id} enableAsk />
+                        <ModuleBreakdownPanel leadId={id} />
+                      </>
+                    )}
+                    {editLayout && !archived && (
+                      <BlockEditor leadId={id} doc={proposal!.sections as unknown as PDoc} onChanged={reloadProposal} />
+                    )}
+                    <ProposalRenderer
+                      doc={proposal!.sections as unknown as PDoc}
+                      onSaveBlock={archived ? undefined : async (bid, patch) => { await updateBlock(id, bid, patch); await reloadProposal(); }}
+                      onRegenerateBlock={archived ? undefined : async (bid, prompt) => { await regenerateBlock(id, bid, prompt); await reloadProposal(); }}
+                      onDeleteBlock={archived ? undefined : async (bid) => { await deleteBlock(id, bid); await reloadProposal(); }}
+                      onExplainBlock={(bid) => explainBlock(id, bid)}
+                    />
+                  </div>
+                ) : sections.length > 0 ? (
                   <>
                     <ProposalDocument
                       title={lead.title}
@@ -357,7 +486,9 @@ export default function LeadDetail() {
                   <div className="rounded-lg border border-dashed border-[#D4D1CC] p-8 text-center">
                     <Sparkles size={22} className="mx-auto mb-2 text-[#EA5400]" />
                     <p className="mb-3 text-[13px] text-[#6B6660]">No proposal yet. Generation drafts the <b>proposal + budget</b> together — grounded in past Riseup projects (RAG).</p>
-                    <button data-testid="act-generate" disabled={busy} onClick={() => act(async () => { await generate(id); dispatch(fetchBudget(id)); }, 'Proposal + budget generated')} className={primary + ' mx-auto'}><Sparkles size={15} /> Generate proposal + budget (AI)</button>
+                    <button data-testid="act-generate" disabled={busy} onClick={genProposal} className={primary + ' mx-auto'}>
+                      {busy ? <><Loader2 size={15} className="animate-spin" /> Generating… (~30–60s)</> : <><Sparkles size={15} /> Generate proposal + budget (AI)</>}
+                    </button>
                   </div>
                 )}
               </div>
@@ -384,8 +515,32 @@ export default function LeadDetail() {
                   </div>
                 </div>
                 {activeViewCurrency === budgetCurrency
-                  ? <BudgetEditor leadId={id} />
+                  ? <BudgetEditor leadId={id} changeLog={proposal?.changeLog} onRegenerated={reloadProposal} />
                   : <BudgetConvertedView leadId={id} currency={activeViewCurrency} budgetCurrency={budgetCurrency} />}
+              </div>
+            )}
+
+            {/* REQUIREMENT — the readiness rubric that feeds the proposal. Reachable AFTER generation so the
+                client's answers (typed here, or uploaded as the filled questionnaire) can still be captured. */}
+            {activeTab === 'requirement' && (
+              <div data-testid="requirement-tab">
+                <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="text-[15px] font-semibold">Requirement readiness</div>
+                    <p className="text-[13px] text-[#6B6660]">Send the clarification questions to the client, then capture their replies here — type them in, or upload the filled Word questionnaire. Regenerate to fold the answers into the proposal and budget.</p>
+                  </div>
+                  {sections.length > 0 && (
+                    <button type="button" data-testid="requirement-regenerate" className={primary} disabled={busy} onClick={regenFromAnswers}>
+                      {busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />} Regenerate with answers
+                    </button>
+                  )}
+                </div>
+                {readinessErr && <div className="mb-3 rounded-lg border border-[#F3D4CE] bg-[#FDF3F1] px-3 py-2 text-[13px] text-[#B42318]">{readinessErr}</div>}
+                {!readiness ? (
+                  <div className="rounded-lg border border-dashed border-[#D4D1CC] p-8 text-center text-sm text-[#6B6660]">Loading the clarification questions…</div>
+                ) : (
+                  <ReadinessPanel leadId={id} readiness={readiness} onChange={setReadiness} showRegenerate />
+                )}
               </div>
             )}
 
@@ -521,6 +676,9 @@ export default function LeadDetail() {
               {lead.website && <KV k="Website" v={<a href={lead.website} target="_blank" rel="noreferrer" className="text-[#175CD3]">{lead.website}</a>} />}
             </div>
           </div>
+
+          {/* CLIENT FEEDBACK — captured post-share; applied with top priority on the next Regenerate (P5). */}
+          <ClientFeedbackPanel leadId={id} disabled={archived} />
 
           {/* COMMENTS — shared thread; both Sales/PM and Admin read + post here. */}
           <div className="rounded-xl border border-[#E8E6E3] bg-white p-4">
