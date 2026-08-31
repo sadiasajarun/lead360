@@ -13,6 +13,7 @@ import { EngineService } from './engine/engine.service';
 import { ClientFeedbackService } from '../client-feedback/client-feedback.service';
 import { SettingsService } from '../settings/settings.service';
 import { posInt, resolvePhaseWeeks, isTotalWeeksMisread } from './engine/directive-parse.util';
+import { PlanPhaseDto } from './dtos/plan-edit.dtos';
 import { collectClientFacingText, lintRedaction, summariseRedaction } from './engine/redaction.util';
 import { crashPlanToWeeks } from './engine/plan-crash.util';
 import { COMPOSE_SYSTEM, HOUSE_RULES } from './engine/system-prompts';
@@ -1774,6 +1775,102 @@ export class GenerationService {
       }
     }
     return { notes };
+  }
+
+  /**
+   * Read the canonical Plan for the plan editor. This is the single source of truth the timeline, team and
+   * budget are all projected from, so editing it is how a rep changes any of them.
+   */
+  async getPlan(leadId: string) {
+    const plan = await this.loadPlanForDirectives(leadId);
+    if (!plan?.phases?.length) throw new BadRequestException('No plan yet — generate the proposal first.');
+    return {
+      currency: plan.currency,
+      totalWeeks: plan.phases.reduce((s, p) => s + (Number(p.weeks) || 0), 0),
+      phases: plan.phases.map((p) => ({
+        name: p.name,
+        focus: p.focus ?? '',
+        weeks: p.weeks,
+        pinnedWeeks: !!p.pinnedWeeks,
+        team: p.team.map((m) => ({
+          role: m.role, seniority: m.seniority, units: m.units,
+          hoursPerDay: m.hoursPerDay ?? HOURS_PER_DAY, department: m.department, dayRateCents: m.dayRateCents,
+        })),
+      })),
+    };
+  }
+
+  /**
+   * Apply a hand-edited plan. Fully deterministic — no AI call, no replan. The edited phases become the
+   * canonical Plan, the budget sheet is re-derived from them and the proposal's money blocks re-sync, so all
+   * three views stay equal.
+   *
+   * Every edited phase is PINNED, so a later regeneration refreshes the wording around it without undoing the
+   * duration the rep just set. This is the path that removes the need to phrase an instruction correctly.
+   */
+  async savePlan(leadId: string, phases: PlanPhaseDto[]) {
+    const calc = (await this.loadInternalCalc(leadId)) ?? {};
+    const existing = await this.loadPlanForDirectives(leadId);
+    if (!existing?.phases?.length) throw new BadRequestException('No plan yet — generate the proposal first.');
+
+    const before = await this.currentBudgetTotals(leadId, existing.currency);
+    await this.proposals.snapshotVersion(leadId, 'Before plan edit');
+
+    // Carry the resolved day rate for any role the editor did not price, so an edit can never invent a rate.
+    const rateFor = new Map<string, number>();
+    for (const p of existing.phases) {
+      for (const m of p.team) rateFor.set(`${m.role}|${m.seniority}`.toLowerCase(), m.dayRateCents);
+    }
+    const wasPinned = new Map(existing.phases.map((p) => [p.name.trim().toLowerCase(), !!p.pinnedWeeks]));
+    const weeksBefore = new Map(existing.phases.map((p) => [p.name.trim().toLowerCase(), Number(p.weeks) || 0]));
+
+    const nextPhases: DecisionPhase[] = phases.map((p) => {
+      const key = p.name.trim().toLowerCase();
+      const durationChanged = weeksBefore.get(key) !== Number(p.weeks);
+      return {
+        name: p.name.trim(),
+        focus: (p.focus ?? '').trim(),
+        weeks: Math.max(1, Math.round(Number(p.weeks) || 1)),
+        // Editing a duration always pins it — that is the point of the edit. Otherwise an explicitly sent flag
+        // wins, so a phase can also be UNPINNED here; failing that, the existing pin carries over.
+        pinnedWeeks: durationChanged
+          ? true
+          : typeof p.pinnedWeeks === 'boolean'
+            ? p.pinnedWeeks
+            : (wasPinned.get(key) ?? false),
+        team: p.team.map((m) => ({
+          role: m.role.trim(),
+          seniority: m.seniority,
+          units: Math.max(1, Math.round(Number(m.units) || 1)),
+          hoursPerDay: Number(m.hoursPerDay) || HOURS_PER_DAY,
+          department: m.department?.trim() || 'Other',
+          dayRateCents: m.dayRateCents ?? rateFor.get(`${m.role}|${m.seniority}`.toLowerCase()) ?? 0,
+        })),
+      };
+    });
+
+    const plan = { currency: existing.currency, phases: nextPhases };
+    await this.proposals.setInternalCalc(leadId, { ...calc, plan });
+    await this.applyPlanToBudget(leadId, plan);
+    await this.syncProposalFromSheet(leadId);
+
+    const after = await this.currentBudgetTotals(leadId, plan.currency);
+    const unpriced = nextPhases.flatMap((p) => p.team.filter((m) => !m.dayRateCents).map((m) => m.role));
+    await this.logChange(leadId, {
+      kind: 'budget',
+      title: 'Edited the delivery plan',
+      details: [
+        `${nextPhases.length} phase${nextPhases.length === 1 ? '' : 's'}, ${after.weeks} week${after.weeks === 1 ? '' : 's'} in total.`,
+        ...(unpriced.length ? [`Not on the rate card, so priced at zero: ${[...new Set(unpriced)].join(', ')}.`] : []),
+      ],
+      budgetBeforeCents: before.cents,
+      budgetAfterCents: after.cents,
+      weeksBefore: before.weeks,
+      weeksAfter: after.weeks,
+      currency: plan.currency,
+    }).catch(() => undefined);
+
+    return this.getPlan(leadId);
   }
 
   // P4 — land a budget target EXACTLY. Day-level scaling (5× finer than whole weeks) trims the plan close to

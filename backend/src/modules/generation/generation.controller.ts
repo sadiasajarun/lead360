@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { UserRole } from '../../common/enums';
@@ -6,6 +6,7 @@ import { GenerationService } from './generation.service';
 import { RegenerateDto } from './dtos/regenerate.dto';
 import { RegenerateSectionDto } from './dtos/regenerate-section.dto';
 import { AskProposalDto } from './dtos/ask.dto';
+import { UpdatePlanDto } from './dtos/plan-edit.dtos';
 
 @ApiTags('generation')
 @Controller('leads/:id/generate')
@@ -64,6 +65,24 @@ export class GenerationController {
   @ApiResponse({ status: 404, description: 'Block not found' })
   regenerateBlock(@Param('id', ParseUUIDPipe) id: string, @Param('blockId') blockId: string, @Body() dto: RegenerateDto) {
     return this.generation.regenerateBlock(id, blockId, dto.prompt);
+  }
+
+  @Get('plan')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Read the delivery plan (phases, durations and staffing) the budget and proposal derive from' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 400, description: 'Nothing generated yet' })
+  getPlan(@Param('id', ParseUUIDPipe) id: string) {
+    return this.generation.getPlan(id);
+  }
+
+  @Put('plan')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Save a hand-edited plan — recomputes the budget and proposal with no AI call; edited phases are pinned' })
+  @ApiResponse({ status: 200, description: 'Saved' })
+  @ApiResponse({ status: 400, description: 'Validation failed, or nothing generated yet' })
+  savePlan(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePlanDto) {
+    return this.generation.savePlan(id, dto.phases);
   }
 
   @Post('budget')
