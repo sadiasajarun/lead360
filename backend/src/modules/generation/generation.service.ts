@@ -13,6 +13,7 @@ import { EngineService } from './engine/engine.service';
 import { ClientFeedbackService } from '../client-feedback/client-feedback.service';
 import { SettingsService } from '../settings/settings.service';
 import { posInt, resolvePhaseWeeks, isTotalWeeksMisread } from './engine/directive-parse.util';
+import { collectClientFacingText, lintRedaction, summariseRedaction } from './engine/redaction.util';
 import { crashPlanToWeeks } from './engine/plan-crash.util';
 import { COMPOSE_SYSTEM, HOUSE_RULES } from './engine/system-prompts';
 import type { DecisionPhase } from './engine/decide.service';
@@ -688,7 +689,22 @@ export class GenerationService {
     const after = await this.currentBudgetTotals(leadId, meta.currency);
     // Plan sanity findings reach the rep here rather than only the server log. First drafts get them too —
     // an implausible plan is exactly as wrong on draft one as on a regeneration.
-    const planWarnings = decisions.warnings ?? [];
+    // Confidentiality is verified on the RENDERED text rather than left to prompt discipline. A leaked supplier
+    // reference or an internal-tooling mention is the one class of error the client must never see, and both
+    // reached shipped proposals while the only protection was wording in the system prompt.
+    const redactionWarnings = summariseRedaction(lintRedaction(collectClientFacingText(doc)));
+    // Budget feasibility was computed, stored and then shown to nobody but the server log — so a target the
+    // plan could not actually reach looked identical to one it met comfortably.
+    const feasibilityWarnings =
+      fit?.feasibility === 'infeasible'
+        ? ['Budget check — the stated target is below the floor cost for this scope, so the plan does not reach it.']
+        : fit?.feasibility === 'tight'
+          ? ['Budget check — the target was met only with a closing adjustment; there is no headroom left.']
+          : [];
+    const planWarnings = [...(decisions.warnings ?? []), ...feasibilityWarnings, ...redactionWarnings];
+    if (redactionWarnings.length) {
+      this.logger.warn(`Redaction lint ▸ ${redactionWarnings.length} finding(s) in client-facing output for lead=${leadId}`);
+    }
     if (!isRegeneration && planWarnings.length) {
       await this.logChange(leadId, {
         kind: 'proposal',
