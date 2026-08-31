@@ -12,6 +12,7 @@ import { GenerationRepository } from './generation.repository';
 import { EngineService } from './engine/engine.service';
 import { ClientFeedbackService } from '../client-feedback/client-feedback.service';
 import { SettingsService } from '../settings/settings.service';
+import { posInt, resolvePhaseWeeks, isTotalWeeksMisread } from './engine/directive-parse.util';
 import { crashPlanToWeeks } from './engine/plan-crash.util';
 import { COMPOSE_SYSTEM, HOUSE_RULES } from './engine/system-prompts';
 import type { DecisionPhase } from './engine/decide.service';
@@ -1651,32 +1652,12 @@ export class GenerationService {
           `  "isStructural": boolean       // true if the instruction changes budget/timeline/team/structure; false if it only changes wording/content/focus text.\n` +
           `}`,
       });
-      const posInt = (n: unknown) => (Number.isFinite(Number(n)) && Number(n) > 0 ? Math.round(Number(n)) : undefined);
       const budgetMajor = posInt(data.budgetTarget);
-
-      // Deterministic phase detection. "make the Core Build phase 2 weeks" was being read as a 2-week TOTAL,
-      // which crashed the entire plan into two one-week phases. If the instruction names a real phase and a
-      // duration, that is a per-phase change — decided here in code, not left to the model.
-      const norm = (v: string) => (v || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-      const said = norm(prompt);
-      const namedPhases = plan.phases.filter((ph) => ph.name && said.includes(norm(ph.name)));
-      const r_WEEKS = /\d+(?:\.\d+)?\s*week/gi;
-      const spokenWeeks = /(\d+(?:\.\d+)?)\s*(?:-|to)?\s*(\d+(?:\.\d+)?)?\s*week/i.exec(prompt);
-      let phaseWeeks = Array.isArray(data.phaseWeeks)
-        ? data.phaseWeeks
-            .map((x) => ({ phase: String(x?.phase ?? '').trim(), weeks: posInt(x?.weeks) ?? 0 }))
-            .filter((x) => x.phase && x.weeks > 0)
-        : [];
-      if (!phaseWeeks.length && namedPhases.length === 1 && spokenWeeks) {
-        const wk = posInt(spokenWeeks[2] ?? spokenWeeks[1]);
-        if (wk) phaseWeeks = [{ phase: namedPhases[0].name, weeks: wk }];
-      }
-      // Suppress totalWeeks ONLY when it is the same number the phase change came from — i.e. the model read a
-      // per-phase duration as the project total. A prompt that genuinely states both ("Core Build 2 weeks, 12
-      // weeks overall") must keep both, so this cannot be a blanket "phase wins" rule.
+      // Phase naming and duration attribution are mechanical — settled in directive-parse.util (unit-tested)
+      // rather than trusted from the model, which twice read a per-phase duration as the project total.
+      const phaseWeeks = resolvePhaseWeeks(prompt, plan.phases.map((ph) => ph.name), data.phaseWeeks);
       const modelTotal = posInt(data.totalWeeks);
-      const weekMentions = (prompt.match(r_WEEKS) ?? []).length;
-      const misread = modelTotal !== undefined && weekMentions <= 1 && phaseWeeks.some((x) => x.weeks === modelTotal);
+      const misread = isTotalWeeksMisread(prompt, modelTotal, phaseWeeks);
       return {
         budgetTargetCents: budgetMajor ? budgetMajor * 100 : undefined,
         budgetMode: data.budgetMode === 'max' ? 'max' : 'exact',
