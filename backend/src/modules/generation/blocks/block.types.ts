@@ -302,6 +302,20 @@ export interface PaymentTermsBlock extends BlockBase {
   note?: string;
 }
 
+/**
+ * Post-launch commercial terms — hosting, maintenance, support response, backup and disaster recovery,
+ * ownership and warranty. Clients ask for these routinely and the proposal had nowhere to state them.
+ *
+ * Deliberately has NO price field. Support and maintenance pricing needs a basis Riseup sets commercially,
+ * and inventing one here would put a number the business never agreed in front of a client. A term may carry
+ * a `basis` describing how it is charged in words ("quoted separately", "included for 3 months").
+ */
+export interface CommercialTermsBlock extends BlockBase {
+  type: 'commercialTerms';
+  terms: { label: string; detail: string; basis?: string }[];
+  note?: string;
+}
+
 export interface HandoverBlock extends BlockBase {
   type: 'handover';
   columns: string[][];
@@ -349,6 +363,7 @@ export type Block =
   | FinancialBlock
   | EquipmentBlock
   | PaymentTermsBlock
+  | CommercialTermsBlock
   | HandoverBlock
   | ComparablesBlock
   | NextStepBlock
@@ -383,6 +398,7 @@ export const BLOCK_TYPES = [
   'equipment',
   'processFlow', // was missing: rendered everywhere but absent here, so block insert/type-change rejected it
   'paymentTerms',
+  'commercialTerms',
   'handover',
   'comparables',
   'nextStep',

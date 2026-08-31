@@ -25,6 +25,7 @@ export const BLOCK_PALETTE: { type: BlockType; label: string }[] = [
   { type: 'financial', label: 'Financial' },
   { type: 'equipment', label: 'Hardware & equipment' },
   { type: 'paymentTerms', label: 'Payment terms' },
+  { type: 'commercialTerms', label: 'Hosting, support & ownership' },
   { type: 'handover', label: 'Handover' },
   { type: 'comparables', label: 'Comparable work' },
   { type: 'nextStep', label: 'Next steps' },
@@ -70,9 +71,14 @@ export function scaffoldBlock(type: BlockType): Block {
       // Empty shell — the Budget tab's equipment rows fill it via rederiveMoneyBlocksFromSheet.
       return { id, type, eyebrow: 'Hardware & equipment', heading: 'Hardware, equipment & installation', currency: 'USD', rows: [], totalCents: 0 };
     case 'financial':
-      return { id, type, heading: 'Investment', currency: 'USD', rows: [{ label: 'Phase', focus: 'Focus', timeline: '2 wks', amountCents: 0 }], totalCents: 0, note: 'Total (excl. third-party costs)' };
+      return { id, type, heading: 'Investment', currency: 'USD', rows: [{ label: 'Phase', focus: 'Focus', timeline: '2 wks', amountCents: 0 }], totalCents: 0, note: '' };
     case 'paymentTerms':
       return { id, type, heading: 'Payment schedule', terms: [{ percent: 100, label: 'On delivery' }], note: '' };
+    case 'commercialTerms':
+      return {
+        id, type, heading: 'Hosting, support & ownership',
+        terms: [{ label: 'Term', detail: 'What it covers.' }], note: '',
+      };
     case 'handover':
       return { id, type, heading: 'What you receive from us', columns: [['Item'], ['Item']] };
     case 'comparables':

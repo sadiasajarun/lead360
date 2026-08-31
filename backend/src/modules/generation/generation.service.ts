@@ -601,8 +601,25 @@ export class GenerationService {
           const plan = await this.loadPlanForDirectives(leadId).catch(() => null);
           if (plan?.phases?.length) {
             const dir = await this.parseDirectivesAI(instructions, plan, await this.equipmentNames(leadId));
-            if (dir.phaseWeeks?.length || dir.totalWeeks || dir.budgetTargetCents || dir.equipmentRemove?.length) {
-              this.logger.log(`Regenerate ▸ plan directive detected (${dir.phaseWeeks?.length ?? 0} phase change(s)) — retiming deterministically instead of re-planning.`);
+            // Team changes belong here too. "drop the DevOps engineer and readjust" is a precise, applicable
+            // edit, yet the trailing "readjust" used to send it down the full-replan path and discard the plan.
+            const concrete =
+              (dir.phaseWeeks?.length ?? 0) > 0 ||
+              !!dir.totalWeeks ||
+              !!dir.budgetTargetCents ||
+              (dir.equipmentRemove?.length ?? 0) > 0 ||
+              (dir.removeRoles?.length ?? 0) > 0 ||
+              (dir.addRoles?.length ?? 0) > 0;
+            if (concrete) {
+              const what = [
+                dir.phaseWeeks?.length ? `${dir.phaseWeeks.length} phase change(s)` : '',
+                dir.totalWeeks ? `total ${dir.totalWeeks}w` : '',
+                dir.budgetTargetCents ? 'budget target' : '',
+                dir.equipmentRemove?.length ? `${dir.equipmentRemove.length} equipment row(s)` : '',
+                dir.removeRoles?.length ? `-${dir.removeRoles.length} role(s)` : '',
+                dir.addRoles?.length ? `+${dir.addRoles.length} role(s)` : '',
+              ].filter(Boolean).join(', ');
+              this.logger.log(`Regenerate ▸ plan directive detected (${what}) — applying deterministically instead of re-planning.`);
               return this.regenerateBudget(leadId, instructions, dir);
             }
           }

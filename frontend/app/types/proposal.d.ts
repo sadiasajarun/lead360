@@ -298,6 +298,14 @@ export interface PaymentTermsBlock extends BlockBase {
 }
 
 /** Release & handover — what the client receives (2 bullet columns). */
+/** Post-launch commercial terms — hosting, maintenance, support, ownership. Deliberately carries no price:
+ *  support pricing needs a commercial basis the business sets, not a figure invented per proposal. */
+export interface CommercialTermsBlock extends BlockBase {
+  type: 'commercialTerms';
+  terms: { label: string; detail: string; basis?: string }[];
+  note?: string;
+}
+
 export interface HandoverBlock extends BlockBase {
   type: 'handover';
   columns: string[][];
@@ -352,6 +360,7 @@ export type Block =
   | FinancialBlock
   | EquipmentBlock
   | PaymentTermsBlock
+  | CommercialTermsBlock
   | HandoverBlock
   | ComparablesBlock
   | NextStepBlock

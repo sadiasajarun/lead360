@@ -18,7 +18,7 @@ import { GenericBlockEditor } from './GenericBlockEditor';
 import { BlockEditContext, BlockToolbarContext, type SaveBlock, type BlockAction, type RegenerateBlock, type ExplainBlock } from './edit-context';
 import {
   Cover, Overview, Scope, FeatureMatrix, WorkApproach, Deliverables, Timeline, Assumptions, OutOfScope, Signoff, TechStack,
-  TeamAllocation, Financial, Equipment, PaymentTerms, Handover, Comparables, NextStep, Prose,
+  TeamAllocation, Financial, Equipment, PaymentTerms, CommercialTerms, Handover, Comparables, NextStep, Prose,
 } from './blocks';
 import { LayeredArchitecture, NumberedFlow, ProcessFlow, VendorArchitecture, SolutionArchitecture, Diagram } from './diagrams';
 
@@ -39,6 +39,7 @@ function renderBlock(block: Block, meta: ProposalMeta) {
     case 'financial': return <Financial block={block} />;
     case 'equipment': return <Equipment block={block} />;
     case 'paymentTerms': return <PaymentTerms block={block} />;
+    case 'commercialTerms': return <CommercialTerms block={block} />;
     case 'handover': return <Handover block={block} />;
     case 'comparables': return <Comparables block={block} />;
     case 'nextStep': return <NextStep block={block} />;

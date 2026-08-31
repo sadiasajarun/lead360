@@ -24,6 +24,7 @@ import type {
   TeamAllocationBlock,
   FinancialBlock,
   PaymentTermsBlock,
+  CommercialTermsBlock,
   HandoverBlock,
   ComparablesBlock,
   NextStepBlock,
@@ -559,6 +560,27 @@ export function PaymentTerms({ block }: { block: PaymentTermsBlock }) {
           {block.note ? <p className="small muted" style={{ marginTop: 14 }}>{block.note}</p> : null}
         </>
       )}
+    </section>
+  );
+}
+
+export function CommercialTerms({ block }: { block: CommercialTermsBlock }) {
+  return (
+    <section>
+      <span className="eyebrow">Hosting, support &amp; ownership</span>
+      {block.heading ? <h2>{block.heading}</h2> : null}
+      <table className="tbl">
+        <tbody>
+          {block.terms.map((t, i) => (
+            <tr key={i}>
+              <td><b>{t.label}</b></td>
+              <td>{t.detail}</td>
+              <td className="small muted">{t.basis ?? ''}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {block.note ? <p className="small muted" style={{ marginTop: 14 }}>{block.note}</p> : null}
     </section>
   );
 }

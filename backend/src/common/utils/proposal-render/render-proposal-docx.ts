@@ -22,7 +22,7 @@ import type {
   ProposalDocument, ProposalMeta, Block,
   CoverBlock, OverviewBlock, ScopeBlock, FeatureMatrixBlock, WorkApproachBlock,
   DeliverablesBlock, TimelineBlock, AssumptionsBlock, OutOfScopeBlock, SignoffBlock,
-  TechStackBlock, TeamAllocationBlock, FinancialBlock, EquipmentBlock, PaymentTermsBlock,
+  TechStackBlock, TeamAllocationBlock, FinancialBlock, EquipmentBlock, PaymentTermsBlock, CommercialTermsBlock,
   HandoverBlock, ComparablesBlock, NextStepBlock, ProseBlock,
   LayeredArchitectureBlock, NumberedFlowBlock, ProcessFlowBlock, VendorArchitectureBlock, SolutionArchitectureBlock, DiagramBlock,
 } from '../../../modules/generation/blocks/block.types';
@@ -332,6 +332,20 @@ function renderBlock(b: Block, meta: ProposalMeta, archImg?: Map<string, ArchIma
       if (p.heading) out.push(h2(p.heading));
       out.push(table(['Stage', 'Payment'], p.terms.map((t) => [t.label, `${t.percent}%`]), { widths: [70, 30] }));
       if (p.note) out.push(para(p.note, { color: MUTED, size: 19 }));
+      break;
+    }
+    case 'commercialTerms': {
+      const c = b as CommercialTermsBlock;
+      out.push(eyebrow('Hosting, support & ownership'));
+      if (c.heading) out.push(h2(c.heading));
+      out.push(
+        table(
+          ['Term', 'What it covers', 'Basis'],
+          c.terms.map((t) => [t.label, t.detail, t.basis ?? '']),
+          { widths: [26, 52, 22] },
+        ),
+      );
+      if (c.note) out.push(para(c.note, { color: MUTED, size: 19 }));
       break;
     }
     case 'assumptions': {

@@ -8,7 +8,7 @@ import type {
   ProposalDocument, ProposalMeta, Block,
   CoverBlock, OverviewBlock, ScopeBlock, FeatureMatrixBlock, WorkApproachBlock,
   DeliverablesBlock, TimelineBlock, AssumptionsBlock, OutOfScopeBlock, SignoffBlock,
-  TechStackBlock, TeamAllocationBlock, FinancialBlock, EquipmentBlock, PaymentTermsBlock,
+  TechStackBlock, TeamAllocationBlock, FinancialBlock, EquipmentBlock, PaymentTermsBlock, CommercialTermsBlock,
   HandoverBlock, ComparablesBlock, NextStepBlock, ProseBlock,
   LayeredArchitectureBlock, NumberedFlowBlock, ProcessFlowBlock, VendorArchitectureBlock, SolutionArchitectureBlock, DiagramBlock,
 } from '../../../modules/generation/blocks/block.types';
@@ -166,6 +166,18 @@ function equipment(b: EquipmentBlock): string {
 function paymentTerms(b: PaymentTermsBlock): string {
   const terms = b.terms.map((t) => `<div class="p"><div class="pn num">${t.percent}%</div><div class="pl">${esc(t.label)}</div></div>`).join('');
   return `<section>${head(undefined, b.heading, 'Payment terms')}<div class="paybar">${terms}</div>${b.note ? `<p class="small muted" style="margin-top:14px">${esc(b.note)}</p>` : ''}</section>`;
+}
+
+function commercialTerms(b: CommercialTermsBlock): string {
+  const rows = b.terms
+    .map(
+      (t) =>
+        `<tr><td><b>${esc(t.label)}</b></td><td>${esc(t.detail)}</td><td class="small muted">${esc(t.basis ?? '')}</td></tr>`,
+    )
+    .join('');
+  return `<section>${head(undefined, b.heading, 'Hosting, support & ownership')}<table class="tbl"><tbody>${rows}</tbody></table>${
+    b.note ? `<p class="small muted" style="margin-top:14px">${esc(b.note)}</p>` : ''
+  }</section>`;
 }
 
 function handover(b: HandoverBlock): string {
@@ -391,6 +403,7 @@ function renderBlock(b: Block, meta: ProposalMeta, m: Record<string, string>): s
     case 'financial': return financial(b);
     case 'equipment': return equipment(b);
     case 'paymentTerms': return paymentTerms(b);
+    case 'commercialTerms': return commercialTerms(b);
     case 'handover': return handover(b);
     case 'comparables': return comparables(b);
     case 'nextStep': return nextStep(b);

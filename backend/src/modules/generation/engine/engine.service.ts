@@ -83,6 +83,22 @@ interface Creative {
 // Week label for phase/timeline rows — singular reads correctly ("1 wk", not "1 wks").
 const wkLabel = (w: number): string => `${w} ${w === 1 ? 'wk' : 'wks'}`;
 
+/**
+ * Whether the brief actually raises post-launch commercial terms. Clients ask about hosting, maintenance,
+ * support windows, backups and ownership routinely, and the proposal had nowhere to answer. Gated on the
+ * brief so proposals that never mention them are unchanged.
+ */
+function wantsCommercialTerms(intent: Intent): boolean {
+  const haystack = [
+    intent.summary, intent.desiredOutcome,
+    ...intent.constraints, ...intent.pains, ...intent.modules, ...intent.outOfScope,
+  ].join(' ').toLowerCase();
+  // Bare "support" / "server" / "dr" are far too common to gate on — they appear in almost every brief.
+  return /\b(hosting|maintenance|sla|uptime|backups?|disaster recovery|warranty|ownership|amc|post-launch|source code|licen[cs]e)\b/.test(haystack)
+    || /\b(support|maintain)\b[^.]{0,40}\b(period|window|contract|hours|response|retainer|annual|monthly)\b/.test(haystack)
+    || /\bown(s|ing)? the (code|source|ip)\b/.test(haystack);
+}
+
 const surfaceIcon = (kind: string) => ({ web: 'globe', mobile: 'smartphone', admin: 'sliders-horizontal', portal: 'user', api: 'server', other: 'layers' } as Record<string, string>)[kind] ?? 'layers';
 // Pick a meaningful icon for a module/feature sub-tile from its label — so the architecture figure's chips
 // vary (cart, pin, lock, …) instead of all reading the same. Resolved by the diagram's own icon set.
@@ -272,14 +288,18 @@ export class EngineService {
       // design_portfolio) carry a financial section. Local still lists the hardware, but WITHOUT prices.
       plan.push('equipment');
       // …what we assume/rely on → sign-off → handover → comparables. No payment terms; no nextStep.
-      plan.push('assumptions', 'outOfScope', 'signoff', 'handover', 'comparables');
+      plan.push('assumptions', 'outOfScope', 'signoff');
+      if (wantsCommercialTerms(intent)) plan.push('commercialTerms');
+      plan.push('handover', 'comparables');
       return plan;
     }
     // Agency (default): architecture → system flow(s) → user journey → …
     const plan: BlockType[] = ['cover', 'overview', 'scope', 'layeredArchitecture', 'processFlow', 'numberedFlow'];
     if (intent.audience === 'technical' && intent.scopeSize !== 'small') plan.push('diagram');
     if (intent.scopeSize !== 'small') plan.push('featureMatrix');
-    plan.push('workApproach', 'techStack', 'teamAllocation', 'equipment', 'financial', 'paymentTerms', 'handover', 'comparables');
+    plan.push('workApproach', 'techStack', 'teamAllocation', 'equipment', 'financial', 'paymentTerms');
+    if (wantsCommercialTerms(intent)) plan.push('commercialTerms');
+    plan.push('handover', 'comparables');
     return plan;
   }
 
@@ -445,7 +465,23 @@ export class EngineService {
       // rederiveMoneyBlocksFromSheet fills it. Never null — the doc is saved before the budget exists.
       equipment: () => ({ id: id(), type: 'equipment', eyebrow: 'Hardware & equipment', heading: 'Hardware, equipment & installation', currency: d.budget.currency, rows: [], totalCents: 0, showPricing: meta.template === 'agency' || meta.template === 'design_portfolio' }),
       financial: () => ({ id: id(), type: 'financial', heading: 'Financial estimation — phase by phase', currency: d.budget.currency, rows: d.budget.rows, totalCents: d.budget.totalCents, note: d.budget.note, explanation: d.budget.explanation }),
-      paymentTerms: () => ({ id: id(), type: 'paymentTerms', heading: 'Payment schedule', terms: d.paymentTerms, note: 'Change requests billed at the standard man-day rate. Third-party fees are paid directly by the client.' }),
+      paymentTerms: () => ({ id: id(), type: 'paymentTerms', heading: 'Payment schedule', terms: d.paymentTerms, note: 'Change requests are billed at the standard man-day rate. Licence and subscription fees are billed at cost.' }),
+      // Structural statements only — no invented prices. Support and maintenance pricing needs a commercial
+      // basis Riseup sets; a figure made up per proposal would put a number the business never agreed in
+      // front of a client. The rep fills the basis column in, and the whole block is editable.
+      commercialTerms: () => ({
+        id: id(),
+        type: 'commercialTerms',
+        heading: 'Hosting, support & ownership',
+        terms: [
+          { label: 'Source code & ownership', detail: 'Full ownership of the delivered source code and its documentation transfers to you.', basis: 'Included' },
+          { label: 'Hosting', detail: 'The system is deployed to infrastructure you own and control.', basis: 'Your environment' },
+          { label: 'Post-launch support', detail: 'Defects traced to the delivered work are corrected after go-live.', basis: 'Agreed at contract' },
+          { label: 'Maintenance & enhancements', detail: 'Changes beyond the agreed scope, once the system is live.', basis: 'Standard man-day rate' },
+          { label: 'Backup & recovery', detail: 'A backup schedule and a tested restore procedure are configured before handover.', basis: 'Included' },
+        ],
+        note: 'Support and maintenance terms are confirmed at contract stage.',
+      }),
       handover: () => ({ id: id(), type: 'handover', heading: 'What you receive from us', columns: c.handover.length >= 2 ? c.handover : [['Production system', 'Admin console with roles & reports'], ['Source code + Git ownership', 'Documentation, training, 60 days support']] }),
       comparables: () => (d.comparables.length ? { id: id(), type: 'comparables', heading: "We've built comparable products before", items: d.comparables, whyRiseup: { heading: 'Why build this with Riseup Labs', body: c.whyRiseup || 'We ship products like this and stay on after launch — you own the source code and your team is trained to run it.', points: [{ stat: '200+', label: 'products delivered' }, { stat: '15+ yrs', label: 'in market' }, { stat: 'You own it', label: 'full source + handover' }] } } : null),
       nextStep: () => ({ id: id(), type: 'nextStep', heading: 'Getting started', steps: [{ title: 'Proposal sign-off', sub: 'Confirm scope & commercial terms.' }, { title: 'Kickoff workshop', sub: 'Stakeholders, accounts, go-live target.' }, { title: 'Discovery sprint', sub: 'Research, confirmation, sitemap.' }, { title: 'Build starts', sub: 'Week-by-week status, milestone reviews.' }] }),

@@ -391,7 +391,7 @@ export class DecideService {
       // short and collapsed real plans to one week per phase.
       const weekly = phases.reduce((peak, ph) => {
         const cap = ph.team
-          .filter((m) => /developer|engineer|designer|architect/i.test(m.role) && !/manager|qa|quality|support|proof|tester/i.test(m.role))
+          .filter((m) => /developer|engineer|designer|architect/i.test(m.role) && !/manager|\bqa\b|quality|support|proof|tester/i.test(m.role))
           .reduce((sum, m) => sum + m.units * ((m.hoursPerDay || HOURS_PER_DAY) / HOURS_PER_DAY) * DAYS_PER_WEEK, 0);
         return Math.max(peak, cap);
       }, 0);
