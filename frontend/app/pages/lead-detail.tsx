@@ -20,6 +20,7 @@ import type { ProposalPayload } from '~/services/httpServices/presentService';
 import { SalesBriefView, PitchDeckView } from '~/components/SalesBriefPitch';
 import { fetchBudget, updateBudget } from '~/services/httpServices/budgetService';
 import { BudgetEditor } from '~/components/BudgetEditor';
+import PlanEditor from '~/components/PlanEditor';
 import { BudgetConvertedView } from '~/components/BudgetConvertedView';
 import { ProposalDocument, buildPricing } from '~/components/ProposalDocument';
 import { ProposalRenderer } from '~/components/proposal/ProposalRenderer';
@@ -40,8 +41,8 @@ import CommentThread from '~/components/shared/CommentThread';
 import StatusPill from '~/components/atoms/StatusPill';
 import type { LeadComment } from '~/types/comment';
 
-const TABS = ['proposal', 'budget', 'requirement', 'brief', 'pitch'] as const;
-const TAB_LABEL: Record<(typeof TABS)[number], string> = { proposal: 'Proposal', budget: 'Budget', requirement: 'Requirement', brief: 'Sales Brief', pitch: 'Pitch Deck' };
+const TABS = ['proposal', 'plan', 'budget', 'requirement', 'brief', 'pitch'] as const;
+const TAB_LABEL: Record<(typeof TABS)[number], string> = { proposal: 'Proposal', plan: 'Plan', budget: 'Budget', requirement: 'Requirement', brief: 'Sales Brief', pitch: 'Pitch Deck' };
 
 // Output routing (Generation-Engine spec §5): Global & Local deliver a proposal + a SEPARATE budget,
 // so they get a Budget tab. Agency & Design Portfolio deliver ONE combined document — the budget is
@@ -517,6 +518,17 @@ export default function LeadDetail() {
                 {activeViewCurrency === budgetCurrency
                   ? <BudgetEditor leadId={id} changeLog={proposal?.changeLog} onRegenerated={reloadProposal} />
                   : <BudgetConvertedView leadId={id} currency={activeViewCurrency} budgetCurrency={budgetCurrency} />}
+              </div>
+            )}
+
+            {/* PLAN — the canonical delivery plan. Editing it here recomputes the timeline, team and budget
+                deterministically, with no AI call, so a duration or staffing change never needs a prompt. */}
+            {activeTab === 'plan' && (
+              <div data-testid="plan-tab">
+                <PlanEditor
+                  leadId={id}
+                  onSaved={() => { reloadProposal(); dispatch(fetchBudget(id)); }}
+                />
               </div>
             )}
 

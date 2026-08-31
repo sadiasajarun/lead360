@@ -113,3 +113,42 @@ export interface LeadTokenUsage {
   byKind: LeadTokenUsageKind[];
   model: string;
 }
+
+// ── Delivery plan ───────────────────────────────────────────────────────────────────────────────────
+// The canonical Plan the timeline, team allocation and budget are all projected from. Editing it in the
+// Plan tab recomputes all three deterministically — no AI call, no replan.
+
+export interface PlanMember {
+  role: string;
+  seniority: string;
+  units: number;
+  hoursPerDay: number;
+  department: string;
+  dayRateCents?: number;
+}
+
+export interface PlanPhase {
+  name: string;
+  focus: string;
+  weeks: number;
+  /** Held through future regenerations. Set automatically when the duration is edited. */
+  pinnedWeeks: boolean;
+  team: PlanMember[];
+}
+
+export interface DeliveryPlan {
+  currency: string;
+  totalWeeks: number;
+  phases: PlanPhase[];
+}
+
+// ── Proposal snapshots ──────────────────────────────────────────────────────────────────────────────
+
+export interface ProposalVersionSummary {
+  id: string;
+  versionNo: number;
+  label: string | null;
+  createdAt: string;
+  /** Whether the snapshot carries the plan as well as the wording. */
+  hasPlan: boolean;
+}
