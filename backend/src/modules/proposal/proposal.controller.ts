@@ -22,6 +22,27 @@ export class ProposalController {
     return this.proposals.getForLead(id);
   }
 
+  @Get('versions')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @ApiOperation({ summary: 'List proposal snapshots, newest first' })
+  @ApiResponse({ status: 200, description: 'OK' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  listVersions(@Param('id', ParseUUIDPipe) id: string) {
+    return this.proposals.listVersions(id);
+  }
+
+  @Post('versions/:versionId/restore')
+  @Roles(UserRole.SALES_PM, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Restore a snapshot (the current state is snapshotted first, so this is undoable)' })
+  @ApiResponse({ status: 201, description: 'Restored' })
+  @ApiResponse({ status: 404, description: 'Proposal or version not found' })
+  restoreVersion(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('versionId', ParseUUIDPipe) versionId: string,
+  ) {
+    return this.proposals.restoreVersion(id, versionId);
+  }
+
   @Get('pdf')
   @Roles(UserRole.SALES_PM, UserRole.ADMIN)
   @ApiOperation({ summary: 'Download the proposal as a branded PDF (the actual generated format)' })

@@ -569,6 +569,15 @@ export class GenerationService {
     const isRegeneration = await this.proposals.existsForLead(leadId).catch(() => false);
     const mode = isRegeneration ? (instructions?.trim() ? 'REGENERATE (prompt)' : 'REGENERATE (full)') : 'GENERATE (first draft)';
     this.logger.log(`━━━ Generation ▸ ${mode} · lead=${leadId}${instructions?.trim() ? ` · prompt="${instructions.trim().slice(0, 120)}"` : ''} ━━━`);
+    // Snapshot BEFORE anything is overwritten. A regeneration rewrites wording, timeline, team and budget at
+    // once, and nothing recorded the previous state — a draft the rep had tuned was simply gone.
+    if (isRegeneration) {
+      const snap = await this.proposals.snapshotVersion(
+        leadId,
+        instructions?.trim() ? `Before: “${instructions.trim().slice(0, 60)}”` : 'Before full regeneration',
+      );
+      if (snap) this.logger.log(`Generation ▸ snapshotted version ${snap.versionNo} before overwriting.`);
+    }
     // Honour a format/template switch FIRST so the whole structure follows it (buildEngineInput re-reads the lead).
     const switchedTemplate = await this.applyTemplateDirective(leadId, instructions);
     // Universal-regen router (Workstream B): split a mixed/Bangla prompt into per-section edits and apply them

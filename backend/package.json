@@ -1,7 +1,7 @@
 {
   "name": "lead360-backend",
   "version": "0.1.0",
-  "description": "Lead360 \u2014 AI proposal & budget studio API (NestJS + PostgreSQL/pgvector + BullMQ)",
+  "description": "Lead360 — AI proposal & budget studio API (NestJS + PostgreSQL/pgvector + BullMQ)",
   "private": true,
   "scripts": {
     "build": "nest build",
@@ -26,7 +26,9 @@
     "migrate:budget-hours": "ts-node src/database/add-budget-line-hours.ts",
     "migrate:module-profiles": "ts-node src/database/add-module-profiles.ts",
     "migrate:budget-equipment": "ts-node src/database/add-budget-equipment.ts",
-    "migrate:lead-procurement": "ts-node src/database/add-lead-procurement-flags.ts"
+    "migrate:lead-procurement": "ts-node src/database/add-lead-procurement-flags.ts",
+    "migrate:budget-pinning": "ts-node src/database/add-budget-pinning.ts",
+    "migrate:proposal-versions": "ts-node src/database/add-proposal-version-calc.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",

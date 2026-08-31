@@ -51,4 +51,9 @@ export class BudgetLine extends BaseEntity {
 
   @Column({ default: false })
   optional: boolean;
+
+  /** Hand-tuned by the rep. A regeneration rewrites the derived rows around it but leaves this one alone —
+   *  previously every regen wiped the whole sheet, discarding any correction the rep had made. */
+  @Column({ default: false })
+  pinned: boolean;
 }

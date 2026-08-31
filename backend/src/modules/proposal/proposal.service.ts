@@ -243,6 +243,68 @@ export class ProposalService {
     return this.proposals.update(existing.id, patch);
   }
 
+  /**
+   * Snapshot the proposal AND the plan it was generated from, immediately before something overwrites them.
+   * This is the universal undo: a full regeneration rewrites wording, timeline, team and budget together, and
+   * until now nothing recorded what was there first — a destroyed draft was simply gone.
+   *
+   * Never throws: a failed snapshot must not block the regeneration the user asked for.
+   */
+  async snapshotVersion(leadId: string, label: string): Promise<{ versionNo: number } | null> {
+    try {
+      const proposal = await this.getForLead(leadId);
+      if (!proposal?.sections) return null;
+      const [latest] = await this.versions.find({
+        where: { proposalId: proposal.id },
+        order: { versionNo: 'DESC' },
+        take: 1,
+      });
+      const calc = await this.getInternalCalc(leadId).catch(() => null);
+      const saved = await this.versions.save(
+        this.versions.create({
+          proposalId: proposal.id,
+          versionNo: (latest?.versionNo ?? 0) + 1,
+          sectionsJson: proposal.sections as Record<string, unknown>,
+          internalCalcJson: (calc?.internalCalc as Record<string, unknown>) ?? null,
+          label,
+        }),
+      );
+      return { versionNo: saved.versionNo };
+    } catch {
+      return null;
+    }
+  }
+
+  /** Snapshot history, newest first. Content is omitted — the list is for choosing, not for rendering. */
+  async listVersions(leadId: string) {
+    const proposal = await this.getForLead(leadId);
+    const rows = await this.versions.find({
+      where: { proposalId: proposal.id },
+      order: { versionNo: 'DESC' },
+    });
+    return rows.map((v) => ({
+      id: v.id,
+      versionNo: v.versionNo,
+      label: v.label ?? null,
+      createdAt: v.createdAt,
+      hasPlan: !!v.internalCalcJson,
+    }));
+  }
+
+  /**
+   * Restore a snapshot. The current state is snapshotted first, so restoring is itself undoable and cannot
+   * become a second way to lose work.
+   */
+  async restoreVersion(leadId: string, versionId: string) {
+    const proposal = await this.getForLead(leadId);
+    const version = await this.versions.findOne({ where: { id: versionId, proposalId: proposal.id } });
+    if (!version) throw new NotFoundException('Version not found for this proposal');
+    await this.snapshotVersion(leadId, `Before restoring version ${version.versionNo}`);
+    await this.upsertForLead(leadId, proposal.template, version.sectionsJson);
+    if (version.internalCalcJson) await this.setInternalCalc(leadId, version.internalCalcJson);
+    return this.getForLead(leadId);
+  }
+
   // Snapshots the current sections into a new version and points the proposal at it.
   // NOTE: the actual AI drafting (Claude) that CHANGES the sections is wired in D5 chunk 5;
   // for now this preserves full version history end-to-end (the delta seam).

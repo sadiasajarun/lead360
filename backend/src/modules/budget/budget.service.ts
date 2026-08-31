@@ -122,7 +122,13 @@ export class BudgetService {
       const lineRepo = manager.getRepository(BudgetLine);
       const equipRepo = manager.getRepository(BudgetEquipment);
 
-      // wipe existing lines for this budget
+      // Snapshot what the sheet held BEFORE the wipe, so a row the rep actually changed can be told apart
+      // from one they merely re-saved. Pinning everything on save would freeze the sheet and make the next
+      // regeneration look broken; pinning nothing would keep losing hand corrections.
+      const priorLines = await lineRepo.find({ where: { budgetId: current.id } });
+      const lineKey = (l: { department?: string; role?: string; seniority?: string }) =>
+        `${(l.department ?? '').trim().toLowerCase()}|${(l.role ?? '').trim().toLowerCase()}|${l.seniority ?? ''}`;
+      const priorByKey = new Map(priorLines.map((l) => [lineKey(l), l]));
       await lineRepo.delete({ budgetId: current.id });
 
       // ensure milestones exist (by name), keyed for line assignment
@@ -148,6 +154,20 @@ export class BudgetService {
           workingDays: l.workingDays ?? Math.round(Number(l.days) || 0),
           dayRateCents: String(l.dayRateCents),
           optional: !!l.optional,
+          // Pinned when this row is new, was already pinned, or any costed field moved.
+          pinned: ((): boolean => {
+            const before = priorByKey.get(lineKey(l));
+            if (!before) return true;
+            if (before.pinned) return true;
+            return (
+              Number(before.units) !== Number(l.units) ||
+              Number(before.days) !== Number(l.days) ||
+              Number(before.hoursPerDay) !== Number(l.hoursPerDay ?? 8) ||
+              Number(before.workingDays) !== Number(l.workingDays ?? Math.round(Number(l.days) || 0)) ||
+              String(before.dayRateCents) !== String(l.dayRateCents) ||
+              !!before.optional !== !!l.optional
+            );
+          })(),
         }),
       );
       await lineRepo.save(newLines);
@@ -193,6 +213,12 @@ export class BudgetService {
           contingencyPct: String(adj.contingencyPct),
           discountPct: String(adj.discountPct),
           vatPct: String(adj.vatPct),
+          // Hand-set adjustments stay pinned so the next regeneration cannot reset them to zero.
+          adjustmentsPinned:
+            current.adjustmentsPinned ||
+            adj.contingencyPct !== Number(current.contingencyPct) ||
+            adj.discountPct !== Number(current.discountPct) ||
+            adj.vatPct !== Number(current.vatPct),
           totalCents: String(result.totalCents),
         }),
       );
@@ -283,8 +309,15 @@ export class BudgetService {
       const lineRepo = manager.getRepository(BudgetLine);
       const equipRepo = manager.getRepository(BudgetEquipment);
       const milestoneRepo = manager.getRepository(Milestone);
-      await lineRepo.delete({ budgetId: current.id });
-      await milestoneRepo.delete({ budgetId: current.id });
+      // Only the DERIVED rows are replaced. A row the rep pinned by editing it survives the regeneration —
+      // previously the whole sheet was wiped and every hand correction went with it.
+      const pinnedLines = await lineRepo.find({ where: { budgetId: current.id, pinned: true } });
+      await lineRepo.delete({ budgetId: current.id, pinned: false });
+      // Milestones still referenced by a pinned row must outlive the wipe or the row loses its grouping.
+      const keepMilestones = new Set(pinnedLines.map((l) => l.milestoneId).filter(Boolean) as string[]);
+      for (const ms of await milestoneRepo.find({ where: { budgetId: current.id } })) {
+        if (!keepMilestones.has(ms.id)) await milestoneRepo.delete({ id: ms.id });
+      }
       // Only scalar columns — never spread the stale `lines` relation (orphans the new rows).
       await budgetRepo.update({ id: current.id }, { currency });
       // Recreate milestones (phases) by name, in first-seen order, so the sheet groups by phase.
@@ -311,16 +344,25 @@ export class BudgetService {
         }),
       );
       if (newLines.length) await lineRepo.save(newLines);
-      // Reset adjustments to zero for a freshly derived sheet unless the caller supplies exact ones (P4 solver).
-      const adj = {
-        contingencyPct: Number(adjustments?.contingencyPct ?? 0),
-        discountPct: Number(adjustments?.discountPct ?? 0),
-        vatPct: Number(adjustments?.vatPct ?? 0),
-      };
+      // Reset adjustments to zero for a freshly derived sheet unless the caller supplies exact ones (P4 solver)
+      // — or the rep pinned them, in which case hand-set contingency/discount/VAT survive the regeneration.
+      const adj = current.adjustmentsPinned
+        ? {
+            contingencyPct: Number(current.contingencyPct ?? 0),
+            discountPct: Number(current.discountPct ?? 0),
+            vatPct: Number(current.vatPct ?? 0),
+          }
+        : {
+            contingencyPct: Number(adjustments?.contingencyPct ?? 0),
+            discountPct: Number(adjustments?.discountPct ?? 0),
+            vatPct: Number(adjustments?.vatPct ?? 0),
+          };
       // Equipment is NOT wiped by a regeneration (only lines/milestones are), so it must stay in the
       // recomputed total — otherwise the hardware silently vanishes from the budget on every regen.
       const equipNow = await equipRepo.find({ where: { budgetId: current.id } });
-      const result = computeBudget(this.toCalcLines(newLines), adj, true, this.toCalcEquipment(equipNow));
+      // Pinned rows are part of the sheet, so they must be part of the total too.
+      const allLines = [...pinnedLines, ...newLines];
+      const result = computeBudget(this.toCalcLines(allLines), adj, true, this.toCalcEquipment(equipNow));
       await budgetRepo.save(
         budgetRepo.create({
           id: current.id,

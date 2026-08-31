@@ -32,6 +32,11 @@ export class Budget extends BaseEntity {
   @Column({ name: 'vat_pct', type: 'numeric', precision: 11, scale: 6, default: 0 })
   vatPct: string;
 
+  /** Contingency / discount / VAT were set by hand and must survive a regeneration, which otherwise resets
+   *  all three to zero on every run. */
+  @Column({ name: 'adjustments_pinned', default: false })
+  adjustmentsPinned: boolean;
+
   // Computed grand total in integer minor units (cents).
   @Column({ name: 'total_cents', type: 'bigint', default: 0 })
   totalCents: string;

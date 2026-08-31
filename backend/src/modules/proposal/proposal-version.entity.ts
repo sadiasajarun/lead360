@@ -25,4 +25,13 @@ export class ProposalVersion extends BaseEntity {
 
   @Column({ name: 'pdf_key', nullable: true })
   pdfKey?: string;
+
+  /** The canonical Plan as it stood. Restoring wording without it would leave the timeline, team and budget
+   *  belonging to a different plan. */
+  @Column({ name: 'internal_calc_json', type: 'jsonb', nullable: true })
+  internalCalcJson?: Record<string, unknown> | null;
+
+  /** What triggered the snapshot ("Before regeneration"), so the list is readable. */
+  @Column({ nullable: true })
+  label?: string;
 }
