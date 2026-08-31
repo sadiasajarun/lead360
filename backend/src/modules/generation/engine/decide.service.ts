@@ -386,12 +386,16 @@ export class DecideService {
     const envelopeWeeks = ((): number => {
       const estDays = moduleRes.totalEstDays;
       if (!estDays || estDays <= 0) return 0;
-      // Weekly EFFECTIVE capacity of the build roles. Roles are staffed part-time, so a head is worth
-      // units x (hoursPerDay/8) x 5 days a week — counting heads as full-time made the envelope far too
+      // Weekly EFFECTIVE capacity of the delivery roles. Roles are staffed part-time, so a head is worth
+      // units x (hoursPerDay/8) x 5 days a week - counting heads as full-time made the envelope far too
       // short and collapsed real plans to one week per phase.
+      //
+      // QA and testers COUNT toward capacity: the module effort estimates cover verification as well as
+      // build, so leaving them out understates the team and stretched a real 19-week plan to 25. Only
+      // roles that carry no module effort - management, support, proofing - are excluded.
       const weekly = phases.reduce((peak, ph) => {
         const cap = ph.team
-          .filter((m) => /developer|engineer|designer|architect/i.test(m.role) && !/manager|\bqa\b|quality|support|proof|tester/i.test(m.role))
+          .filter((m) => /developer|engineer|designer|architect|qa|tester/i.test(m.role) && !/manager|\bpm\b|support|proof|coordinator/i.test(m.role))
           .reduce((sum, m) => sum + m.units * ((m.hoursPerDay || HOURS_PER_DAY) / HOURS_PER_DAY) * DAYS_PER_WEEK, 0);
         return Math.max(peak, cap);
       }, 0);
