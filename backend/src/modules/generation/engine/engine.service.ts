@@ -52,8 +52,10 @@ export interface InternalCalc {
   plan: { currency: string; phases: DecisionPhase[] };
   /** Module-intelligence breakdown (internal) — per-module type/complexity/weight + estimated effort. Drives
    *  the internal module panel; informational only (the plan above sets the price). */
-  modules?: { name: string; type: string; complexity: string; weight: number; keyFeatures: string[]; estDays: number }[];
+  modules?: { name: string; type: string; complexity: string; weight: number; keyFeatures: string[]; estDays: number; featureEstimate?: unknown }[];
   moduleTotalEstDays?: number;
+  /** V2 calibration against approved deliveries (internal; includes any reduced-scope proposal). */
+  calibration?: Decisions['calibration'];
 }
 
 /** Creative content produced by the single compose call (facts come from Intent/Decisions). */
@@ -252,6 +254,7 @@ export class EngineService {
       plan: { currency: decisions.budget.currency, phases: decisions.phases },
       modules: decisions.moduleAnalysis,
       moduleTotalEstDays: decisions.moduleTotalEstDays,
+      ...(decisions.calibration ? { calibration: decisions.calibration } : {}),
     };
     const c = (u: Usage) => this.ai.price(u.tokensIn, u.tokensOut);
     this.logger.log(
@@ -297,7 +300,7 @@ export class EngineService {
     const plan: BlockType[] = ['cover', 'overview', 'scope', 'layeredArchitecture', 'processFlow', 'numberedFlow'];
     if (intent.audience === 'technical' && intent.scopeSize !== 'small') plan.push('diagram');
     if (intent.scopeSize !== 'small') plan.push('featureMatrix');
-    plan.push('workApproach', 'techStack', 'teamAllocation', 'equipment', 'financial', 'paymentTerms');
+    plan.push('workApproach', 'techStack', 'teamAllocation', 'equipment', 'financial', 'assumptions', 'paymentTerms');
     if (wantsCommercialTerms(intent)) plan.push('commercialTerms');
     plan.push('handover', 'comparables');
     return plan;
@@ -307,13 +310,17 @@ export class EngineService {
     // Global/Local proposals carry three extra sections (deliverables & acceptance matrix, assumptions
     // & dependencies) and a methodology/QA-led work approach; Agency keeps its leaner set.
     const wantsFormalSections = template === 'global' || template === 'local';
-    const formalKeys = wantsFormalSections
-      ? '- methodology: 2-3 sentences on the development methodology — how the team works (e.g. Agile/Scrum, sprint length, ceremonies, Definition of Done). Specific to this engagement.\n' +
-        '- qaApproach: 2-3 sentences on the QA approach — testing types (functional, regression, integration, UAT), coverage, and the quality gate before each release.\n' +
-        '- assumptions: array of 5-8 strings — what we assume to be true for this estimate/timeline to hold.\n' +
-        '- dependencies: array of 4-7 strings — what we rely on the client (or third parties) to provide, and by when.\n'
-      : '';
-    // Ground the methodology/assumptions/deliverables in how Riseup approached comparable past projects
+    // Assumptions and dependencies belong on EVERY proposal, agency included: they are the boundary of
+    // the estimate, and the place where an undecided requirement is stated rather than silently priced.
+    // Only the methodology and QA narrative stay exclusive to the formal templates.
+    const assumptionKeys =
+      '- assumptions: array of 5-8 strings — what we assume to be true for this estimate/timeline to hold. Where the brief marks something as UNDECIDED or as a stated assumption, say so explicitly and describe the narrow interpretation being priced.\n' +
+      '- dependencies: array of 4-7 strings — what we rely on the client to provide, and by when.\n';
+    const formalKeys =
+      (wantsFormalSections
+        ? '- methodology: 2-3 sentences on the development methodology — how the team works (e.g. Agile/Scrum, sprint length, ceremonies, Definition of Done). Specific to this engagement.\n' +
+          '- qaApproach: 2-3 sentences on the QA approach — testing types (functional, regression, integration, UAT), coverage, and the quality gate before each release.\n'
+        : '') + assumptionKeys;
     // OF THE SAME TEMPLATE (global vs local differ in approach, assumptions and dependencies).
     const groundingBlock = wantsFormalSections && decisions.grounding.length
       ? `\nGround the methodology, assumptions, dependencies and deliverables in how Riseup approached comparable past ${template} projects — adapt to THIS project, never copy prose:\n${decisions.grounding.slice(0, 5).map((g, i) => `[${i + 1}] ${g}`).join('\n')}\n`
@@ -430,7 +437,7 @@ export class EngineService {
       timeline: () => this.timeline(d, c, id, meta.template),
       assumptions: () => {
         const assumptions = c.assumptions.length ? c.assumptions : ['Requirements as described in this proposal are final at kickoff; material changes follow the change-control process.', 'The client provides timely feedback and sign-off at each phase gate.'];
-        const dependencies = c.dependencies.length ? c.dependencies : ['Client provides branding, content and access to any existing systems before the relevant phase.', 'Third-party accounts, licenses and API credentials are supplied by the client.'];
+        const dependencies = c.dependencies.length ? c.dependencies : ['Client provides branding, content and access to any existing systems before the relevant phase.', 'Provider accounts, licences and API credentials are supplied by the client.'];
         return { id: id(), type: 'assumptions', eyebrow: 'Ground rules', heading: 'Assumptions & remarks', assumptions, dependencies };
       },
       outOfScope: () => {

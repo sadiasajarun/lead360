@@ -293,13 +293,30 @@ function renderBlock(b: Block, meta: ProposalMeta, archImg?: Map<string, ArchIma
     }
     case 'financial': {
       const f = b as FinancialBlock;
-      out.push(eyebrow('Financial estimation'));
+      out.push(eyebrow(f.eyebrow || 'Financial estimation')); // a wide table may be a comparison, not money
       if (f.heading) out.push(h2(f.heading));
+      if (f.rows.some((r) => r.cells)) {
+        // Wide mode — mirrors the HTML renderer: `cells` rendered verbatim across `columns`, equal widths.
+        const cols = f.columns ?? [];
+        const wide = f.rows.map((r) => r.cells ?? []);
+        if (!f.hideTotal) wide.push([f.note ?? 'Total', ...Array(Math.max(0, cols.length - 2)).fill(''), money(f.totalCents, f.currency)]);
+        const w = cols.length ? Math.floor(100 / cols.length) : undefined;
+        out.push(table(cols, wide, { widths: w ? cols.map(() => w) : undefined, totalRow: !f.hideTotal }));
+        if (f.hideTotal && f.note) out.push(para(f.note, { color: MUTED, size: 19 }));
+        break;
+      }
       const rows = f.rows.map((r) => [r.label, r.focus ?? '', r.timeline ?? '', money(r.amountCents, f.currency)]);
-      // Sum the phase-row weeks for the total row (adjustment rows carry "—" → contribute 0).
-      const totalWeeks = f.rows.reduce((s, r) => { const m = /(\d+(?:\.\d+)?)/.exec(r.timeline ?? ''); return s + (m ? parseFloat(m[1]) : 0); }, 0);
-      rows.push([f.note ?? 'Total', '', totalWeeks > 0 ? `${totalWeeks} wks` : '', money(f.totalCents, f.currency)]);
-      out.push(table(['Phase', 'Focus', 'Timeline', `Investment (${f.currency})`], rows, { widths: [20, 42, 14, 24], totalRow: true }));
+      // Mirror the HTML/PDF renderer: optional column headings, and an optional rate-card mode with no
+      // total row (a table by usage band has no meaningful sum — the note prints beneath instead).
+      const c = f.columns ?? [];
+      const headers = [c[0] ?? 'Phase', c[1] ?? 'Focus', c[2] ?? 'Timeline', c[3] ?? `Investment (${f.currency})`];
+      if (!f.hideTotal) {
+        // Sum the phase-row weeks for the total row (adjustment rows carry "—" → contribute 0).
+        const totalWeeks = f.rows.reduce((s, r) => { const m = /(\d+(?:\.\d+)?)/.exec(r.timeline ?? ''); return s + (m ? parseFloat(m[1]) : 0); }, 0);
+        rows.push([f.note ?? 'Total', '', f.columns ? '' : totalWeeks > 0 ? `${totalWeeks} wks` : '', money(f.totalCents, f.currency)]);
+      }
+      out.push(table(headers, rows, { widths: [20, 42, 14, 24], totalRow: !f.hideTotal }));
+      if (f.hideTotal && f.note) out.push(para(f.note, { color: MUTED, size: 19 }));
       break;
     }
     case 'equipment': {
@@ -336,7 +353,7 @@ function renderBlock(b: Block, meta: ProposalMeta, archImg?: Map<string, ArchIma
     }
     case 'commercialTerms': {
       const c = b as CommercialTermsBlock;
-      out.push(eyebrow('Hosting, support & ownership'));
+      out.push(eyebrow(c.eyebrow || 'Hosting, support & ownership'));
       if (c.heading) out.push(h2(c.heading));
       out.push(
         table(
@@ -448,15 +465,18 @@ function renderBlock(b: Block, meta: ProposalMeta, archImg?: Map<string, ArchIma
     case 'processFlow': {
       const s = b as ProcessFlowBlock;
       if (s.eyebrow) out.push(eyebrow(s.eyebrow));
-      const img = archImg?.get(s.id);
-      if (img && img.width > 0) {
+      const imgs = s.flows.map((_, i) => archImg?.get(`${s.id}#${i}`)).filter((im): im is ArchImage => !!im && im.width > 0);
+      if (imgs.length === s.flows.length && imgs.length > 0) {
         const MAX_W = 630;
-        const scale = img.width > MAX_W ? MAX_W / img.width : 1;
-        out.push(new Paragraph({
-          alignment: AlignmentType.CENTER,
-          spacing: { before: 60, after: 60 },
-          children: [new ImageRun({ type: 'png', data: img.data, transformation: { width: Math.round(img.width * scale), height: Math.round(img.height * scale) } })],
-        }));
+        imgs.forEach((img, i) => {
+          const scale = img.width > MAX_W ? MAX_W / img.width : 1;
+          out.push(new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 60, after: 60 },
+            pageBreakBefore: i > 0, // every flow after the first starts a fresh page
+            children: [new ImageRun({ type: 'png', data: img.data, transformation: { width: Math.round(img.width * scale), height: Math.round(img.height * scale) } })],
+          }));
+        });
         break;
       }
       for (const flow of s.flows) {
@@ -501,9 +521,18 @@ export async function renderProposalDocx(doc: ProposalDocument, rasterizeArch?: 
   const archImg = new Map<string, ArchImage>();
   if (rasterizeArch) {
     for (const block of doc.blocks) {
-      if (block.type === 'solutionArchitecture' || block.type === 'processFlow') {
+      if (block.type === 'solutionArchitecture') {
         const img = await rasterizeArch(block).catch(() => null);
         if (img) archImg.set(block.id, img);
+      } else if (block.type === 'processFlow') {
+        // Each flow is its own figure: rasterised separately so a two-flow section is two readable images
+        // on two pages, not one tall image squeezed into a column.
+        const pf = block as ProcessFlowBlock;
+        for (let i = 0; i < pf.flows.length; i++) {
+          const sub = { ...pf, id: `${pf.id}#${i}`, flows: [pf.flows[i]] } as ProcessFlowBlock;
+          const img = await rasterizeArch(sub).catch(() => null);
+          if (img) archImg.set(sub.id, img);
+        }
       }
     }
   }

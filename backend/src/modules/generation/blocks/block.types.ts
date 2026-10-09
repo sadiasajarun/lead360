@@ -283,7 +283,16 @@ export interface TeamAllocationBlock extends BlockBase {
 export interface FinancialBlock extends BlockBase {
   type: 'financial';
   currency: string;
-  rows: { label: string; focus?: string; timeline?: string; amountCents: Cents; rationale?: string }[];
+  /** Optional column headings [col1, col2, col3, amount] — a financial table is not always a phase
+   *  breakdown (e.g. cost per call by contract term). Omit for the default phase wording. */
+  columns?: string[];
+  /** Suppress the total row — a rate card by usage band has no meaningful sum. `note` then prints
+   *  below the table instead of inside the total row. */
+  hideTotal?: boolean;
+  /** A row may instead carry `cells` — one string per entry in `columns`, rendered verbatim — for tables
+   *  wider than the four-column phase layout (e.g. a rate card with rate/monthly/annual per year). When
+   *  `cells` is present the label/focus/timeline/amountCents fields are ignored for that row. */
+  rows: { label: string; focus?: string; timeline?: string; amountCents: Cents; rationale?: string; cells?: string[] }[];
   totalCents: Cents;
   note?: string;
   explanation?: {

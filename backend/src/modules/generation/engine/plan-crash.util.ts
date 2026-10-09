@@ -19,7 +19,7 @@ export interface CrashPhase {
 /** Merge adjacent phases (smallest-combined first) until at most `target` remain — so a deadline shorter than
  *  the phase count can still be met on a sequential calendar (each phase is ≥1 week). Teams union by role
  *  (peak units, max hours); names join; extra phase fields (focus) carry from the first of each pair. */
-function mergePhases(phases: CrashPhase[], target: number): void {
+export function mergePhases(phases: CrashPhase[], target: number): void {
   while (phases.length > Math.max(1, target)) {
     let idx = 0;
     let best = Infinity;

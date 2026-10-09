@@ -1,0 +1,925 @@
+{
+  "summary": {
+    "label": "baseline-v1",
+    "at": "2026-10-09T02:06:29.768Z",
+    "cases": 21,
+    "failed": 1,
+    "flags": {},
+    "phasesAbsErr": 4.2727272727272725,
+    "weeksPctErr": 1.917109473287963,
+    "effortPctErr": 1.2169126490731228,
+    "totalPctErr": 1.1230116690860417,
+    "roleMismatch": 0.5057184767846532
+  },
+  "results": [
+    {
+      "key": "attendance-sonargaon-textiles",
+      "title": "Attendance Management System for Sonargaon Textiles Ltd.",
+      "truth": {
+        "phases": 0,
+        "weeks": 7,
+        "effort": 112,
+        "total": 675685.35,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "back end",
+          "front end",
+          "dev ops",
+          "support engineer",
+          "quality assurance",
+          "tester",
+          "biometric time",
+          "finger rfid",
+          "magnetic door",
+          "power adapter",
+          "wooden door",
+          "accessories",
+          "access control",
+          "vat tax"
+        ]
+      },
+      "plan": {
+        "phases": 4,
+        "weeks": 10,
+        "effort": 127,
+        "total": 642737.8,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "front end",
+          "back end",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "err": {
+        "weeks": 0.42857142857142855,
+        "effort": 0.13392857142857142,
+        "total": 0.04876167583032536,
+        "roles": 0.5555555555555556
+      }
+    },
+    {
+      "key": "autonomous-multi-agent-ecosystem",
+      "title": "Autonomous Multi Agent AI Ecosystem MVP",
+      "truth": {
+        "phases": 0,
+        "weeks": 8,
+        "effort": 276,
+        "total": 1566425.5,
+        "roles": [
+          "product project",
+          "product designer",
+          "systech architect",
+          "designer",
+          "technical lead",
+          "back end",
+          "front end",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 3,
+        "weeks": 8,
+        "effort": 93,
+        "total": 450299.68,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "back end",
+          "dev ops",
+          "front end",
+          "quality assurance",
+          "support engineer"
+        ]
+      },
+      "err": {
+        "weeks": 0,
+        "effort": 0.6630434782608695,
+        "total": 0.7125304203742853,
+        "roles": 0.19999999999999996
+      }
+    },
+    {
+      "key": "brac-bangla",
+      "title": "BRAC Bangla Website",
+      "truth": {
+        "phases": 3,
+        "weeks": 6,
+        "effort": 98,
+        "total": 552291.56,
+        "roles": [
+          "product project",
+          "product designer",
+          "designer",
+          "technical lead",
+          "back end",
+          "front end",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 5,
+        "weeks": 13,
+        "effort": 160,
+        "total": 844780.44,
+        "roles": [
+          "product project",
+          "technical lead",
+          "lead",
+          "systech architect",
+          "back end",
+          "front end",
+          "designer",
+          "quality assurance",
+          "data analyst",
+          "dev ops",
+          "support engineer"
+        ]
+      },
+      "err": {
+        "phases": 2,
+        "weeks": 1.1666666666666667,
+        "effort": 0.6326530612244898,
+        "total": 0.5295914353643207,
+        "roles": 0.41666666666666663
+      }
+    },
+    {
+      "key": "churchill-solitaire-extended",
+      "title": "Churchill Solitaire Extended Project Scope",
+      "truth": {
+        "phases": 3,
+        "weeks": 6,
+        "effort": 192,
+        "total": 8555,
+        "roles": [
+          "product project",
+          "unity developer",
+          "backend developer",
+          "quality assurance",
+          "designer"
+        ]
+      },
+      "plan": {
+        "phases": 7,
+        "weeks": 12,
+        "effort": 129,
+        "total": 5385.41,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "android flutter",
+          "back end",
+          "quality assurance",
+          "ios developer",
+          "graphics designer"
+        ]
+      },
+      "err": {
+        "phases": 4,
+        "weeks": 1,
+        "effort": 0.328125,
+        "total": 0.37049561659848046,
+        "roles": 0.7272727272727273
+      }
+    },
+    {
+      "key": "city-medical-wholesalers-pharmaceutical",
+      "title": "City Medical Wholesalers Pharmaceutical Expo Scope Expansion",
+      "truth": {
+        "phases": 3,
+        "weeks": 5,
+        "effort": 244,
+        "total": 10495.96,
+        "roles": [
+          "project manager",
+          "product designer",
+          "designer",
+          "graphic designer",
+          "technical lead",
+          "devops",
+          "backend developer",
+          "mobile developer",
+          "frontend developer",
+          "expert test"
+        ]
+      },
+      "plan": {
+        "phases": 8,
+        "weeks": 15,
+        "effort": 207,
+        "total": 9135.28,
+        "roles": [
+          "product project",
+          "technical lead",
+          "lead",
+          "android flutter",
+          "back end",
+          "front end",
+          "quality assurance",
+          "designer",
+          "dev ops"
+        ]
+      },
+      "err": {
+        "phases": 5,
+        "weeks": 2,
+        "effort": 0.15163934426229508,
+        "total": 0.1296384513660493,
+        "roles": 0.8823529411764706
+      }
+    },
+    {
+      "key": "daraja-sma-bulletin",
+      "title": "DARAJA SMA Bulletin System",
+      "truth": {
+        "phases": 0,
+        "weeks": 6,
+        "effort": 149,
+        "total": 6500,
+        "roles": [
+          "project project",
+          "technical lead",
+          "designer",
+          "graphics designer",
+          "back end",
+          "front end",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 8,
+        "weeks": 13,
+        "effort": 118,
+        "total": 4839.64,
+        "roles": [
+          "product project",
+          "technical lead",
+          "designer",
+          "back end",
+          "front end",
+          "quality assurance",
+          "dev ops"
+        ]
+      },
+      "err": {
+        "weeks": 1.1666666666666667,
+        "effort": 0.2080536912751678,
+        "total": 0.25543999999999994,
+        "roles": 0.33333333333333337
+      }
+    },
+    {
+      "key": "flooring-operations-erp",
+      "title": "Flooring Operations ERP Phase1",
+      "truth": {
+        "phases": 3,
+        "weeks": 10,
+        "effort": 132,
+        "total": 6242.5,
+        "roles": [
+          "product project",
+          "technical lead",
+          "backend developer",
+          "frontend developer",
+          "devops engineer",
+          "engineer"
+        ]
+      },
+      "plan": {
+        "phases": 0,
+        "weeks": 0,
+        "effort": 0,
+        "total": 0,
+        "roles": []
+      },
+      "err": {
+        "roles": 1
+      },
+      "error": "SyntaxError: Expected ',' or ']' after array element in JSON at position 16932 (line 588 column 6)"
+    },
+    {
+      "key": "imavi",
+      "title": "IMAVI Corporate Website Design Development",
+      "truth": {
+        "phases": 0,
+        "weeks": 4,
+        "effort": 67,
+        "total": 318598.44,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "front end",
+          "back end",
+          "quality assurance",
+          "dev ops"
+        ]
+      },
+      "plan": {
+        "phases": 5,
+        "weeks": 10,
+        "effort": 119,
+        "total": 557182.18,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "front end",
+          "back end",
+          "quality assurance",
+          "dev ops"
+        ]
+      },
+      "err": {
+        "weeks": 1.5,
+        "effort": 0.7761194029850746,
+        "total": 0.7488540747406046,
+        "roles": 0
+      }
+    },
+    {
+      "key": "kanika-blood-donor",
+      "title": "Kanika Blood Donor Mobile Application",
+      "truth": {
+        "phases": 0,
+        "weeks": 7,
+        "effort": 116,
+        "total": 656012.88,
+        "roles": [
+          "product project",
+          "product designer",
+          "designer",
+          "graphics designer",
+          "technical lead",
+          "back end",
+          "dev ops",
+          "flutter developer",
+          "front end",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 6,
+        "weeks": 18,
+        "effort": 355,
+        "total": 1828866.84,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "dev ops",
+          "android flutter",
+          "back end",
+          "quality assurance",
+          "front end",
+          "support engineer"
+        ]
+      },
+      "err": {
+        "weeks": 1.5714285714285714,
+        "effort": 2.060344827586207,
+        "total": 1.787852031197924,
+        "roles": 0.46153846153846156
+      }
+    },
+    {
+      "key": "kids-football",
+      "title": "Kids Football Mobile Application",
+      "truth": {
+        "phases": 3,
+        "weeks": 10,
+        "effort": 206,
+        "total": 9754.72,
+        "roles": [
+          "product manager",
+          "product analyst",
+          "designer",
+          "technical lead",
+          "flutter developer",
+          "backend developer",
+          "frontend developer",
+          "dev ops",
+          "engineer"
+        ]
+      },
+      "plan": {
+        "phases": 8,
+        "weeks": 20,
+        "effort": 258,
+        "total": 11282.83,
+        "roles": [
+          "product project",
+          "technical lead",
+          "lead",
+          "cloud architect",
+          "android flutter",
+          "back end",
+          "designer",
+          "dev ops",
+          "front end",
+          "data analyst",
+          "quality assurance",
+          "tester"
+        ]
+      },
+      "err": {
+        "phases": 5,
+        "weeks": 1,
+        "effort": 0.2524271844660194,
+        "total": 0.1566533944592977,
+        "roles": 0.8333333333333334
+      }
+    },
+    {
+      "key": "national-climate-adaptation-inventory",
+      "title": "National Climate Adaptation Inventory Platform",
+      "truth": {
+        "phases": 7,
+        "weeks": 14,
+        "effort": 208,
+        "total": 1185342.58,
+        "roles": [
+          "product project",
+          "product designer",
+          "system architect",
+          "designer",
+          "technical lead",
+          "back end",
+          "front end",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 6,
+        "weeks": 20,
+        "effort": 322,
+        "total": 1627827.86,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "back end",
+          "front end",
+          "quality assurance",
+          "lead",
+          "dev ops"
+        ]
+      },
+      "err": {
+        "phases": 1,
+        "weeks": 0.42857142857142855,
+        "effort": 0.5480769230769231,
+        "total": 0.37329738040794924,
+        "roles": 0.36363636363636365
+      }
+    },
+    {
+      "key": "newspaper",
+      "title": "Newspaper Platform",
+      "truth": {
+        "phases": 0,
+        "weeks": 8,
+        "effort": 98,
+        "total": 519999.69,
+        "roles": [
+          "project manager",
+          "designer",
+          "technical lead",
+          "backend developer",
+          "frontend developer",
+          "devops",
+          "expert test"
+        ]
+      },
+      "plan": {
+        "phases": 14,
+        "weeks": 32,
+        "effort": 277,
+        "total": 1462638.03,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "front end",
+          "back end",
+          "dev ops",
+          "quality assurance",
+          "tester"
+        ]
+      },
+      "err": {
+        "weeks": 3,
+        "effort": 1.8265306122448979,
+        "total": 1.8127671191496288,
+        "roles": 0.8571428571428572
+      }
+    },
+    {
+      "key": "rooftop-koreans",
+      "title": "Rooftop Koreans",
+      "truth": {
+        "phases": 3,
+        "weeks": 12,
+        "effort": 138,
+        "total": 6693.91,
+        "roles": [
+          "product project",
+          "technical artist",
+          "animator",
+          "designer",
+          "technical lead",
+          "game developer",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 13,
+        "weeks": 21,
+        "effort": 239,
+        "total": 11290.73,
+        "roles": [
+          "product project",
+          "technical lead",
+          "game developer",
+          "concept artist",
+          "designer",
+          "quality assurance",
+          "technical artist",
+          "environment artist",
+          "props artist",
+          "sound engineer",
+          "lead",
+          "dev ops"
+        ]
+      },
+      "err": {
+        "phases": 10,
+        "weeks": 0.75,
+        "effort": 0.7318840579710145,
+        "total": 0.686716732074378,
+        "roles": 0.5384615384615384
+      }
+    },
+    {
+      "key": "spcki",
+      "title": "SPCKI",
+      "truth": {
+        "phases": 6,
+        "weeks": 2,
+        "effort": 52,
+        "total": 289429.17,
+        "roles": [
+          "product manager",
+          "product analyst",
+          "designer",
+          "technical lead",
+          "frontend web",
+          "backend developer",
+          "devops engineer",
+          "engineer"
+        ]
+      },
+      "plan": {
+        "phases": 11,
+        "weeks": 23,
+        "effort": 198,
+        "total": 975227.52,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "back end",
+          "front end",
+          "data analyst",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "err": {
+        "phases": 5,
+        "weeks": 10.5,
+        "effort": 2.8076923076923075,
+        "total": 2.3694859436593765,
+        "roles": 0.8666666666666667
+      }
+    },
+    {
+      "key": "shopify-b2b-freight-automation",
+      "title": "Shopify B2B Freight Automation",
+      "truth": {
+        "phases": 3,
+        "weeks": null,
+        "effort": 33,
+        "total": 1460.29,
+        "roles": [
+          "product project",
+          "shopify solution",
+          "shopify developer",
+          "dev ops",
+          "data business",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 7,
+        "weeks": 21,
+        "effort": 220,
+        "total": 9606.93,
+        "roles": [
+          "product project",
+          "technical lead",
+          "data analyst",
+          "dev ops",
+          "back end",
+          "quality assurance",
+          "front end",
+          "support engineer"
+        ]
+      },
+      "err": {
+        "phases": 4,
+        "effort": 5.666666666666667,
+        "total": 5.578782296667101,
+        "roles": 0.7272727272727273
+      }
+    },
+    {
+      "key": "swisscontact-astha-anatomy",
+      "title": "Swisscontact ASTHA VR Anatomy",
+      "truth": {
+        "phases": 4,
+        "weeks": 5,
+        "effort": 181,
+        "total": 1156957.75,
+        "roles": [
+          "product manager",
+          "product designer",
+          "technical artist",
+          "modeller",
+          "designer",
+          "technical lead",
+          "unity developer",
+          "engineer"
+        ]
+      },
+      "plan": {
+        "phases": 4,
+        "weeks": 12,
+        "effort": 125,
+        "total": 751066.95,
+        "roles": [
+          "product project",
+          "technical lead",
+          "lead",
+          "designer",
+          "concept artist",
+          "technical artist",
+          "sound engineer",
+          "voice over",
+          "game developer",
+          "quality assurance",
+          "support engineer"
+        ]
+      },
+      "err": {
+        "phases": 0,
+        "weeks": 1.4,
+        "effort": 0.30939226519337015,
+        "total": 0.35082594848429,
+        "roles": 0.8125
+      }
+    },
+    {
+      "key": "textile-institution-hrm-license",
+      "title": "Textile Institution HRM License Verification System",
+      "truth": {
+        "phases": 0,
+        "weeks": 12,
+        "effort": 367,
+        "total": 1807629.04,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "back end",
+          "front end",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 3,
+        "weeks": 4,
+        "effort": 32,
+        "total": 150949.84,
+        "roles": [
+          "product project",
+          "technical lead",
+          "designer",
+          "back end",
+          "front end",
+          "quality assurance",
+          "dev ops"
+        ]
+      },
+      "err": {
+        "weeks": 0.6666666666666666,
+        "effort": 0.9128065395095368,
+        "total": 0.9164929105144272,
+        "roles": 0.125
+      }
+    },
+    {
+      "key": "report-bangladesh-rapidpro-chat",
+      "title": "U Report Bangladesh RapidPro Chat",
+      "truth": {
+        "phases": 3,
+        "weeks": 3,
+        "effort": 35,
+        "total": 198525.66,
+        "roles": [
+          "product project",
+          "technical lead",
+          "android flutter",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 13,
+        "weeks": 17,
+        "effort": 145,
+        "total": 778708.6,
+        "roles": [
+          "product project",
+          "technical lead",
+          "android flutter",
+          "quality assurance",
+          "dev ops",
+          "tester"
+        ]
+      },
+      "err": {
+        "phases": 10,
+        "weeks": 4.666666666666667,
+        "effort": 3.142857142857143,
+        "total": 2.9224581850023816,
+        "roles": 0.33333333333333337
+      }
+    },
+    {
+      "key": "unified-enterprise",
+      "title": "Unified AI Integrated Enterprise Management Platform",
+      "truth": {
+        "phases": 0,
+        "weeks": 23,
+        "effort": 96,
+        "total": 540094.68,
+        "roles": [
+          "product project",
+          "product designer",
+          "designer",
+          "graphics designer",
+          "technical lead",
+          "back end",
+          "front end",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 7,
+        "weeks": 24,
+        "effort": 339,
+        "total": 1735491.59,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "back end",
+          "front end",
+          "quality assurance",
+          "dev ops",
+          "data analyst",
+          "lead"
+        ]
+      },
+      "err": {
+        "weeks": 0.043478260869565216,
+        "effort": 2.53125,
+        "total": 2.2133099144764765,
+        "roles": 0.41666666666666663
+      }
+    },
+    {
+      "key": "volar",
+      "title": "VOLAR MVP",
+      "truth": {
+        "phases": 3,
+        "weeks": 11,
+        "effort": 560,
+        "total": 3202763.3,
+        "roles": [
+          "product project",
+          "product designer",
+          "designer",
+          "graphics designer",
+          "technical lead",
+          "back end",
+          "flutter developer",
+          "front end",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 4,
+        "weeks": 18,
+        "effort": 380,
+        "total": 1874528.89,
+        "roles": [
+          "product project",
+          "technical lead",
+          "designer",
+          "back end",
+          "android flutter",
+          "front end",
+          "quality assurance",
+          "dev ops"
+        ]
+      },
+      "err": {
+        "phases": 1,
+        "weeks": 0.6363636363636364,
+        "effort": 0.32142857142857145,
+        "total": 0.41471513364724766,
+        "roles": 0.36363636363636365
+      }
+    },
+    {
+      "key": "zunoks-consulting",
+      "title": "Zunoks Consulting Corporate Website",
+      "truth": {
+        "phases": 0,
+        "weeks": 2,
+        "effort": 57,
+        "total": 320755.11,
+        "roles": [
+          "product project",
+          "product designer",
+          "designer",
+          "technical lead",
+          "front end",
+          "back end",
+          "dev ops",
+          "quality assurance"
+        ]
+      },
+      "plan": {
+        "phases": 10,
+        "weeks": 11,
+        "effort": 76,
+        "total": 346917.41,
+        "roles": [
+          "product project",
+          "technical lead",
+          "systech architect",
+          "designer",
+          "front end",
+          "back end",
+          "dev ops",
+          "quality assurance",
+          "support engineer"
+        ]
+      },
+      "err": {
+        "weeks": 4.5,
+        "effort": 0.3333333333333333,
+        "total": 0.08156471770628998,
+        "roles": 0.30000000000000004
+      }
+    }
+  ]
+}

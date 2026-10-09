@@ -3,6 +3,27 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { BaseRepository } from '../../core/base/base.repository';
 import { ProjectCase } from './project-case.entity';
+import { AsyncLocalStorage } from 'async_hooks';
+import { flagEnabled } from '../generation/engine/engine-flags';
+
+/**
+ * V1 stability guard: approved ("gold") cases only take part in retrieval and norms when ENGINE_V2_GOLD=on.
+ * With the flag off every query below behaves exactly as before the gold corpus existed.
+ */
+export const goldFilter = (includeGold = flagEnabled('GOLD')): string => (includeGold ? '' : " AND quality IS DISTINCT FROM 'gold'");
+
+/**
+ * Leave-one-out isolation for the accuracy backtest: case ids in this context are invisible to every
+ * retrieval/norm query, so a project can never "find itself". Empty outside the backtest.
+ */
+export const caseExclusion = new AsyncLocalStorage<string[]>();
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const excludedIdsClause = (alias = ''): string => {
+  const ids = (caseExclusion.getStore() ?? []).filter((x) => UUID.test(x));
+  return ids.length ? ` AND ${alias}id NOT IN (${ids.map((x) => `'${x}'`).join(',')})` : '';
+};
+/** Gold flag + leave-one-out exclusion, for raw SQL. */
+const caseFilters = (): string => `${caseFilters()}${excludedIdsClause()}`;
 
 /** Budget norm — STRICTLY scoped to one template + currency (never mixed: BDT ≠ USD). */
 export interface BudgetNorm {
@@ -38,6 +59,18 @@ export class ProjectCaseRepository extends BaseRepository<ProjectCase> {
 
   async saveEmbedding(id: string, vec: number[]): Promise<void> {
     await this.repository.query('UPDATE project_cases SET embedding = $1 WHERE id = $2', [JSON.stringify(vec), id]);
+  }
+
+  // Idempotent, additive: the approved-corpus columns (mirrors database/add-gold-cases.ts).
+  async ensureGoldColumns(): Promise<void> {
+    for (const c of ['quality varchar(16)', 'source_kind varchar(32)', 'source_path text', 'effort_days numeric', 'features_raw jsonb', 'final_at timestamptz']) {
+      await this.repository.query(`ALTER TABLE project_cases ADD COLUMN IF NOT EXISTS ${c}`);
+    }
+  }
+
+  /** Idempotency for the approved-corpus import: the existing case for a manifest project key, if any. */
+  findBySourcePath(sourcePath: string): Promise<ProjectCase | null> {
+    return this.repository.findOne({ where: { sourcePath } });
   }
 
   /** Cases whose embedding is missing (fresh rows, or after a synchronize drop) — cheap re-embed. */
@@ -100,7 +133,7 @@ export class ProjectCaseRepository extends BaseRepository<ProjectCase> {
               cardinality(ARRAY(SELECT unnest(tags) INTERSECT SELECT unnest($2::text[]))) AS tag_overlap,
               (embedding <=> $1) AS distance
          FROM project_cases
-        WHERE deleted_at IS NULL AND embedding IS NOT NULL AND template = $3
+        WHERE deleted_at IS NULL AND embedding IS NOT NULL AND template = $3${caseFilters()}
         ORDER BY tag_overlap DESC, embedding <=> $1
         LIMIT $4`,
       [JSON.stringify(vec), tags, template, k],
@@ -118,7 +151,7 @@ export class ProjectCaseRepository extends BaseRepository<ProjectCase> {
               integration_count AS "integrationCount",
               cardinality(ARRAY(SELECT unnest(tags) INTERSECT SELECT unnest($2::text[]))) AS tag_overlap
          FROM project_cases
-        WHERE deleted_at IS NULL AND embedding IS NOT NULL AND template <> $3
+        WHERE deleted_at IS NULL AND embedding IS NOT NULL AND template <> $3${caseFilters()}
         ORDER BY tag_overlap DESC, embedding <=> $1
         LIMIT $4`,
       [JSON.stringify(vec), tags, excludeTemplate, k],
@@ -136,7 +169,7 @@ export class ProjectCaseRepository extends BaseRepository<ProjectCase> {
               percentile_cont(0.50) WITHIN GROUP (ORDER BY budget_total_cents) AS p50,
               percentile_cont(0.75) WITHIN GROUP (ORDER BY budget_total_cents) AS p75
          FROM project_cases
-        WHERE deleted_at IS NULL AND template = $1 AND ($2 = '' OR scope_size = $2) AND currency = $3 AND budget_total_cents > 0`,
+        WHERE deleted_at IS NULL AND template = $1 AND ($2 = '' OR scope_size = $2) AND currency = $3 AND budget_total_cents > 0${caseFilters()}`,
       [template, scopeSize, currency],
     )) as Array<Record<string, string | number | null>>;
     const row = r[0] ?? {};
@@ -155,7 +188,7 @@ export class ProjectCaseRepository extends BaseRepository<ProjectCase> {
               percentile_cont(0.50) WITHIN GROUP (ORDER BY timeline_weeks) AS p50,
               percentile_cont(0.75) WITHIN GROUP (ORDER BY timeline_weeks) AS p75
          FROM project_cases
-        WHERE deleted_at IS NULL AND template = ANY($1::text[]) AND ($2 = '' OR scope_size = $2) AND timeline_weeks IS NOT NULL`,
+        WHERE deleted_at IS NULL AND template = ANY($1::text[]) AND ($2 = '' OR scope_size = $2) AND timeline_weeks IS NOT NULL${caseFilters()}`,
       [templates, scopeSize],
     )) as Array<Record<string, string | number | null>>;
     const row = r[0] ?? {};
@@ -165,11 +198,20 @@ export class ProjectCaseRepository extends BaseRepository<ProjectCase> {
 
   /** Raw cases in a template's scope bucket — for team-ratio aggregation + the same-template analog fallback. */
   casesInBucket(template: string, scopeSize: string): Promise<ProjectCase[]> {
-    return this.repository.find({ where: { template, scopeSize } });
+    return this.repository
+      .createQueryBuilder('c')
+      .where('c.template = :template AND c.scope_size = :scopeSize', { template, scopeSize })
+      .andWhere(`${flagEnabled('GOLD') ? '1=1' : "c.quality IS DISTINCT FROM 'gold'"}${excludedIdsClause('c.')}`)
+      .getMany();
   }
 
   /** Cross-template cases in a scope bucket — the non-vector analog fallback (shape/approach only). */
   casesInScopeExcluding(scopeSize: string, excludeTemplate: string, k: number): Promise<ProjectCase[]> {
-    return this.repository.find({ where: { scopeSize, template: Not(excludeTemplate) }, take: k });
+    return this.repository
+      .createQueryBuilder('c')
+      .where('c.scope_size = :scopeSize AND c.template <> :excludeTemplate', { scopeSize, excludeTemplate })
+      .andWhere(`${flagEnabled('GOLD') ? '1=1' : "c.quality IS DISTINCT FROM 'gold'"}${excludedIdsClause('c.')}`)
+      .take(k)
+      .getMany();
   }
 }

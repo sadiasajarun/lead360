@@ -50,6 +50,10 @@ export class PdfService implements OnModuleDestroy {
     const page = await browser.newPage();
     try {
       await page.setViewport({ width: 980, height: 900, deviceScaleFactor: 2 });
+      // Figures must match the PDF: the print stylesheet keeps a process flow in compact rows instead of the
+      // screen layout, which stacked every stage vertically and produced a 6,000px-tall image Word then
+      // shrank to a sliver.
+      await page.emulateMediaType('print');
       await page.setContent(html, { waitUntil: 'networkidle0' });
       const el = await page.$(selector);
       if (!el) return null;

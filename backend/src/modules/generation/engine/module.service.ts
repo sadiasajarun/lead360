@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { FeatureMemoryService, type FeatureEstimate } from '../../project-case/feature-memory.service';
+import { runWithFlag } from './engine-flags';
 import { AiService } from '../../../infrastructure/ai/ai.service';
 import {
   MODULE_TYPE_KEYS,
@@ -22,6 +24,9 @@ export interface ModuleAnalysis {
   keyFeatures: string[];
   /** Estimated effective man-days — learned per-(type,complexity) when available, else the base table. */
   estDays: number;
+  /** V2 feature-memory estimate (closest features from ANY past project, scale-adjusted). Recorded in shadow
+   *  mode for comparison; drives estDays only when ENGINE_V2_FEATURES=on. */
+  featureEstimate?: FeatureEstimate;
 }
 
 /** Learned per-(type,complexity) effort anchor from comparable past projects (from DecisionBrief). */
@@ -35,7 +40,10 @@ export type TypicalModuleEffort = { type: string; complexity: string; days: numb
 @Injectable()
 export class ModuleService {
   private readonly logger = new Logger(ModuleService.name);
-  constructor(private readonly ai: AiService) {}
+  constructor(
+    private readonly ai: AiService,
+    @Optional() private readonly featureMemory?: FeatureMemoryService,
+  ) {}
 
   async analyze(intent: Intent, typicalModuleEffort?: TypicalModuleEffort): Promise<{ modules: ModuleAnalysis[]; totalEstDays: number; usage: Usage }> {
     const names = (intent.modules ?? []).map((m) => (m || '').trim()).filter(Boolean);
@@ -92,7 +100,31 @@ export class ModuleService {
       out.push({ name: n, type, complexity, weight: 3, keyFeatures: [], estDays: effDays(type, complexity) });
     }
 
+    out = await this.withFeatureMemory(out);
     const totalEstDays = Math.round(out.reduce((s, m) => s + m.estDays, 0) * 10) / 10;
     return { modules: out, totalEstDays, usage };
+  }
+
+  /**
+   * V2 (ENGINE_V2_FEATURES): estimate each module from the closest FEATURES of any past approved project,
+   * scale-adjusted. off → untouched; shadow → estimate attached for comparison only; on → drives estDays.
+   * Any failure falls back to the V1 estimate.
+   */
+  private async withFeatureMemory(mods: ModuleAnalysis[]): Promise<ModuleAnalysis[]> {
+    const mem = this.featureMemory;
+    if (!mem) return mods;
+    const outcome = await runWithFlag(
+      'FEATURES',
+      async () => mods,
+      async () => {
+        const est = await Promise.all(mods.map((m) => mem.estimate(m).catch(() => null)));
+        return mods.map((m, i) => (est[i] ? { ...m, featureEstimate: est[i]!, estDays: est[i]!.days } : m));
+      },
+      { logger: this.logger, timeoutMs: 60_000 },
+    );
+    if (outcome.used === 'v2') return outcome.result;
+    // Shadow: keep V1 numbers, attach V2 estimates for the comparison log.
+    const shadow = outcome.shadow?.value;
+    return shadow ? mods.map((m, i) => (shadow[i]?.featureEstimate ? { ...m, featureEstimate: shadow[i].featureEstimate } : m)) : mods;
   }
 }

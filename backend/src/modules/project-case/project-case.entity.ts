@@ -86,4 +86,28 @@ export class ProjectCase extends BaseEntity {
 
   @Column({ name: 'source_doc_id', type: 'uuid', nullable: true })
   sourceDocId?: string;
+
+  // ── Approved ("gold") corpus — columns added by add-gold-cases.ts. All nullable; NULL for seed/in-app cases.
+  // 'gold' = the user's final, approved version (latest file after rounds of feedback). Engine V1 ignores
+  // gold rows unless ENGINE_V2_GOLD=on (see goldFilter in the repository).
+  @Column({ type: 'varchar', length: 16, nullable: true })
+  quality?: string | null;
+
+  @Column({ name: 'source_kind', type: 'varchar', length: 32, nullable: true })
+  sourceKind?: string | null;
+
+  // Manifest project key — idempotent upsert for the approved corpus.
+  @Column({ name: 'source_path', type: 'text', nullable: true })
+  sourcePath?: string | null;
+
+  // Σ units × days from the approved budget (person-days). Learning is done in effort, never money.
+  @Column({ name: 'effort_days', type: 'numeric', nullable: true })
+  effortDays?: string | null;
+
+  // Per-feature extraction (capability text, sub-features, scale signals) — input to the feature memory.
+  @Column({ name: 'features_raw', type: 'jsonb', nullable: true })
+  featuresRaw?: unknown;
+
+  @Column({ name: 'final_at', type: 'timestamptz', nullable: true })
+  finalAt?: Date | null;
 }

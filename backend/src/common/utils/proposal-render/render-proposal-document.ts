@@ -25,8 +25,11 @@ function icon(name: string | undefined, map: Record<string, string>, size = 20):
 }
 
 const VARROW = '<svg width="26" height="34" viewBox="0 0 26 34" style="margin:2px 0"><path d="M13 2 V25" stroke="#9AA4B4" stroke-width="2" fill="none"/><path d="M13 32 L8 23 H18 Z" fill="#9AA4B4"/></svg>';
+// The eyebrow + h2 are wrapped so print fragmentation treats them as one unbreakable unit. `.eyebrow` is
+// an inline <span>, and break-after does not apply to inline boxes — without this wrapper the eyebrow
+// prints alone at the foot of a page and its heading starts on the next one.
 const head = (eyebrow: string | undefined, heading: string | undefined, defEyebrow?: string) =>
-  `${eyebrow || defEyebrow ? `<span class="eyebrow">${esc(eyebrow ?? defEyebrow)}</span>` : ''}${heading ? `<h2>${esc(heading)}</h2>` : ''}`;
+  `<div class="sechead">${eyebrow || defEyebrow ? `<span class="eyebrow">${esc(eyebrow ?? defEyebrow)}</span>` : ''}${heading ? `<h2>${esc(heading)}</h2>` : ''}</div>`;
 
 // Riseup Labs' own contact — fallback so older proposals (generated before contact was baked into meta)
 // still show it in the PDF without a regenerate. Keep in sync with the frontend Cover component.
@@ -134,6 +137,21 @@ function teamAllocation(b: TeamAllocationBlock, m: Record<string, string>): stri
 }
 
 function financial(b: FinancialBlock): string {
+  // Wide mode: rows carry `cells` matching `columns` (any width). First column is the row label, the
+  // rest are figures; the last is right-aligned like the amount column of the phase layout.
+  if (b.rows.some((r) => r.cells)) {
+    const cols = b.columns ?? [];
+    const last = cols.length - 1;
+    const ths = cols.map((h, i) => `<th${i === last ? ' class="r"' : ''}>${esc(h)}</th>`).join('');
+    const trs = b.rows
+      .map((r) => `<tr>${(r.cells ?? []).map((c, i) => (i === 0 ? `<td><b>${esc(c)}</b></td>` : `<td class="num${i === last ? ' r' : ''}">${esc(c)}</td>`)).join('')}</tr>`)
+      .join('');
+    const tot = b.hideTotal ? '' : `<tr class="tot"><td colspan="${Math.max(1, last)}">${esc(b.note ?? 'Total')}</td><td class="r num">${money(b.totalCents, b.currency)}</td></tr>`;
+    const noteBelow = b.hideTotal && b.note ? `<p class="small muted" style="margin-top:8px">${esc(b.note)}</p>` : '';
+    const dense = cols.length > 6 ? ' style="font-size:12px"' : '';
+    // A wide table is often not money at all (a capability comparison, a rate card) — honour its own eyebrow.
+    return `<section>${head(b.eyebrow, b.heading, 'Financial estimation')}<div class="tw"><table${dense}><tbody><tr>${ths}</tr>${trs}${tot}</tbody></table></div>${noteBelow}</section>`;
+  }
   const rows = b.rows
     .map((r) => {
       const focus = `${esc(r.focus ?? '')}${r.rationale ? `<span class="small muted"> · ${esc(r.rationale)}</span>` : ''}`;
@@ -143,7 +161,19 @@ function financial(b: FinancialBlock): string {
   // Sum the phase-row weeks for the total row (adjustment rows carry "—" → contribute 0).
   const totalWeeks = b.rows.reduce((s, r) => { const m = /(\d+(?:\.\d+)?)/.exec(r.timeline ?? ''); return s + (m ? parseFloat(m[1]) : 0); }, 0);
   const totalWks = totalWeeks > 0 ? `${totalWeeks} wks` : '';
-  return `<section>${head(undefined, b.heading, 'Financial estimation')}<div class="tw"><table><tbody><tr><th>Phase</th><th>Focus</th><th>Timeline</th><th class="r">Investment (${esc(b.currency)})</th></tr>${rows}<tr class="tot"><td colspan="2">${esc(b.note ?? 'Total')}</td><td>${totalWks}</td><td class="r num">${money(b.totalCents, b.currency)}</td></tr></tbody></table></div></section>`;
+  // A financial table is not always a phase breakdown (e.g. cost per call by contract term), so the
+  // column headings may be overridden. Falls back to the phase-breakdown wording.
+  const c = b.columns ?? [];
+  const h1 = esc(c[0] ?? 'Phase');
+  const h2c = esc(c[1] ?? 'Focus');
+  const h3 = esc(c[2] ?? 'Timeline');
+  const h4 = c[3] ? esc(c[3]) : `Investment (${esc(b.currency)})`;
+  // A rate card by usage band has no meaningful sum: drop the total row and print the note beneath.
+  const totalRow = b.hideTotal
+    ? ''
+    : `<tr class="tot"><td colspan="2">${esc(b.note ?? 'Total')}</td><td>${b.columns ? '' : totalWks}</td><td class="r num">${money(b.totalCents, b.currency)}</td></tr>`;
+  const noteBelow = b.hideTotal && b.note ? `<p class="small muted" style="margin-top:8px">${esc(b.note)}</p>` : '';
+  return `<section>${head(undefined, b.heading, 'Financial estimation')}<div class="tw"><table><tbody><tr><th>${h1}</th><th>${h2c}</th><th>${h3}</th><th class="r">${h4}</th></tr>${rows}${totalRow}</tbody></table></div>${noteBelow}</section>`;
 }
 
 function equipment(b: EquipmentBlock): string {
@@ -175,7 +205,7 @@ function commercialTerms(b: CommercialTermsBlock): string {
         `<tr><td><b>${esc(t.label)}</b></td><td>${esc(t.detail)}</td><td class="small muted">${esc(t.basis ?? '')}</td></tr>`,
     )
     .join('');
-  return `<section>${head(undefined, b.heading, 'Hosting, support & ownership')}<table class="tbl"><tbody>${rows}</tbody></table>${
+  return `<section>${head(b.eyebrow, b.heading, 'Hosting, support & ownership')}<table class="tbl"><tbody>${rows}</tbody></table>${
     b.note ? `<p class="small muted" style="margin-top:14px">${esc(b.note)}</p>` : ''
   }</section>`;
 }
@@ -434,5 +464,9 @@ ${PROPOSAL_CSS}
 /* Sections flow naturally across pages (cards/rows stay whole via the @media print rules); avoiding
    whole-section breaks caused tall sections to jump to the next page and leave big gaps. */
 .pdoc section{break-inside:auto}
+/* ...but a heading must never be the last thing on a page. Without this the eyebrow + h2 print at the
+   foot of one page and the content starts on the next, which reads as a blank page. */
+.pdoc .sechead{break-inside:avoid;break-after:avoid}
+.pdoc .card{break-inside:avoid}
 </style></head><body><div class="pdoc"><div class="paper">${body}</div></div></body></html>`;
 }

@@ -1,0 +1,210 @@
+NORTHWIND CLINIC
+TECHNICAL PROPOSAL · OCTOBER 2026
+Patient Booking Platform
+Online appointments, reminders and clinic scheduling in one place
+PREPARED FOR   Northwind Clinic
+PREPARED BY   Riseup Labs
+CONTACT   contact@riseuplabs.com   ·   +88-0175-974-7387   ·   riseuplabs.com
+DATE   October 2026
+THE SOLUTION
+Booking without the phone queue
+Patients book, reschedule and get reminders online; staff manage calendars from one dashboard.
+SCOPE
+What we will build
+Booking
+Doctor availability
+Slot booking and rescheduling
+Reminders
+SMS and email reminders
+Admin
+Calendars
+Reports
+HOW YOUR END USERS WILL EXPERIENCE IT
+Book in a minute — Pick a doctor, pick a slot, done.
+OUT OF SCOPE
+Payments
+Telemedicine
+SOLUTION ARCHITECTURE
+Simple, layered and secure
+Layer
+Component
+Details
+Users
+Patient web app
+Staff dashboard
+Application
+Booking API
+Notification service
+Data
+PostgreSQL
+SYSTEM FLOW
+Booking flow
+1.  Patient — Opens the app
+2.  Pick slot — Live availability
+3.  Confirm — Saved and reminded
+USER JOURNEY
+From search to visit
+1.  Find a doctor — By specialty
+2.  Book — Pick a slot
+3.  Reminder — Day before
+REQUIREMENTS
+Features by module
+Booking
+Availability
+Per doctor
+Rescheduling
+Self-service
+OUR WORK APPROACH
+Three phases
+DEVELOPMENT METHODOLOGY
+Weekly demos.
+QA APPROACH
+Functional and device testing.
+Phase 1 — Discovery
+DELIVERABLES
+Requirements
+Design
+Phase 2 — Build
+DELIVERABLES
+Booking
+Reminders
+Phase 3 — Launch
+DELIVERABLES
+QA
+Release
+DELIVERY TIMELINE
+8 weeks
+Phase
+Duration
+Phase 1 — Discovery
+2 weeks
+Phase 2 — Build
+4 weeks
+Phase 3 — Launch
+2 weeks
+Total
+8 weeks
+DELIVERY TIMELINE
+Gantt
+Phase
+Weeks
+Focus
+Phase 1
+Wks 1–2
+Design
+Phase 2
+Wks 3–6
+Phase 3
+Wks 7–8
+TEAM ALLOCATION
+Who delivers this
+Role
+Responsibility
+Project Manager
+Plan and delivery.
+Developer
+Build.
+FINANCIAL ESTIMATION
+Financial estimation
+Phase
+Focus
+Timeline
+Investment (BDT)
+Phase 1
+Discovery
+Weeks 1–2
+2,000
+Phase 2
+Build
+Weeks 3–6
+5,000
+Phase 3
+Launch
+Weeks 7–8
+2,000
+Total
+9,000
+RATE CARD
+Support rates
+Item
+Detail
+Rate
+Support
+Business hours
+500
+Hosting
+Managed cloud
+120
+Billed monthly.
+HARDWARE
+Equipment
+Item
+Qty
+Unit price
+Amount (BDT)
+Kiosk tablet — pc
+2
+250
+500
+Total
+500
+Warranty — 1 year
+COMMERCIAL TERMS
+Terms
+Term
+What it covers
+Basis
+Pricing
+Fixed per phase
+Fixed
+Support
+3 months included
+Included
+Valid 60 days.
+PAYMENT TERMS
+Payment schedule
+Stage
+Payment
+On signing
+40%
+Go-live
+60%
+Net 15.
+GROUND RULES
+Assumptions &amp; remarks
+ASSUMPTIONS
+Content supplied by the clinic.
+REMARKS
+Timely feedback.
+BOUNDARIES
+Out of scope
+Payments
+Telemedicine
+Change control applies.
+NOTES
+A note on data
+Patient data stays in the clinic’s own cloud account.
+ACCEPTANCE
+Sign-off
+Booking works end to end.
+NORTHWIND CLINIC
+Name: ________________________
+Signature: ________________________     Date: ______________
+RISEUP LABS
+Name: Project Manager
+Signature: ________________________     Date: ______________
+RELEASE &amp; HANDOVER
+What you receive
+Source code
+Deployment
+Documentation
+Training
+COMPARABLE WORK
+Comparable work
+Example project — A booking app.  (https://riseuplabs.com/portfolio/)
+Why Riseup Labs
+One team for design, build and support.
+NEXT STEP
+Next step
+1.  Kickoff — Confirm scope
+2.  Design — Week 1

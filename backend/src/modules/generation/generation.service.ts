@@ -1155,10 +1155,11 @@ export class GenerationService {
     plan: { currency: string; phases: DecisionPhase[] },
     anchorCents?: number,
     mode: 'fit' | 'cap' = 'fit',
+    opts: { replacePinned?: boolean } = {},
   ): Promise<BudgetFit | null> {
     const fitted = await this.fitPlanToAnchor(plan, anchorCents, mode);
     if (!fitted.lines.length) return null;
-    await this.budgets.applyGeneratedPlan(leadId, fitted.lines, plan.currency, fitted.adjustments);
+    await this.budgets.applyGeneratedPlan(leadId, fitted.lines, plan.currency, fitted.adjustments, opts);
     return fitted;
   }
 
@@ -1415,9 +1416,15 @@ export class GenerationService {
           if (!b.note || /third[- ]party|excl\./i.test(b.note)) b.note = 'Total';
         }
         if (computed && (computed.contingencyCents || computed.discountCents || computed.vatCents)) {
-          const adjFocus = 'Adjustment to align the investment with the agreed budget.';
-          if (computed.contingencyCents) rows.push({ label: 'Budget alignment', focus: adjFocus, timeline: '—', amountCents: computed.contingencyCents } as (typeof rows)[number]);
-          if (computed.discountCents) rows.push({ label: 'Budget-alignment discount', focus: adjFocus, timeline: '—', amountCents: -computed.discountCents } as (typeof rows)[number]);
+          // Client-facing wording. "Budget alignment" plus "adjustment to align the investment with the
+          // agreed budget" told the client the price had been worked backwards from a target. An uplift is a
+          // contingency and a reduction is a discount — both are ordinary, and neither exposes the method.
+          if (computed.contingencyCents) {
+            rows.push({ label: 'Contingency', focus: 'Allowance for scope variation and integration risk within the agreed scope.', timeline: '—', amountCents: computed.contingencyCents } as (typeof rows)[number]);
+          }
+          if (computed.discountCents) {
+            rows.push({ label: 'Discount', focus: 'Agreed commercial adjustment.', timeline: '—', amountCents: -computed.discountCents } as (typeof rows)[number]);
+          }
           if (computed.vatCents) rows.push({ label: 'VAT', focus: 'Applicable tax.', timeline: '—', amountCents: computed.vatCents } as (typeof rows)[number]);
           b.totalCents = computed.totalCents;
         } else {
@@ -1868,7 +1875,8 @@ export class GenerationService {
 
     const plan = { currency: existing.currency, phases: nextPhases };
     await this.proposals.setInternalCalc(leadId, { ...calc, plan });
-    await this.applyPlanToBudget(leadId, plan);
+    // The editor replaces the plan outright: rows the previous plan produced must not survive, pinned or not.
+    await this.applyPlanToBudget(leadId, plan, undefined, 'fit', { replacePinned: true });
     await this.syncProposalFromSheet(leadId);
 
     const after = await this.currentBudgetTotals(leadId, plan.currency);

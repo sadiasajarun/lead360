@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { AiService } from '../../../infrastructure/ai/ai.service';
 import { RateCardService } from '../../rate-card/rate-card.service';
 import { KbService } from '../../kb/kb.service';
@@ -6,6 +6,9 @@ import { EstimateService } from '../../estimate/estimate.service';
 import { PortfolioService } from '../../portfolio/portfolio.service';
 import { ProjectCaseService, type DecisionBrief } from '../../project-case/project-case.service';
 import { ModuleService, type ModuleAnalysis } from './module.service';
+import { ConstraintCalibrationService, type Calibration } from '../../project-case/constraint-calibration.service';
+import { flagMode } from './engine-flags';
+import { mergePhases, isParallelizableRole } from './plan-crash.util';
 import { crashPlanToWeeks } from './plan-crash.util';
 import { DECIDE_SYSTEM } from './system-prompts';
 import { BudgetCurrency } from '../../../common/enums/budget-currency.enum';
@@ -74,6 +77,10 @@ export interface Decisions {
    *  the internal breakdown; it never sets the price (the rate-card role plan stays authoritative). */
   moduleAnalysis: ModuleAnalysis[];
   moduleTotalEstDays: number;
+  /** V2 calibration against the user's approved deliveries (ENGINE_V2_CALIBRATION). Recorded in shadow mode,
+   *  applied (weeks / phase count / effort) in on mode. Includes the reduced-scope proposal when a stated
+   *  budget or deadline can't buy the scope. Absent when the flag is off. */
+  calibration?: Calibration;
   /** Sanity findings on the finished plan. Provably-wrong values are corrected in place and reported here
    *  as "corrected"; judgement calls are reported as "check" for a human to accept or override. */
   warnings: string[];
@@ -112,6 +119,7 @@ export class DecideService {
     private readonly portfolio: PortfolioService,
     private readonly cases: ProjectCaseService,
     private readonly modules: ModuleService,
+    @Optional() private readonly calibrator?: ConstraintCalibrationService,
   ) {}
 
   // Format the learned Decision Brief (norm baseline + nearest analogs) into a structured prompt anchor —
@@ -378,6 +386,36 @@ export class DecideService {
       }
     }
 
+    // ── V2 calibration (ENGINE_V2_CALIBRATION) against the user's APPROVED deliveries: learned weeks for the
+    //    scope's effort, learned phase count, effort correction, and a reduced-scope proposal when a stated
+    //    budget/deadline can't buy the scope. off → skipped; shadow → recorded only; on → applied below.
+    //    Never applied over a strong match (that is already a real delivery). ──
+    const calMode = flagMode('CALIBRATION');
+    let calibration: Calibration | undefined;
+    if (calMode !== 'off' && this.calibrator) {
+      try {
+        const effortOf = (p: DecisionPhase) => p.weeks * DAYS_PER_WEEK * p.team.reduce((a, m) => a + m.units * (m.hoursPerDay / HOURS_PER_DAY), 0);
+        const costOf = (p: DecisionPhase) => p.weeks * DAYS_PER_WEEK * p.team.reduce((a, m) => a + m.units * m.dayRateCents * (m.hoursPerDay / HOURS_PER_DAY), 0);
+        const planEffort = phases.reduce((s, p) => s + effortOf(p), 0);
+        const planCost = phases.reduce((s, p) => s + costOf(p), 0);
+        calibration = await this.calibrator.calibrate({
+          mode: calMode,
+          modules: moduleRes.modules,
+          planEffort,
+          planWeeks: phases.reduce((s, p) => s + p.weeks, 0),
+          statedWeeks: intent.timelineWeeks && intent.timelineWeeks > 0 ? intent.timelineWeeks : undefined,
+          statedBudgetCents: intent.budgetCents && (!intent.budgetCurrency || intent.budgetCurrency === currency) ? intent.budgetCents : undefined,
+          blendedDayRateCents: planEffort > 0 ? planCost / planEffort : undefined,
+        });
+      } catch (e) {
+        this.logger.warn(`Decide ▸ calibration skipped: ${String(e)}`);
+      }
+    }
+    const applyCal = calMode === 'on' && !!calibration && !strong;
+    if (applyCal && calibration!.phaseCount && structureMode !== 'module' && !hardwareInstallWeeks && phases.length > calibration!.phaseCount + 1) {
+      mergePhases(phases, calibration!.phaseCount);
+    }
+
     // ── Size envelope. The module model already estimates this project's effort in man-days; until now that
     //    was only a sentence in the prompt, so the calendar was whatever the model felt like — the same brief
     //    came back as 11, 22, 24 and 31 weeks. Convert effort → weeks against the build heads actually
@@ -422,7 +460,7 @@ export class DecideService {
       envelopeTarget && normP75 && (brief?.sampleCount ?? 0) >= 5
         ? Math.max(phases.length, Math.min(envelopeTarget, Math.round(normP75 * 1.25)))
         : envelopeTarget;
-    const targetWeeks = statedWeeks || normCapped;
+    const targetWeeks = statedWeeks || (applyCal && calibration?.weeks ? calibration.weeks : normCapped);
     if (!statedWeeks && normCapped) {
       this.logger.log(`Decide ▸ SIZE ENVELOPE — ${moduleRes.totalEstDays}d effort ≈ ${envelopeWeeks}w; plan was ${naturalTotal}w; norm p75 ${normP75 ?? '—'}w → retimed to ${normCapped}w.`);
     }
@@ -438,6 +476,20 @@ export class DecideService {
           const drift = targetWeeks - phases.reduce((s, p) => s + p.weeks, 0);
           const big = [...phases].sort((a, b) => b.weeks - a.weeks)[0];
           if (big) big.weeks = Math.max(1, big.weeks + drift);
+        }
+      }
+    }
+    // V2 effort correction: bring the plan's person-days to what approved projects of this scope staffed.
+    // Never after a deadline crash (the crash already sized the team to the deadline).
+    if (applyCal && calibration!.effortScale && !crashNote) {
+      const f = calibration!.effortScale;
+      for (const p of phases) {
+        for (const m of p.team) {
+          const want = m.hoursPerDay * f;
+          if (want <= HOURS_PER_DAY) { m.hoursPerDay = Math.max(1, Math.round(want * 2) / 2); continue; }
+          m.hoursPerDay = HOURS_PER_DAY;
+          const residual = want / HOURS_PER_DAY;
+          if (residual > 1.15 && isParallelizableRole(m.role)) m.units = Math.min(10, Math.round(m.units * residual));
         }
       }
     }
@@ -499,7 +551,21 @@ export class DecideService {
     // (Different currency: price the real roster across the timeline instead of inventing a bigger team.)
     // Phase weekly burn now reflects PART-TIME effort: each member is billed for hoursPerDay/8 of the week.
     const phaseWeekly = (p: DecisionPhase) => p.team.reduce((s, m) => s + m.units * m.dayRateCents * DAYS_PER_WEEK * (m.hoursPerDay / HOURS_PER_DAY), 0);
-    const reuseBudget = !!strong && strong.currency === currency && strong.budgetCents > 0;
+    // A strong comparable anchors the PRICE only when it is genuinely comparable in SIZE. Matching is done on
+    // domain and shape, which can pair an 81-screen platform with a small project in the same field — and
+    // reusing that project's real quote then prices an 18-week enterprise build at a few thousand dollars.
+    // Compare this plan's own rate-card cost against the comparable's quote and refuse the anchor when they
+    // are far apart; the rate-card plan is the honest number in that case.
+    const ownCostCents = Math.round(phases.reduce((s, p) => s + phaseWeekly(p) * p.weeks, 0));
+    const sizeRatio = strong && strong.budgetCents > 0 ? ownCostCents / strong.budgetCents : 1;
+    const sizeComparable = sizeRatio >= 0.6 && sizeRatio <= 1.7;
+    const reuseBudget = !!strong && strong.currency === currency && strong.budgetCents > 0 && sizeComparable;
+    if (strong && strong.currency === currency && strong.budgetCents > 0 && !sizeComparable) {
+      this.logger.warn(
+        `Decide ▸ comparable "${prettyTitle(strong.title)}" NOT used as a price anchor — this plan costs ` +
+          `${Math.round(sizeRatio * 100)}% of that delivery, which is outside the comparable range. Pricing from the rate card.`,
+      );
+    }
     const wsum = phases.reduce((s, p) => s + p.weeks, 0) || 1;
     let rows: Decisions['budget']['rows'];
     if (reuseBudget) {
@@ -564,7 +630,9 @@ export class DecideService {
         ? { clientBudgetCents: intent.budgetCents, clientBudgetHardness: intent.budgetHardness ?? 'soft' }
         : {}),
       ...(crashNote ? { timelineCrashed: true } : {}),
-      note: 'Total (excl. third-party & certification costs)',
+      // Never name outside parties in client-facing copy: this exact line shipped to a client and is the
+      // reason the redaction lint exists. Say what the total excludes without saying who supplies it.
+      note: 'Total excludes licence, subscription and certification fees, which are billed at cost.',
       explanation: {
         byStack: this.byStack(roleCost),
         byRole: this.byRole(roleCost),
@@ -619,6 +687,7 @@ export class DecideService {
         paymentTerms: this.payment(structureMode),
         moduleAnalysis: moduleRes.modules,
         moduleTotalEstDays: moduleRes.totalEstDays,
+        ...(calibration ? { calibration } : {}),
       },
       usage: { tokensIn: tokensIn + moduleRes.usage.tokensIn, tokensOut: tokensOut + moduleRes.usage.tokensOut },
     };

@@ -1,0 +1,214 @@
+SKYLINK TRAVELS LTD
+TECHNICAL &amp; FINANCIAL PROPOSAL · AUGUST 2026
+SkyLink Air Ticketing Platform
+Flights, holidays and visas on one platform — GDS plus direct local airline inventory, secure payments, and a self-service customer portal.
+PREPARED FOR   SkyLink Travels Ltd
+PREPARED BY   Riseup Labs
+CONTACT   contact@riseuplabs.com   ·   +88-0175-974-7387   ·   riseuplabs.com
+DATE   August 2026
+THE SOLUTION
+A single platform that books seats, sells holidays, and processes visas — run entirely by your team
+A production-ready B2C platform for the Bangladesh market with three connected verticals — GDS + direct local airline APIs, payments via SSLCommerz, SMS confirmation, and a single ops console.
+PROJECT SCOPE
+What we&apos;ll build
+Flights
+Multi-city search
+GDS + local fares
+Seat, baggage, instant e-ticket
+Holidays
+Curated &amp; custom packages
+Inquiry-to-quote
+Itinerary + voucher PDF
+Visas
+Requirements engine
+Document upload
+Status timeline
+HOW YOUR END USERS WILL EXPERIENCE IT
+One search, every option — The platform fans out to GDS and local airlines at once and shows the best fares as each source replies.
+A price with nothing hidden — Base fare, taxes and service fee shown separately before payment.
+Pay the way they already pay — Card, bKash/Nagad, or bank — confirmed instantly by SMS with the ticket number.
+Everything in one account — Flights, holidays and visas together in the portal, Bangla or English.
+OUT OF SCOPE
+GDS / IATA consolidator fees &amp; PCC setup
+Third-party subscription &amp; usage costs (SMS, gateway)
+Brand identity &amp; UI design creation
+Content writing &amp; translation
+SOLUTION ARCHITECTURE
+How the platform is wired together
+Layer
+Components
+Channels
+Website, Mobile PWA
+Application Core
+Search Engine, Booking Engine
+Integrations
+GDS, SSLCommerz
+USER JOURNEY
+Full booking flow
+1.  Search — Route, dates &amp; pax
+2.  Select Flight — GDS + local fares
+3.  E-Ticket — PNR + invoice, SMS
+DEPLOYMENT
+Infrastructure architecture
+Frontend
+Single Linux VM (Ubuntu): Nginx, API, Redis
+Booking sequence
+(Diagram — see the PDF or web version for the visual figure.)
+REQUIREMENTS
+Features by module — and who uses them
+Flights
+Multi-city / return search
+GDS + local inventory
+Hold, re-issue &amp; void desk
+Carrier permitting
+Visas
+Country requirement engine
+Editable rule sheets
+OUR WORK APPROACH
+Three phases, each accepted before the next begins
+DEVELOPMENT METHODOLOGY
+We work in Agile two-week sprints with a demo and retro at the end of each. Every feature carries a Definition of Done — code reviewed, merged, deployed to staging — and the backlog is re-prioritised with you each sprint so scope stays aligned with value.
+QA APPROACH
+Each release passes functional, regression and integration testing on a staging mirror of production before sign-off; payment and booking flows get dedicated end-to-end scenarios. A release is gated on a green regression run and zero open P0/P1 defects.
+Phase 1 · Foundation &amp; Flights
+DELIVERABLES
+GDS abstraction layer
+Flight search + fare aggregation
+Booking engine — PNR, hold, issue
+Payment integration
+Instant e-ticket + SMS
+Phase 2 · Holidays &amp; Visas
+DELIVERABLES
+Holiday package CMS
+Inquiry-to-quote workflow
+Visa requirement engine
+Document upload + status timeline
+Phase 3 · Admin &amp; Launch
+DELIVERABLES
+Admin console + CRM
+Finance &amp; reconciliation
+Full QA + payment-flow testing
+Production deploy + training
+SCOPE COMMITMENT
+Deliverables &amp; acceptance criteria
+Deliverable
+Acceptance criteria
+GDS abstraction layer (Phase 1)
+Live fare + availability returned from ≥2 providers within 3s p95.
+Booking engine (PNR, hold, issue) (Phase 1)
+A domestic and an international itinerary book end-to-end with a valid PNR.
+Payment integration (Phase 1)
+Successful capture + refund verified against the gateway settlement file.
+Holiday package CMS (Phase 2)
+A package is authored, published and booked by a test customer.
+Visa requirement engine (Phase 2)
+A visa application is submitted and tracked to a decision state.
+Admin console + reconciliation (Phase 3)
+Daily reconciliation matches the settlement file with zero unexplained variance.
+TECHNOLOGY CHOICES
+What we chose, and why
+Layer
+Choice
+Why
+Frontend
+Next.js + Tailwind
+SEO-friendly rendering, fast search results, mobile-first.
+Backend
+NestJS
+Tight integration code for GDS/API orchestration.
+Data
+PostgreSQL + Redis
+Transactional integrity; Redis caches fares to cut GDS segment fees. — Lower running cost
+TEAM ALLOCATION
+Who delivers this, and what they own
+Role
+Responsibility
+Project Manager
+Single point of contact, weekly status, risk log.
+Solution Architect
+GDS layer, integration design, code reviews.
+Backend Engineers
+Booking engine, payments, admin APIs.
+QA Engineer
+Functional, regression, payment-flow testing.
+DELIVERY TIMELINE
+Project timeline — week by week
+Phase
+Weeks
+Focus
+Phase 1 · Foundation &amp; Flights
+Wks 1–6
+GDS layer, booking engine, payments
+Phase 2 · Holidays &amp; Visas
+Wks 7–10
+Package CMS, visa engine
+Phase 3 · Admin &amp; Launch
+Wks 11–14
+Admin, QA, production deploy
+GROUND RULES
+Assumptions &amp; dependencies
+ASSUMPTIONS
+Scope is as described in this proposal; material changes follow the change-control process.
+One consolidated round of feedback is provided per deliverable within 3 business days.
+A single production environment is targeted for launch.
+REMARKS
+SkyLink provides GDS/consolidator credentials and a payment-gateway merchant account before Phase 1.
+Branding, copy and legal/visa content are supplied by SkyLink before the relevant phase.
+Third-party licence and certification fees are paid directly by SkyLink.
+FINANCIAL ESTIMATION
+Investment — phase by phase
+Phase
+Focus
+Timeline
+Investment (BDT)
+Phase 1
+Foundation &amp; Flights
+Weeks 1–6
+3,40,000
+Phase 2
+Holidays &amp; Visas
+Weeks 7–10
+2,60,000
+Phase 3
+Admin, hardening &amp; launch
+Weeks 11–14
+2,00,000
+Total (excl. GDS/API &amp; certification costs)
+19 wks
+8,00,000
+PAYMENT TERMS
+A simple four-stage schedule
+Stage
+Payment
+On signing
+30%
+Phase 1 acceptance
+30%
+Phase 2 acceptance
+30%
+On go-live
+10%
+Change requests billed at BDT 12,000 / man-day. Third-party fees paid directly by SkyLink.
+RELEASE &amp; HANDOVER
+What you receive from us
+Production platform — Flights, Holidays, Visas
+Customer portal with full self-service
+Admin console with reports &amp; roles
+GDS abstraction + local airline integrations
+Source code + Git repository ownership
+Technical documentation &amp; API references
+Admin training (2 sessions) + recordings
+60 days of post-launch defect-fix support
+COMPARABLE WORK
+We&apos;ve built booking and transactional platforms before
+eCook — Multi-vendor ordering with payments &amp; live tracking.  (https://riseuplabs.com/portfolio/)
+WorkTok — Two-sided marketplace, wallet, and admin console.  (https://riseuplabs.com/portfolio/)
+U-Report — High-volume transactional messaging at national scale.  (https://riseuplabs.com/portfolio/)
+Why build this with Riseup Labs
+We&apos;ve shipped 200+ products across booking, fintech and marketplace domains — so we&apos;ve already solved the hard parts your platform depends on. You own the source code, your team is trained to run it, and we stay on after launch.
+NEXT STEP
+Getting started
+1.  Proposal sign-off — Confirm scope &amp; commercial terms.
+2.  Kickoff workshop — Stakeholders, supplier accounts, go-live target.
+3.  Discovery sprint — UX research, GDS confirmation, sitemap.
+4.  Build starts — Week-by-week status, milestone reviews.

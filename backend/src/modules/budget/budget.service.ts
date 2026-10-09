@@ -299,6 +299,7 @@ export class BudgetService {
     lines: GeneratedBudgetLine[],
     currency = 'USD',
     adjustments?: { contingencyPct: number; discountPct: number; vatPct: number },
+    opts: { replacePinned?: boolean } = {},
   ) {
     await this.getForLead(leadId); // ensure the budget row exists
     const current = await this.budgets.findByLead(leadId);
@@ -311,8 +312,11 @@ export class BudgetService {
       const milestoneRepo = manager.getRepository(Milestone);
       // Only the DERIVED rows are replaced. A row the rep pinned by editing it survives the regeneration —
       // previously the whole sheet was wiped and every hand correction went with it.
-      const pinnedLines = await lineRepo.find({ where: { budgetId: current.id, pinned: true } });
-      await lineRepo.delete({ budgetId: current.id, pinned: false });
+      // ...EXCEPT when the caller is replacing the plan outright (the plan editor): then every row the old
+      // plan produced is stale, pinned or not, and keeping it silently doubles the sheet.
+      const pinnedLines = opts.replacePinned ? [] : await lineRepo.find({ where: { budgetId: current.id, pinned: true } });
+      if (opts.replacePinned) await lineRepo.delete({ budgetId: current.id });
+      else await lineRepo.delete({ budgetId: current.id, pinned: false });
       // Milestones still referenced by a pinned row must outlive the wipe or the row loses its grouping.
       const keepMilestones = new Set(pinnedLines.map((l) => l.milestoneId).filter(Boolean) as string[]);
       for (const ms of await milestoneRepo.find({ where: { budgetId: current.id } })) {
@@ -446,12 +450,23 @@ export class BudgetService {
     // resulting day count, rounded to a whole number so the client never sees a fractional day.
     const HEADER = ['Sl.', 'Departments', 'Heads', 'Type', 'No. of Unit', 'No. of Days', 'Per Day Cost', 'Unit Cost', 'Total Cost'];
     const wholeDays = (d: number) => Math.max(d > 0 ? 1 : 0, Math.round(d));
-    const thin = { style: 'thin' as const, color: { argb: 'FFBFBFBF' } };
+    const thin = { style: 'thin' as const, color: { argb: 'FF000000' } };
     const border = { top: thin, left: thin, bottom: thin, right: thin };
+    // Typography and row metrics follow the Riseup reference budget sheet, so an exported sheet is
+    // indistinguishable from a hand-built one.
+    const FONT = 'Calibri';
+    const CENTER = { horizontal: 'center' as const, vertical: 'middle' as const, wrapText: true };
+    const ROW_H = 31.5;
+    const titleCase = (v: unknown) => {
+      const t = String(v ?? '').trim();
+      return t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+    };
     // Number format follows the budget's OWN currency — a BDT budget must render "৳", not "$". Unknown
     // currencies fall back to a trailing code (e.g. `1,234 SGD`) rather than mislabelling with a dollar sign.
     const curSym = CURRENCY_SYMBOL[budget.currency as BudgetCurrency];
-    const CURRENCY = curSym ? `"${curSym}"#,##0` : `#,##0" ${budget.currency || 'USD'}"`;
+    const CURRENCY = curSym
+      ? `_ * #,##0.00_)_${curSym}_ ;_ * (#,##0.00)_${curSym}_ ;_ * -??_)_${curSym}_ ;_ @_ `
+      : `#,##0.00" ${budget.currency || 'USD'}"`;
 
     const msTotalCells: string[] = []; // for the multi-milestone summary sheet
 
@@ -459,19 +474,24 @@ export class BudgetService {
     for (const [milestone, msLines] of byMs) {
       itemNo++;
       const ws = wb.addWorksheet(milestone.slice(0, 31) || DEFAULT_MS);
-      ws.columns = [{ width: 6 }, { width: 22 }, { width: 26 }, { width: 11 }, { width: 11 }, { width: 12 }, { width: 14 }, { width: 14 }, { width: 15 }];
+      ws.columns = [{ width: 5.55 }, { width: 17.33 }, { width: 29.55 }, { width: 18.33 }, { width: 10.11 }, { width: 10.66 }, { width: 15 }, { width: 21.22 }, { width: 18.44 }];
 
-      // banner row (merged) — "Cost Breakdown for Item X \n Milestone"
-      ws.mergeCells(1, 1, 1, 9);
-      const banner = ws.getCell(1, 1);
+      // Thin ruled spacer above the table, then the banner — "Cost Breakdown for Item X \n Milestone".
+      ws.getRow(1).height = 12;
+      for (let c = 1; c <= 9; c++) ws.getCell(1, c).border = border;
+
+      ws.mergeCells(2, 1, 2, 9);
+      const banner = ws.getCell(2, 1);
       banner.value = `Cost Breakdown for Item ${itemNo}\n${milestone}`;
       banner.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-      banner.font = { name: 'Arial', size: 11, bold: true };
-      ws.getRow(1).height = 32;
+      banner.font = { name: FONT, size: 14, bold: true };
+      ws.getRow(2).height = 75.75;
+      for (let c = 1; c <= 9; c++) ws.getCell(2, c).border = border;
 
       const headerRow = ws.addRow(HEADER);
-      headerRow.font = { name: 'Arial', size: 10, bold: true };
-      headerRow.eachCell((c) => { c.border = border; c.alignment = { horizontal: 'center', wrapText: true }; });
+      headerRow.height = 36.75;
+      headerRow.font = { name: FONT, size: 12, bold: true };
+      headerRow.eachCell((c) => { c.border = border; c.alignment = CENTER; });
 
       // department groups
       const deptOrder: string[] = [];
@@ -501,7 +521,7 @@ export class BudgetService {
             l.role,
             // Equipment/licence lines are not staffed roles — a seniority ("mid") in the Type column would
             // read as nonsense next to "Power Adapter", so it is left blank for those rows.
-            /hardware|equipment|licen[cs]e|installation/i.test(l.department || '') ? '' : l.seniority,
+            /hardware|equipment|licen[cs]e|installation/i.test(l.department || '') ? '' : titleCase(l.seniority),
             Number(l.units),
             days,
             money(l.dayRateCents),
@@ -510,8 +530,9 @@ export class BudgetService {
           ]);
           const rn = r.number;
           r.getCell(8).value = { formula: `E${rn}*F${rn}*G${rn}` };
-          r.font = { name: 'Arial', size: 10 };
-          r.eachCell({ includeEmpty: true }, (c) => { c.border = border; });
+          r.height = ROW_H;
+          r.font = { name: FONT, size: 11 };
+          r.eachCell({ includeEmpty: true }, (c) => { c.border = border; c.alignment = CENTER; });
           r.getCell(6).numFmt = '0';
           r.getCell(7).numFmt = CURRENCY;
           r.getCell(8).numFmt = CURRENCY;
@@ -520,16 +541,32 @@ export class BudgetService {
         const gt = ws.getCell(firstRow, 9);
         gt.value = { formula: `SUM(H${firstRow}:H${lastRow})` };
         gt.numFmt = CURRENCY;
-        gt.font = { name: 'Arial', size: 10, bold: true };
+        gt.font = { name: FONT, size: 11 };
+        gt.alignment = CENTER;
+        // The department is ONE block, not a run of repeated lines: the serial, the department name and
+        // the department total each span the whole group, which is what the reference sheets do.
+        if (lastRow > firstRow) {
+          ws.mergeCells(firstRow, 1, lastRow, 1);
+          ws.mergeCells(firstRow, 2, lastRow, 2);
+          ws.mergeCells(firstRow, 9, lastRow, 9);
+        }
         groupTopRows.push(firstRow);
+        // Ruled blank row between department blocks (never after the last one) — the visual division.
+        if (dept !== deptOrder[deptOrder.length - 1]) {
+          const sep = ws.addRow([]);
+          sep.height = ROW_H;
+          for (let c = 1; c <= 9; c++) ws.getCell(sep.number, c).border = border;
+        }
       }
 
       // grand total for this milestone = sum of the department group totals (col K)
       const firstG = groupTopRows[0] ?? 3;
       const lastG = ws.rowCount;
       const totalRow = ws.addRow(['Total', '', '', '', '', '', '', '', null]);
-      totalRow.font = { name: 'Arial', size: 10, bold: true };
-      totalRow.eachCell({ includeEmpty: true }, (c) => { c.border = border; });
+      totalRow.height = 21;
+      totalRow.font = { name: FONT, size: 12, bold: true };
+      totalRow.eachCell({ includeEmpty: true }, (c) => { c.border = border; c.alignment = CENTER; });
+      ws.mergeCells(totalRow.number, 1, totalRow.number, 8);
       const totalCell = ws.getCell(totalRow.number, 9);
       totalCell.value = groupTopRows.length ? { formula: `SUM(I${firstG}:I${lastG})` } : 0;
       totalCell.numFmt = CURRENCY;
@@ -544,13 +581,13 @@ export class BudgetService {
         ws.addRow([]);
         const eb = ws.addRow(['Hardware, Equipment & Installation']);
         ws.mergeCells(eb.number, 1, eb.number, 9);
-        eb.getCell(1).font = { name: 'Arial', size: 11, bold: true };
+        eb.getCell(1).font = { name: 'Calibri', size: 11, bold: true };
         eb.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
         eb.getCell(1).border = border;
 
         const eh = ws.addRow(['Sl.', 'Item', '', 'Brand / Model', 'UoM', 'Qty', 'Unit Price', 'Total Price', 'Remarks']);
         ws.mergeCells(eh.number, 2, eh.number, 3);
-        eh.font = { name: 'Arial', size: 10, bold: true };
+        eh.font = { name: 'Calibri', size: 11, bold: true };
         eh.eachCell({ includeEmpty: true }, (c) => { c.border = border; c.alignment = { horizontal: 'center', wrapText: true }; });
 
         const eFirst = ws.rowCount + 1;
@@ -558,7 +595,7 @@ export class BudgetService {
           const r = ws.addRow([i + 1, e.item, '', e.brand ?? '', e.uom ?? '', Number(e.qty), money(e.unitPriceCents), null, e.note ?? '']);
           ws.mergeCells(r.number, 2, r.number, 3);
           r.getCell(8).value = { formula: `F${r.number}*G${r.number}` };
-          r.font = { name: 'Arial', size: 10 };
+          r.font = { name: 'Calibri', size: 11 };
           r.eachCell({ includeEmpty: true }, (c) => { c.border = border; });
           r.getCell(7).numFmt = CURRENCY;
           r.getCell(8).numFmt = CURRENCY;
@@ -566,7 +603,7 @@ export class BudgetService {
         const eLast = ws.rowCount;
         const et = ws.addRow(['', 'Hardware, Equipment & Installation — total', '', '', '', '', '', null, '']);
         ws.mergeCells(et.number, 2, et.number, 3);
-        et.font = { name: 'Arial', size: 10, bold: true };
+        et.font = { name: 'Calibri', size: 11, bold: true };
         et.eachCell({ includeEmpty: true }, (c) => { c.border = border; });
         et.getCell(8).value = { formula: `SUM(H${eFirst}:H${eLast})` };
         et.getCell(8).numFmt = CURRENCY;
@@ -578,7 +615,7 @@ export class BudgetService {
         ws.addRow([]);
         const gt2 = ws.addRow(['', 'Project total (resources + hardware)', '', '', '', '', '', '', null]);
         ws.mergeCells(gt2.number, 2, gt2.number, 3);
-        gt2.font = { name: 'Arial', size: 11, bold: true };
+        gt2.font = { name: 'Calibri', size: 11, bold: true };
         gt2.eachCell({ includeEmpty: true }, (c) => { c.border = border; });
         gt2.getCell(9).value = { formula: `I${totalRow.number}+${equipTotalCell}` };
         gt2.getCell(9).numFmt = CURRENCY;
@@ -589,7 +626,7 @@ export class BudgetService {
       const weeks = Math.max(1, Math.ceil(maxDays / 5));
       ws.addRow([]);
       const note = ws.addRow([`Note: ${milestone} Timeline = ${weeks} week${weeks > 1 ? 's' : ''}.`]);
-      note.font = { name: 'Arial', size: 10, italic: true };
+      note.font = { name: 'Calibri', size: 11, italic: true };
 
       // Single-milestone budgets carry the adjustments here (mirrors the on-screen budget).
       if (byMs.size === 1) {
@@ -602,7 +639,7 @@ export class BudgetService {
       const ws = wb.addWorksheet('Summary');
       ws.columns = [{ width: 30 }, { width: 18 }];
       const h = ws.addRow(['Milestone', 'Total Cost']);
-      h.font = { name: 'Arial', size: 10, bold: true };
+      h.font = { name: 'Calibri', size: 11, bold: true };
       [...byMs.keys()].forEach((name, i) => {
         const r = ws.addRow([name, null]);
         r.getCell(2).value = { formula: msTotalCells[i] };
@@ -611,7 +648,7 @@ export class BudgetService {
       const sub = ws.addRow(['Subtotal', null]);
       sub.getCell(2).value = { formula: `SUM(B2:B${sub.number - 1})` };
       sub.getCell(2).numFmt = CURRENCY;
-      sub.font = { name: 'Arial', size: 10, bold: true };
+      sub.font = { name: 'Calibri', size: 11, bold: true };
       this.appendAdjustments(ws, sub.number, budget, CURRENCY, border, 2);
     }
 
@@ -641,7 +678,7 @@ export class BudgetService {
       r.getCell(col - 1).value = label;
       r.getCell(col).value = { formula };
       r.getCell(col).numFmt = numFmt;
-      r.font = { name: 'Arial', size: 10, bold };
+      r.font = { name: 'Calibri', size: 11, bold };
       r.getCell(col - 1).border = border;
       r.getCell(col).border = border;
       return r.number;

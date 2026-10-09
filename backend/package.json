@@ -28,6 +28,11 @@
     "migrate:budget-equipment": "ts-node src/database/add-budget-equipment.ts",
     "migrate:lead-procurement": "ts-node src/database/add-lead-procurement-flags.ts",
     "migrate:budget-pinning": "ts-node src/database/add-budget-pinning.ts",
+    "migrate:gold-cases": "ts-node src/database/add-gold-cases.ts",
+    "approved:manifest": "ts-node src/database/build-approved-manifest.ts",
+    "ingest:approved": "ts-node src/database/ingest-approved.ts",
+    "backtest": "ts-node src/database/backtest-plans.ts",
+    "build:feature-memory": "ts-node src/database/build-feature-memory.ts",
     "migrate:proposal-versions": "ts-node src/database/add-proposal-version-calc.ts"
   },
   "dependencies": {

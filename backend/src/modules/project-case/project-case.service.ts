@@ -150,6 +150,12 @@ export class ProjectCaseService extends BaseService<ProjectCase> implements OnMo
     } catch (e) {
       this.logger.warn(`project_cases vector column ensure skipped: ${String(e)}`);
     }
+    // Additive gold-corpus columns (nullable) — ensured at boot so the entity never queries a missing column.
+    try {
+      await this.cases.ensureGoldColumns();
+    } catch (e) {
+      this.logger.warn(`project_cases gold columns ensure skipped: ${String(e)}`);
+    }
   }
 
   /**
